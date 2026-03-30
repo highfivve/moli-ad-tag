@@ -3964,6 +3964,7 @@ export namespace prebidjs {
   export const Pubstack = 'pubstack';
   export const Ogury = 'ogury';
   export const OneTag = 'onetag';
+  export const Oms = 'oms';
   export const OpenX = 'openx';
   export const SmartAdServer = 'smartadserver';
   export const Smartx = 'smartx';
@@ -4013,6 +4014,7 @@ export namespace prebidjs {
     | typeof PubMatic
     | typeof Pubstack
     | typeof Ogury
+    | typeof Oms
     | typeof OneTag
     | typeof OpenX
     | typeof SmartAdServer
@@ -5081,6 +5083,23 @@ export namespace prebidjs {
    * @see https://docs.prebid.org/dev-docs/bidders/onetag.html
    */
   export interface IOneTagBid extends IBidObject<typeof OneTag, IOneTagParams> {}
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/oms.html
+   */
+  export interface IOmsBid extends IBidObject<typeof Oms, IOmsParams> {}
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/oms.html
+   */
+  export interface IOmsParams {
+    /**
+     * Unique publisher ID
+     * @type integer
+     * @example 12345
+     */
+    readonly publisherId: number;
+  }
 
   /**
    * OpenX bid parameters
