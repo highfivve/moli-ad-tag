@@ -341,13 +341,12 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
           window
         );
 
-        modules.forEach(module => {
-          try {
+        modules
+          .filter(module => {
             const moduleName = module.name;
             const moduleConfig = state.config?.modules?.[moduleName];
 
-            // if there is a labelCondition setting, only configure the module if conditions are met
-            if (moduleConfig.labelCondition) {
+            if (moduleConfig?.labelCondition) {
               const areLabelConditionsMet = labelService.isLabelConditionMet(
                 moduleConfig.labelCondition
               );
@@ -357,39 +356,46 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
                   'MoliGlobal',
                   `skipping configuration of ${module.moduleType} module ${moduleName} due to label condition not met.`
                 );
-                return;
+                return false;
               }
             }
 
-            module.configure__(state.config?.modules ?? {});
-            getLogger(state.runtimeConfig, window).debug(
-              'MoliGlobal',
-              `configure ${module.moduleType} module ${module.name}`,
-              module.config__()
-            );
-            state.runtimeConfig.adPipelineConfig.initSteps.push(...module.initSteps__());
-            state.runtimeConfig.adPipelineConfig.configureSteps.push(...module.configureSteps__());
-            state.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps.push(
-              ...module.prepareRequestAdsSteps__()
-            );
-            if (module.requestBidsSteps__) {
-              state.runtimeConfig.adPipelineConfig.requestBidsSteps.push(
-                ...module.requestBidsSteps__()
+            // if no labelCondition is available or labelConditions are met, the module should be configured
+            return true;
+          })
+          .forEach(module => {
+            try {
+              module.configure__(state.config?.modules ?? {});
+              getLogger(state.runtimeConfig, window).debug(
+                'MoliGlobal',
+                `configure ${module.moduleType} module ${module.name}`,
+                module.config__()
+              );
+              state.runtimeConfig.adPipelineConfig.initSteps.push(...module.initSteps__());
+              state.runtimeConfig.adPipelineConfig.configureSteps.push(
+                ...module.configureSteps__()
+              );
+              state.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps.push(
+                ...module.prepareRequestAdsSteps__()
+              );
+              if (module.requestBidsSteps__) {
+                state.runtimeConfig.adPipelineConfig.requestBidsSteps.push(
+                  ...module.requestBidsSteps__()
+                );
+              }
+              if (module.prebidBidsBackHandler__) {
+                state.runtimeConfig.adPipelineConfig.prebidBidsBackHandler.push(
+                  ...module.prebidBidsBackHandler__()
+                );
+              }
+            } catch (e) {
+              getLogger(state.runtimeConfig, window).error(
+                'MoliGlobal',
+                `failed to configure ${module.moduleType} module ${module.name}`,
+                e
               );
             }
-            if (module.prebidBidsBackHandler__) {
-              state.runtimeConfig.adPipelineConfig.prebidBidsBackHandler.push(
-                ...module.prebidBidsBackHandler__()
-              );
-            }
-          } catch (e) {
-            getLogger(state.runtimeConfig, window).error(
-              'MoliGlobal',
-              `failed to configure ${module.moduleType} module ${module.name}`,
-              e
-            );
-          }
-        });
+          });
 
         const { refreshInfiniteSlots } = state.runtimeConfig;
         let config = state.config;
