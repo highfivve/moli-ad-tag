@@ -202,4 +202,113 @@ describe('LabelConfigConfigService', () => {
       expect(sizeConfigService.getSupportedLabels()).to.not.include('desktop');
     });
   });
+
+  describe('isLabelConditionMet', () => {
+    let labelConfigService: ReturnType<typeof newLabelConfigService>;
+
+    beforeEach(() => {
+      matchMediaStub.returns({ matches: true } as MediaQueryList);
+      // Create service with labels: ['desktop', 'video', 'mobile', 'bottom']
+      labelConfigService = newLabelConfigService([labelConfigEntry1, labelConfigEntry2]);
+    });
+
+    describe('labelAll conditions', () => {
+      it('should return true when all specified labels are supported', () => {
+        const condition = { labelAll: ['desktop', 'video'] };
+        expect(labelConfigService.isLabelConditionMet(condition)).to.be.true;
+      });
+
+      it('should return true when single label in labelAll is supported', () => {
+        const condition = { labelAll: ['desktop'] };
+        expect(labelConfigService.isLabelConditionMet(condition)).to.be.true;
+      });
+
+      it('should return false when some labels in labelAll are not supported', () => {
+        const condition = { labelAll: ['desktop', 'unsupported'] };
+        expect(labelConfigService.isLabelConditionMet(condition)).to.be.false;
+      });
+
+      it('should return false when all labels in labelAll are not supported', () => {
+        const condition = { labelAll: ['unsupported1', 'unsupported2'] };
+        expect(labelConfigService.isLabelConditionMet(condition)).to.be.false;
+      });
+
+      it('should return true when labelAll is empty array', () => {
+        const condition = { labelAll: [] };
+        expect(labelConfigService.isLabelConditionMet(condition)).to.be.true;
+      });
+    });
+
+    describe('labelAny conditions', () => {
+      it('should return true when at least one label in labelAny is supported', () => {
+        const condition = { labelAny: ['desktop', 'unsupported'] };
+        expect(labelConfigService.isLabelConditionMet(condition)).to.be.true;
+      });
+
+      it('should return true when all labels in labelAny are supported', () => {
+        const condition = { labelAny: ['desktop', 'video'] };
+        expect(labelConfigService.isLabelConditionMet(condition)).to.be.true;
+      });
+
+      it('should return true when single label in labelAny is supported', () => {
+        const condition = { labelAny: ['desktop'] };
+        expect(labelConfigService.isLabelConditionMet(condition)).to.be.true;
+      });
+
+      it('should return false when no labels in labelAny are supported', () => {
+        const condition = { labelAny: ['unsupported1', 'unsupported2'] };
+        expect(labelConfigService.isLabelConditionMet(condition)).to.be.false;
+      });
+
+      it('should return false when labelAny is empty array', () => {
+        const condition = { labelAny: [] };
+        expect(labelConfigService.isLabelConditionMet(condition)).to.be.false;
+      });
+    });
+
+    describe('labelNone conditions', () => {
+      it('should return true when none of the specified labels are supported', () => {
+        const condition = { labelNone: ['unsupported1', 'unsupported2'] };
+        expect(labelConfigService.isLabelConditionMet(condition)).to.be.true;
+      });
+
+      it('should return true when single label in labelNone is not supported', () => {
+        const condition = { labelNone: ['unsupported'] };
+        expect(labelConfigService.isLabelConditionMet(condition)).to.be.true;
+      });
+
+      it('should return false when some labels in labelNone are supported', () => {
+        const condition = { labelNone: ['desktop', 'unsupported'] };
+        expect(labelConfigService.isLabelConditionMet(condition)).to.be.false;
+      });
+
+      it('should return false when all labels in labelNone are supported', () => {
+        const condition = { labelNone: ['desktop', 'video'] };
+        expect(labelConfigService.isLabelConditionMet(condition)).to.be.false;
+      });
+
+      it('should return true when labelNone is empty array', () => {
+        const condition = { labelNone: [] };
+        expect(labelConfigService.isLabelConditionMet(condition)).to.be.true;
+      });
+    });
+
+    describe('edge cases', () => {
+      it('should return false for invalid condition objects', () => {
+        const condition = {} as any;
+        expect(labelConfigService.isLabelConditionMet(condition)).to.be.false;
+      });
+
+      it('should work correctly when no labels are supported', () => {
+        const emptyLabelService = newLabelConfigService([]);
+
+        expect(emptyLabelService.isLabelConditionMet({ labelAll: ['desktop'] })).to.be.false;
+        expect(emptyLabelService.isLabelConditionMet({ labelAny: ['desktop'] })).to.be.false;
+        expect(emptyLabelService.isLabelConditionMet({ labelNone: ['desktop'] })).to.be.true;
+        expect(emptyLabelService.isLabelConditionMet({ labelAll: [] })).to.be.true;
+        expect(emptyLabelService.isLabelConditionMet({ labelAny: [] })).to.be.false;
+        expect(emptyLabelService.isLabelConditionMet({ labelNone: [] })).to.be.true;
+      });
+    });
+  });
 });

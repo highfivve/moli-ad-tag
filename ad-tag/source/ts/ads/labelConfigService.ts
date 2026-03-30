@@ -21,6 +21,17 @@ export interface ILabelledSlot {
   readonly labelAll?: string[];
 }
 
+export type LabelCondition =
+  | {
+      labelAll: string[];
+    }
+  | {
+      labelAny: string[];
+    }
+  | {
+      labelNone: string[];
+    };
+
 /**
  * Service that holds the labels configuration.
  *
@@ -52,6 +63,12 @@ export interface LabelConfigService {
    * @param label - device labels are not allowed and will be ignored.
    */
   addLabel(label: string): void;
+
+  /**
+   * Checks if the given label condition is met by the current supported labels.
+   * @param labelCondition
+   */
+  isLabelConditionMet(labelCondition: LabelCondition): boolean;
 }
 
 const possibleDevices: Device[] = ['mobile', 'desktop', 'android', 'ios'];
@@ -109,11 +126,27 @@ export const createLabelConfigService = (
     }
   };
 
+  const isLabelConditionMet = (labelCondition: LabelCondition) => {
+    if ('labelAll' in labelCondition) {
+      return labelCondition.labelAll.every(label => supportedLabels.includes(label));
+    }
+
+    if ('labelAny' in labelCondition) {
+      return labelCondition.labelAny.some(label => supportedLabels.includes(label));
+    }
+
+    if ('labelNone' in labelCondition) {
+      return labelCondition.labelNone.every(label => !supportedLabels.includes(label));
+    }
+    return false;
+  };
+
   return {
     filterSlot,
     getSupportedLabels,
     getDeviceLabel,
-    addLabel
+    addLabel,
+    isLabelConditionMet
   };
 };
 

@@ -273,6 +273,55 @@
       ],
       "type": "object"
     },
+    "LabelCondition": {
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "labelAll": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "labelAll"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "labelAny": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "labelAny"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "labelNone": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "labelNone"
+          ],
+          "type": "object"
+        }
+      ]
+    },
     "MoliConfig": {
       "additionalProperties": false,
       "description": "## Moli Configuration\n\nContains the configuration for the ad tag that is served from a backend.",
@@ -1891,6 +1940,10 @@
           },
           "type": "array"
         },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
         "mappingDefinitions": {
           "description": "extraction and conversion rules to produce Adex compatible data from key/value targeting.",
           "items": {
@@ -2092,6 +2145,10 @@
             "type": "number"
           },
           "type": "array"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "optimizeClsScoreDomIds": {
           "description": "Ad slots that have an influence on content positioning should be included here. The ad reload module will make sure that reloading these slots will not negatively impact CLS scores.",
@@ -2379,6 +2436,10 @@
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
         },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
         "mode": {
           "const": "block",
           "description": "`block` - this mode blocks ad requests entirely `key-value` - sets a specified key value",
@@ -2409,6 +2470,10 @@
         "key": {
           "description": "The key that is used for the key value",
           "type": "string"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "mode": {
           "const": "key-value",
@@ -2521,6 +2586,10 @@
         "enabled": {
           "description": "Information about whether the cleanup module is enabled or not.",
           "type": "boolean"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         }
       },
       "required": [
@@ -2560,6 +2629,10 @@
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         }
       },
       "required": [
@@ -2589,6 +2662,10 @@
             "code"
           ],
           "type": "object"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "scripts": {
           "description": "List of external scripts to be loaded.",
@@ -2742,6 +2819,10 @@
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
         },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
         "linkOrKeyword": {
           "$ref": "#/definitions/modules.emetriq.EmetriqAppKeywordOrLinkConfig",
           "description": "At least one of the config properties `link` or `keywords` must be set."
@@ -2890,6 +2971,10 @@
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
         },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
         "login": {
           "$ref": "#/definitions/modules.emetriq.EmetriqLoginEventConfig",
           "description": "Optional configuration for login events"
@@ -2968,6 +3053,10 @@
         "key": {
           "description": "Your GeoEdge publisher key",
           "type": "string"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         }
       },
       "required": [
@@ -2989,6 +3078,10 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "launchPadId": {
           "description": "The launchPadID references a bunch of services from LiveRamp that are loaded dynamically.\n\nIt is used to load the script from the LiveRamp CDN at https://launchpad-wrapper.privacymanager.io",
@@ -3119,6 +3212,10 @@
           },
           "type": "array"
         },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
         "slots": {
           "items": {
             "$ref": "#/definitions/modules.lazyload.LazyLoadModuleSlotsConfig"
@@ -3209,6 +3306,10 @@
           "description": "Name of the provider that is used in the site.content.data segments as provider name. Usually, this is the name/domain of the publisher.\n\nhttps://docs.prebid.org/features/firstPartyData.html#segments-and-taxonomy",
           "type": "string"
         },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
         "staticPrebidFirstPartyData": {
           "$ref": "#/definitions/prebidjs.firstpartydata.PrebidFirstPartyData",
           "description": "A static OpenRTB2 config that is merged with the dynamic settings from the key value targetings"
@@ -3225,6 +3326,10 @@
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "tagId": {
           "description": "TagID from pubstack",
@@ -3405,6 +3510,10 @@
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         }
       },
       "required": [
@@ -3570,6 +3679,10 @@
           "description": "References the ad slot in the moli config",
           "type": "string"
         },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
         "minVisibleDurationMs": {
           "description": "If set, setting css classes will be delayed by the amount of milliseconds specified here.\n\nIf `waitForRendering` is set to `true`, the timer starts after the ad has been rendered.",
           "type": "number"
@@ -3670,6 +3783,10 @@
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "options": {
           "$ref": "#/definitions/modules.utiq.UtiqConfigOptions",
@@ -3888,6 +4005,10 @@
           },
           "type": "array"
         },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
         "provider": {
           "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfigProvider"
         }
@@ -3907,6 +4028,10 @@
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "provider": {
           "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfigProvider"
@@ -3935,6 +4060,10 @@
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "provider": {
           "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfigProvider"
@@ -4035,6 +4164,10 @@
         "hashedEmailAddress": {
           "description": "sha-256 hash of the user's email address. If you pass an email address here, the idplus module will be activated.",
           "type": "string"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "mode": {
           "description": "The mode defines if the Zeotap script can be loaded repeatedly with updated parameters (in spa/single page application mode) or just once (for sever side rendered pages, mode = default).",
