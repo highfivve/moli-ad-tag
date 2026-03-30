@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.8.1">
 <title data-rh="true">emetriq | The Publisher Ad Tag</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://highfivve.github.io/moli-ad-tag/docs/modules/emetriq"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="emetriq | The Publisher Ad Tag"><meta data-rh="true" name="description" content="/profiling/adp/data-providers-client)"><meta data-rh="true" property="og:description" content="/profiling/adp/data-providers-client)"><link data-rh="true" rel="icon" href="/moli-ad-tag/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://highfivve.github.io/moli-ad-tag/docs/modules/emetriq"><link data-rh="true" rel="alternate" href="https://highfivve.github.io/moli-ad-tag/docs/modules/emetriq" hreflang="en"><link data-rh="true" rel="alternate" href="https://highfivve.github.io/moli-ad-tag/docs/modules/emetriq" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"emetriq","item":"https://highfivve.github.io/moli-ad-tag/docs/modules/emetriq"}]}</script><link rel="stylesheet" href="/moli-ad-tag/assets/css/styles.d5c9ce24.css">
-<script src="/moli-ad-tag/assets/js/runtime~main.7044f567.js" defer="defer"></script>
+<script src="/moli-ad-tag/assets/js/runtime~main.0c9872c2.js" defer="defer"></script>
 <script src="/moli-ad-tag/assets/js/main.721311b6.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -16,57 +16,31 @@
 <p>This module provides Emetriq data collection functionality to Moli.</p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="integration-web">Integration Web<a href="#integration-web" class="hash-link" aria-label="Direct link to Integration Web" title="Direct link to Integration Web">​</a></h2>
 <p>In your <code>index.ts</code>, import Emetriq and register the module.</p>
-<div class="language-js codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-js codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token keyword module" style="color:#00009f">import</span><span class="token plain"> </span><span class="token imports punctuation" style="color:#393A34">{</span><span class="token imports"> </span><span class="token imports maybe-class-name">Emetriq</span><span class="token imports"> </span><span class="token imports punctuation" style="color:#393A34">}</span><span class="token plain"> </span><span class="token keyword module" style="color:#00009f">from</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&#x27;@highfivve/module-emetriq&#x27;</span><span class="token punctuation" style="color:#393A34">;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">moli</span><span class="token punctuation" style="color:#393A34">.</span><span class="token method function property-access" style="color:#d73a49">registerModule</span><span class="token punctuation" style="color:#393A34">(</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token keyword" style="color:#00009f">new</span><span class="token plain"> </span><span class="token class-name">Emetriq</span><span class="token punctuation" style="color:#393A34">(</span><span class="token punctuation" style="color:#393A34">{</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token literal-property property" style="color:#36acaa">os</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&#x27;web&#x27;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token literal-property property" style="color:#36acaa">syncDelay</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&#x27;pbjs&#x27;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"> </span><span class="token comment" style="color:#999988;font-style:italic">// wait for the first auction to end before the sync is triggered</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token literal-property property" style="color:#36acaa">_enqAdpParam</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token punctuation" style="color:#393A34">{</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">      </span><span class="token literal-property property" style="color:#36acaa">sid</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token number" style="color:#36acaa">1337</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">      </span><span class="token literal-property property" style="color:#36acaa">yob</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&#x27;2001&#x27;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">      </span><span class="token literal-property property" style="color:#36acaa">custom1</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&#x27;IAB1,IAB1-2&#x27;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">      </span><span class="token literal-property property" style="color:#36acaa">id_sharedid</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&#x27;7338305e-6779-4239-9d3b-897730521992&#x27;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token punctuation" style="color:#393A34">}</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token punctuation" style="color:#393A34">}</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token punctuation" style="color:#393A34">)</span><span class="token punctuation" style="color:#393A34">;</span><br></span></code></pre></div></div>
-<p>Configure the module with:</p>
-<ul>
-<li>your Emetriq <code>sid</code></li>
-<li>additional fields such as<!-- -->
-<ul>
-<li>yob, zip or gender</li>
-<li>custom1, custom2, custom3, ...</li>
-<li>id_id5, id_liveramp, ...</li>
-</ul>
-</li>
-</ul>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="integration-app">Integration App<a href="#integration-app" class="hash-link" aria-label="Direct link to Integration App" title="Direct link to Integration App">​</a></h2>
-<p>If you load emetriq in a Webview in an app you can send tracking information as well.</p>
-<p>In your <code>index.ts</code>, import Emetriq and register the module.</p>
-<div class="language-js codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-js codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token keyword module" style="color:#00009f">import</span><span class="token plain"> </span><span class="token imports punctuation" style="color:#393A34">{</span><span class="token imports"> </span><span class="token imports maybe-class-name">Emetriq</span><span class="token imports"> </span><span class="token imports punctuation" style="color:#393A34">}</span><span class="token plain"> </span><span class="token keyword module" style="color:#00009f">from</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&#x27;@highfivve/module-emetriq&#x27;</span><span class="token punctuation" style="color:#393A34">;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">moli</span><span class="token punctuation" style="color:#393A34">.</span><span class="token method function property-access" style="color:#d73a49">registerModule</span><span class="token punctuation" style="color:#393A34">(</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token keyword" style="color:#00009f">new</span><span class="token plain"> </span><span class="token class-name">Emetriq</span><span class="token punctuation" style="color:#393A34">(</span><span class="token punctuation" style="color:#393A34">{</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token literal-property property" style="color:#36acaa">os</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&#x27;android&#x27;</span><span class="token plain"> </span><span class="token comment" style="color:#999988;font-style:italic">// or &#x27;ios&#x27;,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token literal-property property" style="color:#36acaa">syncDelay</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token number" style="color:#36acaa">2000</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"> </span><span class="token comment" style="color:#999988;font-style:italic">// wait 2000ms before syncing</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token literal-property property" style="color:#36acaa">sid</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token number" style="color:#36acaa">123</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token comment" style="color:#999988;font-style:italic">// AppID in the app store</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token literal-property property" style="color:#36acaa">appId</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&#x27;com.highfivve.app&#x27;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token comment" style="color:#999988;font-style:italic">// describes the key-value where the IDFA or AdID is located</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token literal-property property" style="color:#36acaa">advertiserIdKey</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&#x27;advertiserId&#x27;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token comment" style="color:#999988;font-style:italic">// provider at least one property `link` or `keywords`</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token literal-property property" style="color:#36acaa">linkOrKeyword</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token punctuation" style="color:#393A34">{</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">      </span><span class="token literal-property property" style="color:#36acaa">keywords</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&#x27;sports,football&#x27;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token punctuation" style="color:#393A34">}</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token comment" style="color:#999988;font-style:italic">// optionally provide more identifiers</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token literal-property property" style="color:#36acaa">additionalIdentifier</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token punctuation" style="color:#393A34">{</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">      </span><span class="token literal-property property" style="color:#36acaa">id_sharedid</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&#x27;1c6e063f-feaa-40a0-8a86-b9be3c655c39&#x27;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token punctuation" style="color:#393A34">}</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token punctuation" style="color:#393A34">}</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token punctuation" style="color:#393A34">)</span><span class="token punctuation" style="color:#393A34">;</span><br></span></code></pre></div></div>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="classes">Classes<a href="#classes" class="hash-link" aria-label="Direct link to Classes" title="Direct link to Classes">​</a></h2>
-<h3 class="anchor anchorWithStickyNavbar_LWe7" id="emetriq-1">Emetriq<a href="#emetriq-1" class="hash-link" aria-label="Direct link to Emetriq" title="Direct link to Emetriq">​</a></h3>
-<h1>Emetriq Module</h1>
-<p>This module provides Emetriq data collection functionality to Moli.</p>
-<h4 class="anchor anchorWithStickyNavbar_LWe7" id="see">See<a href="#see" class="hash-link" aria-label="Direct link to See" title="Direct link to See">​</a></h4>
-<p><a href="https://doc.emetriq.de/#/profiling/adp/data-providers-client" target="_blank" rel="noopener noreferrer">https://doc.emetriq.de/#/profiling/adp/data-providers-client</a></p>
-<h4 class="anchor anchorWithStickyNavbar_LWe7" id="implements">Implements<a href="#implements" class="hash-link" aria-label="Direct link to Implements" title="Direct link to Implements">​</a></h4>
+<div class="language-js codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-js codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token keyword module" style="color:#00009f">import</span><span class="token plain"> </span><span class="token imports punctuation" style="color:#393A34">{</span><span class="token imports"> createEmetriq </span><span class="token imports punctuation" style="color:#393A34">}</span><span class="token plain"> </span><span class="token keyword module" style="color:#00009f">from</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&#x27;@highfivve/module-emetriq&#x27;</span><span class="token punctuation" style="color:#393A34">;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">moli</span><span class="token punctuation" style="color:#393A34">.</span><span class="token method function property-access" style="color:#d73a49">registerModule</span><span class="token punctuation" style="color:#393A34">(</span><span class="token function" style="color:#d73a49">createEmetriq</span><span class="token punctuation" style="color:#393A34">(</span><span class="token punctuation" style="color:#393A34">)</span><span class="token punctuation" style="color:#393A34">)</span><span class="token punctuation" style="color:#393A34">;</span><br></span></code></pre></div></div>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="interfaces">Interfaces<a href="#interfaces" class="hash-link" aria-label="Direct link to Interfaces" title="Direct link to Interfaces">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="iemetriqmodule">IEmetriqModule<a href="#iemetriqmodule" class="hash-link" aria-label="Direct link to IEmetriqModule" title="Direct link to IEmetriqModule">​</a></h3>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="extends">Extends<a href="#extends" class="hash-link" aria-label="Direct link to Extends" title="Direct link to Extends">​</a></h4>
 <ul>
 <li><code>IModule</code></li>
 </ul>
-<h4 class="anchor anchorWithStickyNavbar_LWe7" id="constructors">Constructors<a href="#constructors" class="hash-link" aria-label="Direct link to Constructors" title="Direct link to Constructors">​</a></h4>
-<h5 class="anchor anchorWithStickyNavbar_LWe7" id="new-emetriq">new Emetriq()<a href="#new-emetriq" class="hash-link" aria-label="Direct link to new Emetriq()" title="Direct link to new Emetriq()">​</a></h5>
-<blockquote>
-<p><strong>new Emetriq</strong>(): <a href="/moli-ad-tag/docs/modules/emetriq#emetriq"><code>Emetriq</code></a></p>
-</blockquote>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns">Returns<a href="#returns" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
-<p><a href="/moli-ad-tag/docs/modules/emetriq#emetriq"><code>Emetriq</code></a></p>
 <h4 class="anchor anchorWithStickyNavbar_LWe7" id="properties">Properties<a href="#properties" class="hash-link" aria-label="Direct link to Properties" title="Direct link to Properties">​</a></h4>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="description">description<a href="#description" class="hash-link" aria-label="Direct link to description" title="Direct link to description">​</a></h5>
 <blockquote>
-<p><code>readonly</code> <strong>description</strong>: <code>string</code> = <code>&#x27;Provides Emetriq data collection functionality to Moli.&#x27;</code></p>
+<p><code>readonly</code> <strong>description</strong>: <code>string</code></p>
 </blockquote>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of">Implementation of<a href="#implementation-of" class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from">Inherited from<a href="#inherited-from" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
 <p><code>IModule.description</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="moduletype">moduleType<a href="#moduletype" class="hash-link" aria-label="Direct link to moduleType" title="Direct link to moduleType">​</a></h5>
 <blockquote>
-<p><code>readonly</code> <strong>moduleType</strong>: <code>string</code> = <code>&#x27;dmp&#x27;</code></p>
+<p><code>readonly</code> <strong>moduleType</strong>: <code>string</code></p>
 </blockquote>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-1">Implementation of<a href="#implementation-of-1" class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-1">Inherited from<a href="#inherited-from-1" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
 <p><code>IModule.moduleType</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="name">name<a href="#name" class="hash-link" aria-label="Direct link to name" title="Direct link to name">​</a></h5>
 <blockquote>
-<p><code>readonly</code> <strong>name</strong>: <code>string</code> = <code>&#x27;emetriq&#x27;</code></p>
+<p><code>readonly</code> <strong>name</strong>: <code>string</code></p>
 </blockquote>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-2">Implementation of<a href="#implementation-of-2" class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-2">Inherited from<a href="#inherited-from-2" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
 <p><code>IModule.name</code></p>
 <h4 class="anchor anchorWithStickyNavbar_LWe7" id="methods">Methods<a href="#methods" class="hash-link" aria-label="Direct link to Methods" title="Direct link to Methods">​</a></h4>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="checkifconsentismissing">checkIfConsentIsMissing()<a href="#checkifconsentismissing" class="hash-link" aria-label="Direct link to checkIfConsentIsMissing()" title="Direct link to checkIfConsentIsMissing()">​</a></h5>
@@ -75,25 +49,25 @@
 </blockquote>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="parameters">Parameters<a href="#parameters" class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters">​</a></h6>
 <p>• <strong>ctx</strong>: <code>AdPipelineContext</code></p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-1">Returns<a href="#returns-1" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns">Returns<a href="#returns" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
 <p><code>boolean</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="config__">config__()<a href="#config__" class="hash-link" aria-label="Direct link to config__()" title="Direct link to config__()">​</a></h5>
 <blockquote>
-<p><strong>config__</strong>(): <code>null</code> | <code>EmetriqModuleConfig</code></p>
+<p><strong>config__</strong>(): <code>null</code> | <code>Object</code></p>
 </blockquote>
 <p>If the module has some sort of configuration this can be fetched with this method</p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-2">Returns<a href="#returns-2" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
-<p><code>null</code> | <code>EmetriqModuleConfig</code></p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-3">Implementation of<a href="#implementation-of-3" class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-1">Returns<a href="#returns-1" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
+<p><code>null</code> | <code>Object</code></p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-3">Inherited from<a href="#inherited-from-3" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
 <p><code>IModule.config__</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="configuresteps__">configureSteps__()<a href="#configuresteps__" class="hash-link" aria-label="Direct link to configureSteps__()" title="Direct link to configureSteps__()">​</a></h5>
 <blockquote>
 <p><strong>configureSteps__</strong>(): <code>ConfigureStep</code>[]</p>
 </blockquote>
 <p>Returns a list of steps that should be executed in the ad pipeline.</p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-3">Returns<a href="#returns-3" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-2">Returns<a href="#returns-2" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
 <p><code>ConfigureStep</code>[]</p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-4">Implementation of<a href="#implementation-of-4" class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-4">Inherited from<a href="#inherited-from-4" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
 <p><code>IModule.configureSteps__</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="configure__">configure__()<a href="#configure__" class="hash-link" aria-label="Direct link to configure__()" title="Direct link to configure__()">​</a></h5>
 <blockquote>
@@ -103,18 +77,18 @@
 Depending on the configuration the module may become active or inactive.</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="parameters-1">Parameters<a href="#parameters-1" class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters">​</a></h6>
 <p>• <strong>moduleConfig?</strong>: <code>ModulesConfig</code></p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-4">Returns<a href="#returns-4" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-3">Returns<a href="#returns-3" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
 <p><code>void</code></p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-5">Implementation of<a href="#implementation-of-5" class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-5">Inherited from<a href="#inherited-from-5" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
 <p><code>IModule.configure__</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="initsteps__">initSteps__()<a href="#initsteps__" class="hash-link" aria-label="Direct link to initSteps__()" title="Direct link to initSteps__()">​</a></h5>
 <blockquote>
 <p><strong>initSteps__</strong>(): <code>InitStep</code>[]</p>
 </blockquote>
 <p>Returns a list of steps that should be executed in the ad pipeline.</p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-5">Returns<a href="#returns-5" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-4">Returns<a href="#returns-4" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
 <p><code>InitStep</code>[]</p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-6">Implementation of<a href="#implementation-of-6" class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-6">Inherited from<a href="#inherited-from-6" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
 <p><code>IModule.initSteps__</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="loademetriqscript">loadEmetriqScript()<a href="#loademetriqscript" class="hash-link" aria-label="Direct link to loadEmetriqScript()" title="Direct link to loadEmetriqScript()">​</a></h5>
 <blockquote>
@@ -125,8 +99,34 @@ Depending on the configuration the module may become active or inactive.</p>
 <p>• <strong>webConfig</strong>: <code>EmetriqWebConfig</code></p>
 <p>• <strong>additionalIdentifier</strong>: <code>EmetriqAdditionalIdentifier</code></p>
 <p>• <strong>additionalCustomParams</strong>: <code>EmetriqCustomParams</code></p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-6">Returns<a href="#returns-6" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-5">Returns<a href="#returns-5" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="prebidbidsbackhandler__">prebidBidsBackHandler__()?<a href="#prebidbidsbackhandler__" class="hash-link" aria-label="Direct link to prebidBidsBackHandler__()?" title="Direct link to prebidBidsBackHandler__()?">​</a></h5>
+<blockquote>
+<p><code>optional</code> <strong>prebidBidsBackHandler__</strong>(): <code>PrebidBidsBackHandler</code>[]</p>
+</blockquote>
+<p>This method is called in the bidsBackHandler of prebid.</p>
+<p>A module may provide those callbacks if it needs to alter the requests send to the ad server.
+The <code>auctionEnd</code> event cannot be used for this, as there&#x27;s no guarantee the event handler
+will run before the <code>requestAds</code> step.</p>
+<p>Note: Amazon TAM (A9) also has a callback that could be used for similar things. Unfortunately
+does the callback not provide the necessary information to implement any meaningful
+business logic. Especially the <code>cpm</code> parameter and <code>bidder</code></p>
+<p>The callback receives additional information coming from the ad pipeline run.</p>
+<p>Note: These callbacks should not perform any initialization code or only be created once
+as this array will be accessed on every pbjs.requestBids() callback.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="use-cases">Use cases<a href="#use-cases" class="hash-link" aria-label="Direct link to Use cases" title="Direct link to Use cases">​</a></h2>
+<p>The <code>generic-skin</code> module provides prebid bids back handlers to block certain ad units from
+being requested.</p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-6">Returns<a href="#returns-6" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
+<p><code>PrebidBidsBackHandler</code>[]</p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="see">See<a href="#see" class="hash-link" aria-label="Direct link to See" title="Direct link to See">​</a></h6>
+<ul>
+<li><a href="https://docs.prebid.org/dev-docs/publisher-api-reference/requestBids.html" target="_blank" rel="noopener noreferrer">https://docs.prebid.org/dev-docs/publisher-api-reference/requestBids.html</a></li>
+<li><a href="https://ams.amazon.com/webpublisher/uam/docs/web-integration-documentation/integration-guide/javascript-guide/api-reference.html#apstagfetchbids" target="_blank" rel="noopener noreferrer">https://ams.amazon.com/webpublisher/uam/docs/web-integration-documentation/integration-guide/javascript-guide/api-reference.html#apstagfetchbids</a></li>
+</ul>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-7">Inherited from<a href="#inherited-from-7" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
+<p><code>IModule.prebidBidsBackHandler__</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="preparerequestadssteps__">prepareRequestAdsSteps__()<a href="#preparerequestadssteps__" class="hash-link" aria-label="Direct link to prepareRequestAdsSteps__()" title="Direct link to prepareRequestAdsSteps__()">​</a></h5>
 <blockquote>
 <p><strong>prepareRequestAdsSteps__</strong>(): <code>PrepareRequestAdsStep</code>[]</p>
@@ -134,31 +134,52 @@ Depending on the configuration the module may become active or inactive.</p>
 <p>Returns a list of steps that should be executed in the ad pipeline.</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-7">Returns<a href="#returns-7" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
 <p><code>PrepareRequestAdsStep</code>[]</p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-7">Implementation of<a href="#implementation-of-7" class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-8">Inherited from<a href="#inherited-from-8" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
 <p><code>IModule.prepareRequestAdsSteps__</code></p>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="requestbidssteps__">requestBidsSteps__()?<a href="#requestbidssteps__" class="hash-link" aria-label="Direct link to requestBidsSteps__()?" title="Direct link to requestBidsSteps__()?">​</a></h5>
+<blockquote>
+<p><code>optional</code> <strong>requestBidsSteps__</strong>(): <code>RequestBidsStep</code>[]</p>
+</blockquote>
+<p>Returns a list of steps that should be executed in the ad pipeline.</p>
+<p>This step is optional, as should have been all steps to reduce implementation complexity of
+modules.</p>
+<p>Note: prebid and amazon tam (a9) maybe implemented as modules in the future as they add those
+steps to the ad pipeline.</p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-8">Returns<a href="#returns-8" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
+<p><code>RequestBidsStep</code>[]</p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-9">Inherited from<a href="#inherited-from-9" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
+<p><code>IModule.requestBidsSteps__</code></p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="variables">Variables<a href="#variables" class="hash-link" aria-label="Direct link to Variables" title="Direct link to Variables">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="emetriq-1">Emetriq<a href="#emetriq-1" class="hash-link" aria-label="Direct link to Emetriq" title="Direct link to Emetriq">​</a></h3>
+<blockquote>
+<p><code>const</code> <strong>Emetriq</strong>: <code>object</code></p>
+</blockquote>
+<p>Namespace for backward compatibility. Provides static utility methods as object properties,
+allowing sinon to spy/stub them (e.g. <code>sandbox.spy(Emetriq, &#x27;syncDelay&#x27;)</code>).</p>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="type-declaration">Type declaration<a href="#type-declaration" class="hash-link" aria-label="Direct link to Type declaration" title="Direct link to Type declaration">​</a></h4>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="prebididentifiers">prebidIdentifiers()<a href="#prebididentifiers" class="hash-link" aria-label="Direct link to prebidIdentifiers()" title="Direct link to prebidIdentifiers()">​</a></h5>
 <blockquote>
-<p><code>static</code> <strong>prebidIdentifiers</strong>(<code>ctx</code>): <code>EmetriqAdditionalIdentifier</code></p>
+<p><strong>prebidIdentifiers</strong>: (<code>ctx</code>) =&gt; <code>EmetriqAdditionalIdentifier</code></p>
 </blockquote>
 <p>This method assumes that <code>window.pbjs</code> is available and loaded. Call this only inside of
 a <code>window.pbjs.que(() =&gt; ...)</code> callback.</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="parameters-3">Parameters<a href="#parameters-3" class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters">​</a></h6>
 <p>• <strong>ctx</strong>: <code>AdPipelineContext</code></p>
 <p>ad pipeline context to access <code>pbjs</code></p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-8">Returns<a href="#returns-8" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-9">Returns<a href="#returns-9" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
 <p><code>EmetriqAdditionalIdentifier</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="staticcustomparams">staticCustomParams()<a href="#staticcustomparams" class="hash-link" aria-label="Direct link to staticCustomParams()" title="Direct link to staticCustomParams()">​</a></h5>
 <blockquote>
-<p><code>static</code> <strong>staticCustomParams</strong>(<code>targeting</code>, <code>mappings</code>): <code>EmetriqCustomParams</code></p>
+<p><strong>staticCustomParams</strong>: (<code>targeting</code>, <code>mappings</code>) =&gt; <code>EmetriqCustomParams</code></p>
 </blockquote>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="parameters-4">Parameters<a href="#parameters-4" class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters">​</a></h6>
 <p>• <strong>targeting</strong>: <code>KeyValueMap</code></p>
 <p>• <strong>mappings</strong>: <code>undefined</code> | <code>EmetriqMappingDefinition</code>[]</p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-9">Returns<a href="#returns-9" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-10">Returns<a href="#returns-10" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
 <p><code>EmetriqCustomParams</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="syncdelay">syncDelay()<a href="#syncdelay" class="hash-link" aria-label="Direct link to syncDelay()" title="Direct link to syncDelay()">​</a></h5>
 <blockquote>
-<p><code>static</code> <strong>syncDelay</strong>(<code>ctx</code>, <code>delay</code>?): <code>Promise</code>&lt;<code>EmetriqAdditionalIdentifier</code>&gt;</p>
+<p><strong>syncDelay</strong>: (<code>ctx</code>, <code>delay</code>?) =&gt; <code>Promise</code>&lt;<code>EmetriqAdditionalIdentifier</code>&gt;</p>
 </blockquote>
 <p>Returns a promise that delays the data tracking call.</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="parameters-5">Parameters<a href="#parameters-5" class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters">​</a></h6>
@@ -166,7 +187,53 @@ a <code>window.pbjs.que(() =&gt; ...)</code> callback.</p>
 <p>ad pipeline context for <code>window</code> access</p>
 <p>• <strong>delay?</strong>: <code>SyncDelay</code></p>
 <p>configuration of delay</p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-10">Returns<a href="#returns-10" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
-<p><code>Promise</code>&lt;<code>EmetriqAdditionalIdentifier</code>&gt;</p></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col"><a href="https://github.com/highfivve/moli-ad-tag/docs/modules/emetriq.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/moli-ad-tag/docs/modules/custom"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">custom</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/moli-ad-tag/docs/modules/generic-skin"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">generic-skin</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#integration-web" class="table-of-contents__link toc-highlight">Integration Web</a></li><li><a href="#integration-app" class="table-of-contents__link toc-highlight">Integration App</a></li><li><a href="#classes" class="table-of-contents__link toc-highlight">Classes</a><ul><li><a href="#emetriq-1" class="table-of-contents__link toc-highlight">Emetriq</a></li></ul></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Docs</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/moli-ad-tag/docs/">Getting Started</a></li><li class="footer__item"><a class="footer__link-item" href="/moli-ad-tag/docs/api">API</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Community</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://stackoverflow.com/questions/tagged/moli-ad-tag" target="_blank" rel="noopener noreferrer" class="footer__link-item">Stack Overflow<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="https://twitter.com/gutefrageIT" target="_blank" rel="noopener noreferrer" class="footer__link-item">Twitter<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Company</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://highfivve.com" target="_blank" rel="noopener noreferrer" class="footer__link-item">Highfivve</a></li><li class="footer__item"><a href="https://github.com/highfivve/moli-ad-tag" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 Highfivve, Inc. Built with Docusaurus.</div></div></div></footer></div>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-11">Returns<a href="#returns-11" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
+<p><code>Promise</code>&lt;<code>EmetriqAdditionalIdentifier</code>&gt;</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="createemetriq">createEmetriq()<a href="#createemetriq" class="hash-link" aria-label="Direct link to createEmetriq()" title="Direct link to createEmetriq()">​</a></h3>
+<blockquote>
+<p><strong>createEmetriq</strong>(): <a href="/moli-ad-tag/docs/modules/emetriq#iemetriqmodule"><code>IEmetriqModule</code></a></p>
+</blockquote>
+<h1>Emetriq Module</h1>
+<p>This module provides Emetriq data collection functionality to Moli.</p>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="returns-12">Returns<a href="#returns-12" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h4>
+<p><a href="/moli-ad-tag/docs/modules/emetriq#iemetriqmodule"><code>IEmetriqModule</code></a></p>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="see-1">See<a href="#see-1" class="hash-link" aria-label="Direct link to See" title="Direct link to See">​</a></h4>
+<p><a href="https://doc.emetriq.de/#/profiling/adp/data-providers-client" target="_blank" rel="noopener noreferrer">https://doc.emetriq.de/#/profiling/adp/data-providers-client</a></p>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="prebididentifiers-1">prebidIdentifiers()<a href="#prebididentifiers-1" class="hash-link" aria-label="Direct link to prebidIdentifiers()" title="Direct link to prebidIdentifiers()">​</a></h3>
+<blockquote>
+<p><strong>prebidIdentifiers</strong>(<code>ctx</code>): <code>EmetriqAdditionalIdentifier</code></p>
+</blockquote>
+<p>This method assumes that <code>window.pbjs</code> is available and loaded. Call this only inside of
+a <code>window.pbjs.que(() =&gt; ...)</code> callback.</p>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="parameters-6">Parameters<a href="#parameters-6" class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters">​</a></h4>
+<p>• <strong>ctx</strong>: <code>AdPipelineContext</code></p>
+<p>ad pipeline context to access <code>pbjs</code></p>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="returns-13">Returns<a href="#returns-13" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h4>
+<p><code>EmetriqAdditionalIdentifier</code></p>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="staticcustomparams-1">staticCustomParams()<a href="#staticcustomparams-1" class="hash-link" aria-label="Direct link to staticCustomParams()" title="Direct link to staticCustomParams()">​</a></h3>
+<blockquote>
+<p><strong>staticCustomParams</strong>(<code>targeting</code>, <code>mappings</code>): <code>EmetriqCustomParams</code></p>
+</blockquote>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="parameters-7">Parameters<a href="#parameters-7" class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters">​</a></h4>
+<p>• <strong>targeting</strong>: <code>KeyValueMap</code></p>
+<p>• <strong>mappings</strong>: <code>undefined</code> | <code>EmetriqMappingDefinition</code>[]</p>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="returns-14">Returns<a href="#returns-14" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h4>
+<p><code>EmetriqCustomParams</code></p>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="syncdelay-1">syncDelay()<a href="#syncdelay-1" class="hash-link" aria-label="Direct link to syncDelay()" title="Direct link to syncDelay()">​</a></h3>
+<blockquote>
+<p><strong>syncDelay</strong>(<code>ctx</code>, <code>delay</code>?): <code>Promise</code>&lt;<code>EmetriqAdditionalIdentifier</code>&gt;</p>
+</blockquote>
+<p>Returns a promise that delays the data tracking call.</p>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="parameters-8">Parameters<a href="#parameters-8" class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters">​</a></h4>
+<p>• <strong>ctx</strong>: <code>AdPipelineContext</code></p>
+<p>ad pipeline context for <code>window</code> access</p>
+<p>• <strong>delay?</strong>: <code>SyncDelay</code></p>
+<p>configuration of delay</p>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="returns-15">Returns<a href="#returns-15" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h4>
+<p><code>Promise</code>&lt;<code>EmetriqAdditionalIdentifier</code>&gt;</p></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col"><a href="https://github.com/highfivve/moli-ad-tag/docs/modules/emetriq.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/moli-ad-tag/docs/modules/custom"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">custom</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/moli-ad-tag/docs/modules/generic-skin"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">generic-skin</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#integration-web" class="table-of-contents__link toc-highlight">Integration Web</a></li><li><a href="#interfaces" class="table-of-contents__link toc-highlight">Interfaces</a><ul><li><a href="#iemetriqmodule" class="table-of-contents__link toc-highlight">IEmetriqModule</a></li></ul></li><li><a href="#use-cases" class="table-of-contents__link toc-highlight">Use cases</a></li><li><a href="#variables" class="table-of-contents__link toc-highlight">Variables</a><ul><li><a href="#emetriq-1" class="table-of-contents__link toc-highlight">Emetriq</a></li></ul></li><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#createemetriq" class="table-of-contents__link toc-highlight">createEmetriq()</a></li><li><a href="#prebididentifiers-1" class="table-of-contents__link toc-highlight">prebidIdentifiers()</a></li><li><a href="#staticcustomparams-1" class="table-of-contents__link toc-highlight">staticCustomParams()</a></li><li><a href="#syncdelay-1" class="table-of-contents__link toc-highlight">syncDelay()</a></li></ul></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Docs</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/moli-ad-tag/docs/">Getting Started</a></li><li class="footer__item"><a class="footer__link-item" href="/moli-ad-tag/docs/api">API</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Community</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://stackoverflow.com/questions/tagged/moli-ad-tag" target="_blank" rel="noopener noreferrer" class="footer__link-item">Stack Overflow<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="https://twitter.com/gutefrageIT" target="_blank" rel="noopener noreferrer" class="footer__link-item">Twitter<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Company</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://highfivve.com" target="_blank" rel="noopener noreferrer" class="footer__link-item">Highfivve</a></li><li class="footer__item"><a href="https://github.com/highfivve/moli-ad-tag" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 Highfivve, Inc. Built with Docusaurus.</div></div></div></footer></div>
 </body>
 </html>
