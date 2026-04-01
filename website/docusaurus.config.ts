@@ -162,6 +162,7 @@ const config: Config = {
           '../ad-tag/source/ts/ads/modules/emetriq/index.ts',
           '../ad-tag/source/ts/ads/modules/generic-skin/index.ts',
           '../ad-tag/source/ts/ads/modules/geoedge/index.ts',
+          '../ad-tag/source/ts/ads/modules/feed/index.ts',
           '../ad-tag/source/ts/ads/modules/identitylink/index.ts',
           '../ad-tag/source/ts/ads/modules/interstitial/index.ts',
           '../ad-tag/source/ts/ads/modules/lazy-load/index.ts',
