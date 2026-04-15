@@ -322,6 +322,55 @@
         }
       ]
     },
+    "LabelCondition": {
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "labelAll": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "labelAll"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "labelAny": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "labelAny"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "labelNone": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "labelNone"
+          ],
+          "type": "object"
+        }
+      ]
+    },
     "MoliConfig": {
       "additionalProperties": false,
       "description": "## Moli Configuration\n\nContains the configuration for the ad tag that is served from a backend.",
@@ -337,6 +386,7 @@
         "bridge": {
           "$ref": "#/definitions/bridge.BridgeConfig",
           "description": "#### Bridge Configuration\n\nThe ad tag supports a postMessage protocol to communicate with other javascript inside an iframe.\n\nThe most common use case, is to trigger ads from within a creative that is served in an iframe, e.g. for backfill implementations or \"post-bid\".\n\nIf enabled and configured a listener will be attached to the current `window` object that listens for messages."
+          "description": "#### Bridge Configuration\n\nThe ad tag supports a postMessage protocol to communicate with other javascript inside an iframe.\n\nThe most common use case, is to trigger ads from within a creative that is served in an iframe, e.g. for backfill implementations or \"post-bid\".\n\nIf enabled and configured a listener will be attached to the current `window` object that listens for messages."
         },
         "buckets": {
           "$ref": "#/definitions/bucket.GlobalBucketConfig",
@@ -349,6 +399,7 @@
           "$ref": "#/definitions/consent.ConsentConfig"
         },
         "domain": {
+          "description": "Set the domain on which this ad tag runs. This should be the \"top private domain\", which is the `subdomain` + `public prefix`. The notion \"top private domain\" comes from the Google Guava library.\n\nIn general, it's recommended to set the domain in the ad tag configuration. As a fallback, the ad tag tries to extract the top private domain, but with a very limited implementation. This also fails if the ad tag is called on other domains such as google.transl or in iframe integrations.\n\n#### Ad Unit Path Variables\n\nThe `domain` will be used in the `adUnitPathVariables`. A domain set via `setAdUnitPathVariables` takes precedences over the ad tag config. If neither `domain` is set in the config, nor provided via `setAdUnitPathVariables`, we make a best effort guess via `window.location.hostname`.\n\n#### Label\n\nIf set, the `domain` will also be added as a label.\n\n#### Why ?\n\nThe `domain` is part of the ad unit path and used for targeting certain bidders that work on a per-domain basis.\n\n#### Examples\n\n- `example.com` - the most common domain\n- `example.co.uk` - some country TLDs span the last two segments\n- `myblog.github.io` - github.io is a public suffix and subdomains are separate domains\n- `my-sub-domain.my-domain.com` - my domain is not in the publc_suffix_list.dat , but I still use subdomains for different sites",
           "description": "Set the domain on which this ad tag runs. This should be the \"top private domain\", which is the `subdomain` + `public prefix`. The notion \"top private domain\" comes from the Google Guava library.\n\nIn general, it's recommended to set the domain in the ad tag configuration. As a fallback, the ad tag tries to extract the top private domain, but with a very limited implementation. This also fails if the ad tag is called on other domains such as google.transl or in iframe integrations.\n\n#### Ad Unit Path Variables\n\nThe `domain` will be used in the `adUnitPathVariables`. A domain set via `setAdUnitPathVariables` takes precedences over the ad tag config. If neither `domain` is set in the config, nor provided via `setAdUnitPathVariables`, we make a best effort guess via `window.location.hostname`.\n\n#### Label\n\nIf set, the `domain` will also be added as a label.\n\n#### Why ?\n\nThe `domain` is part of the ad unit path and used for targeting certain bidders that work on a per-domain basis.\n\n#### Examples\n\n- `example.com` - the most common domain\n- `example.co.uk` - some country TLDs span the last two segments\n- `myblog.github.io` - github.io is a public suffix and subdomains are separate domains\n- `my-sub-domain.my-domain.com` - my domain is not in the publc_suffix_list.dat , but I still use subdomains for different sites",
           "type": "string"
         },
@@ -376,6 +427,7 @@
         },
         "modules": {
           "$ref": "#/definitions/modules.ModulesConfig",
+          "description": "#### Module configuration\n\nOptional module configuration. Every module must be enabled individually and has its own configuration. A module may the access its configuration via the `moli` configuration. This is very similar to how prebid handles module configuration."
           "description": "#### Module configuration\n\nOptional module configuration. Every module must be enabled individually and has its own configuration. A module may the access its configuration via the `moli` configuration. This is very similar to how prebid handles module configuration."
         },
         "prebid": {
@@ -1541,6 +1593,7 @@
     "headerbidding.A9AdSlotConfig": {
       "additionalProperties": false,
       "description": "Most of the a9 configuration is derived from the [[IAdSlot]] definition that provides the configuration.\n\n- `slotID` - is defined by the slot `domId`\n- `slotName` - is defined by the slot `adUnitPath`\n- `sizes` - is defined by the slot `sizes`",
+      "description": "Most of the a9 configuration is derived from the [[IAdSlot]] definition that provides the configuration.\n\n- `slotID` - is defined by the slot `domId`\n- `slotName` - is defined by the slot `adUnitPath`\n- `sizes` - is defined by the slot `sizes`",
       "properties": {
         "labelAll": {
           "description": "Filter ad slot based on the given labels",
@@ -1639,6 +1692,7 @@
     },
     "headerbidding.A9PublisherAudienceConfig": {
       "additionalProperties": false,
+      "description": "Allow Amazon to target on hashed user email addresses when consent is given.",
       "description": "Allow Amazon to target on hashed user email addresses when consent is given.",
       "properties": {
         "enabled": {
@@ -1740,6 +1794,7 @@
           "type": "object"
         },
         "bidderConfigs": {
+          "description": "An optional list of configs that will be applied through `pbjs.setBidderConfig`.\n\nThis is useful for configuring bidder specific settings that are not part of the `pbjs.setConfig` API or custom extensions that are not part of the prebid.js core, such as\n\n- schain configuration\n- bidder specific openrtb extensions\n\n**Prebid setBidderConfig docs**\n\nThis function is similar to setConfig, but is designed to support certain bidder-specific scenarios.\n\nConfiguration provided through the setConfig function is globally available to all bidder adapters. This makes sense because most of these settings are global in nature. However, there are use cases where different bidders require different data, or where certain parameters apply only to a given bidder. Use setBidderConfig when you need to support these cases.",
           "description": "An optional list of configs that will be applied through `pbjs.setBidderConfig`.\n\nThis is useful for configuring bidder specific settings that are not part of the `pbjs.setConfig` API or custom extensions that are not part of the prebid.js core, such as\n\n- schain configuration\n- bidder specific openrtb extensions\n\n**Prebid setBidderConfig docs**\n\nThis function is similar to setConfig, but is designed to support certain bidder-specific scenarios.\n\nConfiguration provided through the setConfig function is globally available to all bidder adapters. This makes sense because most of these settings are global in nature. However, there are use cases where different bidders require different data, or where certain parameters apply only to a given bidder. Use setBidderConfig when you need to support these cases.",
           "items": {
             "$ref": "#/definitions/headerbidding.SetBidderConfig"
@@ -1863,6 +1918,9 @@
         "custom": {
           "$ref": "#/definitions/modules.custom.CustomModuleConfig"
         },
+        "custom": {
+          "$ref": "#/definitions/modules.custom.CustomModuleConfig"
+        },
         "emetriq": {
           "$ref": "#/definitions/modules.emetriq.EmetriqModuleConfig"
         },
@@ -1952,6 +2010,10 @@
           "description": "Name of the app (publisher code).",
           "type": "string"
         },
+        "appName": {
+          "description": "Name of the app (publisher code).",
+          "type": "string"
+        },
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
@@ -1962,6 +2024,10 @@
             "$ref": "#/definitions/modules.adex.AdexPartner"
           },
           "type": "array"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "labelCondition": {
           "$ref": "#/definitions/LabelCondition",
@@ -1982,6 +2048,7 @@
       "required": [
         "adexCustomerId",
         "adexTagId",
+        "appName",
         "appName",
         "enabled",
         "mappingDefinitions",
@@ -2168,6 +2235,10 @@
             "type": "number"
           },
           "type": "array"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "labelCondition": {
           "$ref": "#/definitions/LabelCondition",
@@ -2463,6 +2534,10 @@
           "$ref": "#/definitions/LabelCondition",
           "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
         "mode": {
           "const": "block",
           "description": "`block` - this mode blocks ad requests entirely `key-value` - sets a specified key value",
@@ -2493,6 +2568,10 @@
         "key": {
           "description": "The key that is used for the key value",
           "type": "string"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "labelCondition": {
           "$ref": "#/definitions/LabelCondition",
@@ -2613,6 +2692,10 @@
         "labelCondition": {
           "$ref": "#/definitions/LabelCondition",
           "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         }
       },
       "required": [
@@ -2656,11 +2739,109 @@
         "labelCondition": {
           "$ref": "#/definitions/LabelCondition",
           "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         }
       },
       "required": [
         "assetUrl",
         "enabled"
+      ],
+      "type": "object"
+    },
+    "modules.custom.CustomModuleConfig": {
+      "additionalProperties": false,
+      "description": "## Custom Module Configuration\n\nThis module configuration allows the execute arbitrary javascript code. Late this may be extended to add arbitrary styles.",
+      "properties": {
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "inlineJs": {
+          "additionalProperties": false,
+          "description": "Inline JavaScript code that will be executed once per requestAds.",
+          "properties": {
+            "code": {
+              "description": "The JavaScript code to be executed.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "code"
+          ],
+          "type": "object"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
+        "scripts": {
+          "description": "List of external scripts to be loaded.",
+          "items": {
+            "$ref": "#/definitions/modules.custom.CustomScriptConfig"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "type": "object"
+    },
+    "modules.custom.CustomScriptConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "attributes": {
+          "additionalProperties": {
+            "description": "Additional attributes to be added to the script tag.",
+            "type": "string"
+          },
+          "description": "Additional attributes for the script tag.",
+          "type": "object"
+        },
+        "consent": {
+          "additionalProperties": false,
+          "description": "Consent requirements for loading the script.",
+          "properties": {
+            "cmpApi": {
+              "const": "tcf",
+              "description": "validate GVL (general vendor id) via tcf2api interface",
+              "type": "string"
+            },
+            "vendorId": {
+              "description": "A valid GVL vendor id.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cmpApi",
+            "vendorId"
+          ],
+          "type": "object"
+        },
+        "labelAll": {
+          "description": "Loading conditions based on labels.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "labelAny": {
+          "description": "Loading conditions based on labels.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "src": {
+          "description": "URL of an external script to be loaded.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "src"
       ],
       "type": "object"
     },
@@ -2846,6 +3027,10 @@
           "$ref": "#/definitions/LabelCondition",
           "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
         "linkOrKeyword": {
           "$ref": "#/definitions/modules.emetriq.EmetriqAppKeywordOrLinkConfig",
           "description": "At least one of the config properties `link` or `keywords` must be set."
@@ -2998,6 +3183,10 @@
           "$ref": "#/definitions/LabelCondition",
           "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
         "login": {
           "$ref": "#/definitions/modules.emetriq.EmetriqLoginEventConfig",
           "description": "Optional configuration for login events"
@@ -3080,6 +3269,10 @@
         "labelCondition": {
           "$ref": "#/definitions/LabelCondition",
           "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         }
       },
       "required": [
@@ -3101,6 +3294,10 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "labelCondition": {
           "$ref": "#/definitions/LabelCondition",
@@ -3239,6 +3436,10 @@
           "$ref": "#/definitions/LabelCondition",
           "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
         "slots": {
           "items": {
             "$ref": "#/definitions/modules.lazyload.LazyLoadModuleSlotsConfig"
@@ -3368,6 +3569,10 @@
           "$ref": "#/definitions/LabelCondition",
           "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
         "staticPrebidFirstPartyData": {
           "$ref": "#/definitions/prebidjs.firstpartydata.PrebidFirstPartyData",
           "description": "A static OpenRTB2 config that is merged with the dynamic settings from the key value targetings"
@@ -3384,6 +3589,10 @@
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "labelCondition": {
           "$ref": "#/definitions/LabelCondition",
@@ -3572,6 +3781,10 @@
         "labelCondition": {
           "$ref": "#/definitions/LabelCondition",
           "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         }
       },
       "required": [
@@ -3741,6 +3954,10 @@
           "$ref": "#/definitions/LabelCondition",
           "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
         "minVisibleDurationMs": {
           "description": "If set, setting css classes will be delayed by the amount of milliseconds specified here.\n\nIf `waitForRendering` is set to `true`, the timer starts after the ad has been rendered.",
           "type": "number"
@@ -3822,6 +4039,7 @@
         "delay": {
           "additionalProperties": false,
           "description": "**Utiq Loading Delay Configuration**\n\nIf you wish to delay the loading of the Utiq script, you can use the `delay` configuration option. There are different ways to delay the loading of the Utiq script, but only one is currently supported:\n\n- `minAdRequests` (supported): This option allows you to specify the minimum number of ad requests that must be made before the Utiq script is loaded.\n- `consent` (planned): 'existed'. If set to `existed`, the Utiq script will only be loaded if the user has already given consent for all purposes.               This would mitigate the risk of overwhelming users with the Utiq pop-up if they have just seen the CMP pop-up.",
+          "description": "**Utiq Loading Delay Configuration**\n\nIf you wish to delay the loading of the Utiq script, you can use the `delay` configuration option. There are different ways to delay the loading of the Utiq script, but only one is currently supported:\n\n- `minAdRequests` (supported): This option allows you to specify the minimum number of ad requests that must be made before the Utiq script is loaded.\n- `consent` (planned): 'existed'. If set to `existed`, the Utiq script will only be loaded if the user has already given consent for all purposes.               This would mitigate the risk of overwhelming users with the Utiq pop-up if they have just seen the CMP pop-up.",
           "properties": {
             "enabled": {
               "description": "Delaying the utiq script, must be explicitly enabled.",
@@ -3840,7 +4058,12 @@
         },
         "enabled": {
           "description": "If set to true the module will be enabled.",
+          "description": "If set to true the module will be enabled.",
           "type": "boolean"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "labelCondition": {
           "$ref": "#/definitions/LabelCondition",
@@ -3853,9 +4076,14 @@
         "userIdConfig": {
           "$ref": "#/definitions/modules.utiq.UtiqUserIdConfig",
           "description": "Configuration for integrating UTIQ with other user ID solutions."
+        },
+        "userIdConfig": {
+          "$ref": "#/definitions/modules.utiq.UtiqUserIdConfig",
+          "description": "Configuration for integrating UTIQ with other user ID solutions."
         }
       },
       "required": [
+        "enabled"
         "enabled"
       ],
       "type": "object"
@@ -3911,6 +4139,7 @@
             },
             "customizationOptions": {
               "description": "**Configuration option for language**\n\nYou can use the below configuration option if you need to dynamically change the default language of the text generated by the dynamic `<div>`, e.g. if users have a language drop-down option.",
+              "description": "**Configuration option for language**\n\nYou can use the below configuration option if you need to dynamically change the default language of the text generated by the dynamic `<div>`, e.g. if users have a language drop-down option.",
               "enum": [
                 "en",
                 "de",
@@ -3921,6 +4150,7 @@
               "type": "string"
             },
             "domainListAnchorMargin": {
+              "description": "**Optimize auto-scroll margin to domain list paragraph**\n\nUsers may land on Manage Utiq page from either the Integrated Model or Separate pop-up Model, with a relevant hyperlink, and they will be automatically scrolled to the domains list paragraph.\n\nIn case you have any overlaying top menu, remaining in view when users scroll lower, you can use the below configuration, to optimize the margin of the auto scroll, so that the paragraph title is visible.",
               "description": "**Optimize auto-scroll margin to domain list paragraph**\n\nUsers may land on Manage Utiq page from either the Integrated Model or Separate pop-up Model, with a relevant hyperlink, and they will be automatically scrolled to the domains list paragraph.\n\nIn case you have any overlaying top menu, remaining in view when users scroll lower, you can use the below configuration, to optimize the margin of the auto scroll, so that the paragraph title is visible.",
               "type": "number"
             },
@@ -3965,6 +4195,26 @@
         "disableGoogleSecureSignals": {
           "description": "Utiq SDK automatically sends adtechpass as Google Secure Signals to Google Ad Manager (GAM), firing the below code. From integration perspective you don’t have to do anything else.\n\nYour only pending action would be to enable the feature in Google Ad Manager UI.",
           "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "modules.utiq.UtiqUserIdConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "emetriq": {
+          "additionalProperties": false,
+          "description": "Configuration for integrating UTIQ with Emetriq.",
+          "properties": {
+            "sid": {
+              "description": "SID (Site ID) for Emetriq integration.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "sid"
+          ],
+          "type": "object"
         }
       },
       "type": "object"
@@ -4067,6 +4317,10 @@
           "$ref": "#/definitions/LabelCondition",
           "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
         "provider": {
           "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfigProvider"
         }
@@ -4086,6 +4340,10 @@
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "labelCondition": {
           "$ref": "#/definitions/LabelCondition",
@@ -4118,6 +4376,10 @@
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "labelCondition": {
           "$ref": "#/definitions/LabelCondition",
@@ -4227,6 +4489,10 @@
           "$ref": "#/definitions/LabelCondition",
           "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
         "mode": {
           "description": "The mode defines if the Zeotap script can be loaded repeatedly with updated parameters (in spa/single page application mode) or just once (for sever side rendered pages, mode = default).",
           "enum": [
@@ -4313,7 +4579,9 @@
         "nextMillennium",
         "pubmatic",
         "pubstack",
+        "pubstack",
         "ogury",
+        "oms",
         "oms",
         "onetag",
         "openx",
@@ -5067,6 +5335,9 @@
         },
         {
           "$ref": "#/definitions/prebidjs.IPubMaticBid"
+        },
+        {
+          "$ref": "#/definitions/prebidjs.IPubstackBid"
         },
         {
           "$ref": "#/definitions/prebidjs.IPubstackBid"
@@ -5883,6 +6154,9 @@
         "oms": {
           "$ref": "#/definitions/prebidjs.IBidderSetting"
         },
+        "oms": {
+          "$ref": "#/definitions/prebidjs.IBidderSetting"
+        },
         "onetag": {
           "$ref": "#/definitions/prebidjs.IBidderSetting"
         },
@@ -5893,6 +6167,9 @@
           "$ref": "#/definitions/prebidjs.IBidderSetting"
         },
         "pubmatic": {
+          "$ref": "#/definitions/prebidjs.IBidderSetting"
+        },
+        "pubstack": {
           "$ref": "#/definitions/prebidjs.IBidderSetting"
         },
         "pubstack": {
@@ -8559,10 +8836,12 @@
             "nextMillennium": {},
             "ogury": {},
             "oms": {},
+            "oms": {},
             "onetag": {},
             "openx": {},
             "orbidder": {},
             "pubmatic": {},
+            "pubstack": {},
             "pubstack": {},
             "ra": {},
             "rads": {},
@@ -8606,7 +8885,9 @@
             "nextMillennium",
             "pubmatic",
             "pubstack",
+            "pubstack",
             "ogury",
+            "oms",
             "oms",
             "onetag",
             "openx",
@@ -8668,6 +8949,10 @@
             "$ref": "#/definitions/prebidjs.INativeEventtrackers"
           },
           "type": "array"
+        },
+        "plcmttype": {
+          "description": "Specifies the design/format/layout of the ad unit being offered. Currently, there's only 1 to 4 specified but exchanges can define their own IDs, so we don't make the type too specific.",
+          "type": "number"
         },
         "plcmttype": {
           "description": "Specifies the design/format/layout of the ad unit being offered. Currently, there's only 1 to 4 specified but exchanges can define their own IDs, so we don't make the type too specific.",
@@ -9280,6 +9565,43 @@
       ],
       "type": "object"
     },
+    "prebidjs.IPubstackBid": {
+      "additionalProperties": false,
+      "properties": {
+        "bidSource": {
+          "$ref": "#/definitions/prebidjs.server.BidSource",
+          "description": "Only available with the s2sTesting module. Overrides the global bidSource configuration"
+        },
+        "bidder": {
+          "const": "pubstack",
+          "description": "Unique code identifying the bidder. For bidder codes, see the [bidder param reference](https://prebid.org/dev-docs/bidders.html).",
+          "type": "string"
+        },
+        "labelAll": {
+          "description": "Used for [conditional ads](https://prebid.org/dev-docs/conditional-ad-units.html). Works with sizeConfig argument to [pbjs.setConfig](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads).\n\nNote: will be removed by the ad tag and thus hidden for prebid",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "labelAny": {
+          "description": "Used for [conditional ads](https://prebid.org/dev-docs/conditional-ad-units.html). Works with sizeConfig argument to [pbjs.setConfig](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads).\n\nNote: will be removed by the ad tag and thus hidden for prebid",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "params": {
+          "$ref": "#/definitions/prebidjs.IPubstackParams",
+          "description": "Bid request parameters for a given bidder. For allowed params, see the [bidder param reference](https://prebid.org/dev-docs/bidders.html)."
+        }
+      },
+      "required": [
+        "bidder",
+        "params"
+      ],
+      "type": "object"
+    },
     "prebidjs.IPubstackConfig": {
       "additionalProperties": false,
       "properties": {
@@ -9299,6 +9621,22 @@
           "type": "array"
         }
       },
+      "type": "object"
+    },
+    "prebidjs.IPubstackParams": {
+      "additionalProperties": false,
+      "properties": {
+        "adUnitName": {
+          "type": "string"
+        },
+        "siteId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "siteId",
+        "adUnitName"
+      ],
       "type": "object"
     },
     "prebidjs.IPubstackParams": {
@@ -12045,6 +12383,9 @@
         "oms": {
           "$ref": "#/definitions/prebidjs.currency.ICurrency"
         },
+        "oms": {
+          "$ref": "#/definitions/prebidjs.currency.ICurrency"
+        },
         "onetag": {
           "$ref": "#/definitions/prebidjs.currency.ICurrency"
         },
@@ -12055,6 +12396,9 @@
           "$ref": "#/definitions/prebidjs.currency.ICurrency"
         },
         "pubmatic": {
+          "$ref": "#/definitions/prebidjs.currency.ICurrency"
+        },
+        "pubstack": {
           "$ref": "#/definitions/prebidjs.currency.ICurrency"
         },
         "pubstack": {
@@ -12144,7 +12488,9 @@
         "nextMillennium",
         "pubmatic",
         "pubstack",
+        "pubstack",
         "ogury",
+        "oms",
         "oms",
         "onetag",
         "openx",
@@ -13742,10 +14088,12 @@
         "nextMillennium": {},
         "ogury": {},
         "oms": {},
+        "oms": {},
         "onetag": {},
         "openx": {},
         "orbidder": {},
         "pubmatic": {},
+        "pubstack": {},
         "pubstack": {},
         "ra": {},
         "rads": {},
@@ -14076,6 +14424,9 @@
             "oms": {
               "$ref": "#/definitions/prebidjs.server.BidderControl"
             },
+            "oms": {
+              "$ref": "#/definitions/prebidjs.server.BidderControl"
+            },
             "onetag": {
               "$ref": "#/definitions/prebidjs.server.BidderControl"
             },
@@ -14086,6 +14437,9 @@
               "$ref": "#/definitions/prebidjs.server.BidderControl"
             },
             "pubmatic": {
+              "$ref": "#/definitions/prebidjs.server.BidderControl"
+            },
+            "pubstack": {
               "$ref": "#/definitions/prebidjs.server.BidderControl"
             },
             "pubstack": {
