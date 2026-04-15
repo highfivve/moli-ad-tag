@@ -216,7 +216,7 @@ export const MoliAnalytics = (): IModule => {
     },
     configure__(moduleConfig?: modules.ModulesConfig): void {
       if (moduleConfig?.moliAnalytics?.enabled) {
-        config = {...DEFAULT_CONFIG, ...moduleConfig.moliAnalytics};
+        config = { ...DEFAULT_CONFIG, ...moduleConfig.moliAnalytics };
       }
     },
     configureSteps__(): ConfigureStep[] {
