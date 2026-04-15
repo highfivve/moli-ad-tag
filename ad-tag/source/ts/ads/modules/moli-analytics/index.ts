@@ -128,8 +128,8 @@ export const MoliAnalytics = (): IModule => {
     };
     eventTracker = createEventTracker(
       config.url,
-      config.batchSize || DEFAULT_CONFIG.batchSize,
-      config.batchDelay || DEFAULT_CONFIG.batchDelay,
+      config.batchSize!,
+      config.batchDelay!,
       adPipelineContext.logger__
     );
 
@@ -216,7 +216,7 @@ export const MoliAnalytics = (): IModule => {
     },
     configure__(moduleConfig?: modules.ModulesConfig): void {
       if (moduleConfig?.moliAnalytics?.enabled) {
-        config = moduleConfig.moliAnalytics;
+        config = {...DEFAULT_CONFIG, ...moduleConfig.moliAnalytics};
       }
     },
     configureSteps__(): ConfigureStep[] {
