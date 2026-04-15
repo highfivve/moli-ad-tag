@@ -25,7 +25,7 @@ export const DEFAULT_CONFIG = {
 };
 
 export const MoliAnalytics = (): IModule => {
-  let config: Required<modules.moliAnalytics.MoliAnalyticsConfig>;
+  let config: modules.moliAnalytics.MoliAnalyticsConfig;
   let eventContext: EventContext;
   let eventTracker: EventTracker;
   let adUnitsMap: Map<string, { auctionId: string; adUnitName: string; gpid: string }> = new Map();
@@ -128,8 +128,8 @@ export const MoliAnalytics = (): IModule => {
     };
     eventTracker = createEventTracker(
       config.url,
-      config.batchSize,
-      config.batchDelay,
+      config.batchSize || DEFAULT_CONFIG.batchSize,
+      config.batchDelay || DEFAULT_CONFIG.batchDelay,
       adPipelineContext.logger__
     );
 
@@ -216,7 +216,7 @@ export const MoliAnalytics = (): IModule => {
     },
     configure__(moduleConfig?: modules.ModulesConfig): void {
       if (moduleConfig?.moliAnalytics?.enabled) {
-        config = Object.assign({}, DEFAULT_CONFIG, moduleConfig.moliAnalytics);
+        config = moduleConfig.moliAnalytics;
       }
     },
     configureSteps__(): ConfigureStep[] {
