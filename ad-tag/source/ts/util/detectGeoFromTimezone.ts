@@ -90,12 +90,3 @@ export const detectGeoFromTimezone = (timezone: string): GeoResult => {
   const country = TIMEZONE_TO_COUNTRY[timezone];
   return { country, continent: continentFromTimezone(timezone) };
 };
-
-export const detectGeoFromBrowser = (): GeoResult => {
-  try {
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    return detectGeoFromTimezone(timezone);
-  } catch {
-    return { country: undefined, continent: undefined };
-  }
-};
