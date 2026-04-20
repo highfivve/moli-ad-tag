@@ -401,6 +401,19 @@ export namespace googleAdManager {
     [key: string]: string | string[] | undefined;
   }
 
+  export interface GeoConfig {
+    /**
+     * ISO 2-letter country code (e.g. `"DE"`, `"US"`).
+     * If omitted, the country is detected from the browser timezone.
+     */
+    readonly country?: string;
+    /**
+     * Continent label (e.g. `"europe"`, `"america"`).
+     * If omitted, the continent is detected from the browser timezone.
+     */
+    readonly continent?: string;
+  }
+
   export interface Targeting {
     /** static or supplied key-values */
     readonly keyValues: KeyValueMap;
@@ -417,6 +430,12 @@ export namespace googleAdManager {
 
     /** ad unit path variables */
     readonly adUnitPathVariables?: AdUnitPathVariables;
+
+    /**
+     * Optional geo configuration. Country and continent are added as labels for targeting.
+     * If not set, both values are detected automatically from the browser timezone.
+     */
+    readonly geo?: GeoConfig;
   }
 }
 
