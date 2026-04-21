@@ -11,6 +11,7 @@ export const mapGPTSlotRenderEnded = (
   adContext: AdPipelineContext
 ): Events.GPT.SlotRenderEnded => {
   const timestamp = Date.now();
+  const size: string = Array.isArray(event.size) ? event.size.join('x') : event.size || '';
   return {
     v: 1,
     type: 'gpt.slotRenderEnded',
@@ -25,7 +26,7 @@ export const mapGPTSlotRenderEnded = (
       adUnitPath: event.slot.getAdUnitPath(),
       adUnitName: context.adUnitName,
       adUnitCode: event.slot.getSlotElementId(),
-      size: Array.isArray(event.size) ? event.size.join('x') : event.size,
+      size: size,
       isEmpty: event.isEmpty
     }
   };

@@ -15,10 +15,28 @@ describe('AnalyticsGPTSlotRenderEnded', () => {
   const { jsDomWindow } = createDomAndWindow();
   const adContext = adPipelineContext(jsDomWindow);
   const now = 1000000;
+  const userId = 'user-id';
+  const adUnitCode = 'ad_header';
+  const adUnitPath = '/111,222/example/example_header/desktop/example.com';
+  let eventContext: ReturnType<typeof createEventContextStub> & {
+    auctionId: string;
+    adUnitName: string;
+    gpid: string;
+  };
 
   beforeEach(() => {
     sandbox.useFakeTimers({ now });
     jsDomWindow.pbjs = createPbjsStub();
+    eventContext = {
+      ...createEventContextStub(),
+      auctionId: 'auc-001',
+      adUnitName: 'header',
+      gpid: adUnitPath
+    };
+    adContext.window__.pbjs = {
+      ...adContext.window__.pbjs,
+      getUserIds: sandbox.stub().returns({ pubcid: userId })
+    };
   });
 
   afterEach(() => {
@@ -26,29 +44,15 @@ describe('AnalyticsGPTSlotRenderEnded', () => {
   });
 
   it('testMapGPTSlotRenderEnded', () => {
-    const userId = 'user-id';
-    const adUnitCode = 'ad_header';
     const size = '300x200';
     const event = {
       slot: {
-        getAdUnitPath: sandbox
-          .stub()
-          .returns('/111,222/example/example_header/desktop/example.com'),
+        getAdUnitPath: sandbox.stub().returns(adUnitPath),
         getSlotElementId: sandbox.stub().returns(adUnitCode)
       } as any,
       isEmpty: false,
       size: size.split('x').map(Number)
     } as googletag.events.ISlotRenderEndedEvent;
-    const eventContext = {
-      ...createEventContextStub(),
-      auctionId: 'auc-001',
-      adUnitName: 'header',
-      gpid: '/111,222/example/example_header/desktop/example.com'
-    };
-    adContext.window__.pbjs = {
-      ...adContext.window__.pbjs,
-      getUserIds: sandbox.stub().returns({ pubcid: userId })
-    };
 
     const result = mapGPTSlotRenderEnded(event, eventContext, adContext);
 
@@ -70,5 +74,35 @@ describe('AnalyticsGPTSlotRenderEnded', () => {
     expect(data).to.have.property('adUnitName', eventContext.adUnitName);
     expect(data).to.have.property('size', size);
     expect(data).to.have.property('isEmpty', event.isEmpty);
+  });
+
+  it('testMapGPTSlotRenderEnded with size as number array', () => {
+    const event = {
+      slot: {
+        getAdUnitPath: sandbox.stub().returns(adUnitPath),
+        getSlotElementId: sandbox.stub().returns(adUnitCode)
+      } as any,
+      isEmpty: false,
+      size: [300, 200]
+    } as googletag.events.ISlotRenderEndedEvent;
+
+    const result = mapGPTSlotRenderEnded(event, eventContext, adContext);
+
+    expect(result.data).to.have.property('size', '300x200');
+  });
+
+  it('testMapGPTSlotRenderEnded with size as null', () => {
+    const event = {
+      slot: {
+        getAdUnitPath: sandbox.stub().returns(adUnitPath),
+        getSlotElementId: sandbox.stub().returns(adUnitCode)
+      } as any,
+      isEmpty: false,
+      size: null
+    } as googletag.events.ISlotRenderEndedEvent;
+
+    const result = mapGPTSlotRenderEnded(event, eventContext, adContext);
+
+    expect(result.data).to.have.property('size', '');
   });
 });
