@@ -95,7 +95,7 @@ export namespace Events {
         adUnitPath: string;
         adUnitCode: string;
         adUnitName: string;
-        size: string;
+        size: string | null;
         isEmpty: boolean;
       };
     };
