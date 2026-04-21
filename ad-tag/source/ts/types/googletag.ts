@@ -282,6 +282,9 @@ export namespace googletag {
       slot: IAdSlot;
     }
 
+    /**
+     * @see https://developers.google.com/publisher-tag/reference#googletag.events.SlotRenderEndedEvent
+     */
     export interface ISlotRenderEndedEvent extends Event {
       isEmpty: boolean;
 
@@ -331,8 +334,24 @@ export namespace googletag {
        * @see https://developers.google.com/publisher-tag/reference#googletag.events.SlotRenderEndedEvent_yieldGroupIds
        */
       yieldGroupIds: null | number[];
+
+      /**
+       * Name of the service that triggered the event
+       */
       serviceName: string;
-      size: Size;
+
+      /**
+       * Indicates the pixel size of the rendered creative.
+       * Example: [728, 90].
+       * Value is null for empty ad slots.
+       *
+       * @see https://developers.google.com/publisher-tag/reference#googletag.events.SlotRenderEndedEvent.size
+       */
+      size: null | Size;
+
+      /**
+       * The slot that triggered the event.
+       */
       slot: IAdSlot;
     }
 
