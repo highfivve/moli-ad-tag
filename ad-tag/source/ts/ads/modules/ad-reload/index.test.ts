@@ -819,9 +819,9 @@ describe('Moli Ad Reload Module', () => {
       it('should use bidder-specific interval when the winning bidder is configured on the slot', async () => {
         const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
         const stickyElement = jsDomWindow.document.createElement('div');
-        sandbox.stub(jsDomWindow.document, 'getElementById').callsFake(id =>
-          id === stickyAdSlotDomId ? stickyElement : null
-        );
+        sandbox
+          .stub(jsDomWindow.document, 'getElementById')
+          .callsFake(id => (id === stickyAdSlotDomId ? stickyElement : null));
         sandbox.stub(jsDomWindow.performance, 'now').callsFake(() => sandbox.clock.now + 1);
 
         const refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
@@ -829,17 +829,19 @@ describe('Moli Ad Reload Module', () => {
         const module = createAdReload();
         module.configure__({ adReload: moduleConfigWithBidderOverrides });
 
-        winningBids = [
-          {
-            adUnitCode: stickyAdSlotDomId,
-            bidderCode: prebidjs.Rubicon
-          } as prebidjs.BidResponse
-        ];
+        const auctionContext = newGlobalAuctionContext(jsDomWindow);
+        sandbox
+          .stub(auctionContext, 'getLastWinningBidderOfAdUnit')
+          .withArgs(stickyAdSlotDomId)
+          .returns(prebidjs.Rubicon);
 
-        const adReloadContext = adPipelineContext({
-          ...emptyConfig,
-          slots: [stickyAdSlot]
-        });
+        const adReloadContext = {
+          ...adPipelineContext({
+            ...emptyConfig,
+            slots: [stickyAdSlot]
+          }),
+          auction__: auctionContext
+        };
 
         await module.configureSteps__()[0](adReloadContext, [stickyAdSlot]);
 
@@ -864,9 +866,9 @@ describe('Moli Ad Reload Module', () => {
       it('should fall back to slot default interval when winning bidder has no bidder-specific override', async () => {
         const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
         const stickyElement = jsDomWindow.document.createElement('div');
-        sandbox.stub(jsDomWindow.document, 'getElementById').callsFake(id =>
-          id === stickyAdSlotDomId ? stickyElement : null
-        );
+        sandbox
+          .stub(jsDomWindow.document, 'getElementById')
+          .callsFake(id => (id === stickyAdSlotDomId ? stickyElement : null));
         sandbox.stub(jsDomWindow.performance, 'now').callsFake(() => sandbox.clock.now + 1);
 
         const refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');

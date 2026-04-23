@@ -9,6 +9,7 @@ import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { EventService } from './eventService';
 import { ConfigureStep, mkConfigureStep } from './adPipeline';
 import { createInterstitialContext } from 'ad-tag/ads/auctions/interstitialContext';
+import { createTrackWinningBidder } from 'ad-tag/ads/auctions/trackWinningBidder';
 
 /**
  * ## Global Auction Context
@@ -69,6 +70,10 @@ export const createGlobalAuctionContext = (
   eventService: EventService,
   config: auction.GlobalAuctionContextConfig = {}
 ): GlobalAuctionContext => {
+  const trackWinningBidder = config.trackWinningBidder?.enabled
+    ? createTrackWinningBidder()
+    : undefined;
+
   const biddersDisabling = config.biddersDisabling?.enabled
     ? createBiddersDisabling(config.biddersDisabling, window)
     : undefined;
@@ -120,15 +125,20 @@ export const createGlobalAuctionContext = (
     });
   }
 
-  if (config.frequencyCap?.enabled) {
+  if (config.frequencyCap?.enabled || config.trackWinningBidder?.enabled) {
     window.pbjs.que.push(() => {
       window.pbjs.onEvent('bidWon', bid => {
         if (config.frequencyCap) {
           frequencyCapping?.onBidWon(bid);
         }
+        if (config.trackWinningBidder) {
+          trackWinningBidder?.onBidWon(bid);
+        }
       });
     });
+  }
 
+  if (config.frequencyCap?.enabled) {
     eventService.addEventListener('beforeRequestAds', () => {
       frequencyCapping?.beforeRequestAds();
     });
@@ -169,8 +179,7 @@ export const createGlobalAuctionContext = (
       return previousBidCpms?.getLastBidCpms(slotId) ?? [];
     },
     getLastWinningBidderOfAdUnit(slotId: string): prebidjs.BidderCode | undefined {
-      const winningBid = window.pbjs?.getAllWinningBids?.()?.find(bid => bid.adUnitCode === slotId);
-      return winningBid?.bidderCode;
+      return trackWinningBidder?.getLastWinningBidderOnAdUnit(slotId);
     },
     isBidderDisabled(domId: string, bidder: prebidjs.BidderCode): boolean {
       return biddersDisabling?.isBidderDisabled(domId, bidder) ?? false;

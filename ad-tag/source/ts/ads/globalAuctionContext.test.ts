@@ -8,6 +8,7 @@ import sinonChai from 'sinon-chai';
 import { noopLogger } from 'ad-tag/stubs/moliStubs';
 import { createEventService } from './eventService';
 import { auction } from 'ad-tag/types/moliConfig';
+import { prebidjs } from 'ad-tag/types/prebidjs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -49,6 +50,56 @@ describe('Global auction context', () => {
     makeAuctionContext();
     expect(pbjsOnEventSpy).to.have.not.been.called;
     expect(googletagAddEventListenerSpy).to.have.not.been.called;
+  });
+
+  describe('last winning bidder cache', () => {
+    it('should overwrite the cached winning bidder when a newer bid wins on the same slot', () => {
+      const context = makeAuctionContext({ trackWinningBidder: { enabled: true } });
+      const bidWonHandler = pbjsOnEventSpy.args.find(args => args[0] === 'bidWon')?.[1] as
+        | ((bid: prebidjs.BidResponse) => void)
+        | undefined;
+
+      expect(bidWonHandler).to.exist;
+
+      bidWonHandler?.({
+        adUnitCode: 'slot-1',
+        bidderCode: 'appnexus'
+      } as unknown as prebidjs.BidResponse);
+      expect(context.getLastWinningBidderOfAdUnit('slot-1')).to.equal('appnexus');
+
+      bidWonHandler?.({
+        adUnitCode: 'slot-1',
+        bidderCode: 'rubicon'
+      } as unknown as prebidjs.BidResponse);
+
+      expect(context.getLastWinningBidderOfAdUnit('slot-1')).to.equal('rubicon');
+    });
+
+    it('should track bidWon winners if trackWinningBidder is enabled', () => {
+      const context = makeAuctionContext({
+        trackWinningBidder: {
+          enabled: true
+        }
+      });
+
+      const bidWonHandler = pbjsOnEventSpy.args.find(args => args[0] === 'bidWon')?.[1] as
+        | ((bid: prebidjs.BidResponse) => void)
+        | undefined;
+
+      expect(pbjsOnEventSpy).to.have.been.calledOnceWithExactly('bidWon', sinon.match.func);
+      expect(bidWonHandler).to.exist;
+
+      bidWonHandler?.({
+        adUnitCode: 'slot-1',
+        bidderCode: 'appnexus'
+      } as unknown as prebidjs.BidResponse);
+      bidWonHandler?.({
+        adUnitCode: 'slot-1',
+        bidderCode: 'rubicon'
+      } as unknown as prebidjs.BidResponse);
+
+      expect(context.getLastWinningBidderOfAdUnit('slot-1')).to.equal('rubicon');
+    });
   });
 
   describe('bidder disabling', () => {

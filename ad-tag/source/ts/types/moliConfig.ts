@@ -705,6 +705,13 @@ export namespace auction {
     readonly ttlStorage?: number;
   }
 
+  /**
+   * Track the latest winning bidder per ad unit based on the prebid `bidWon` event.
+   */
+  export interface TrackWinningBidderConfig {
+    readonly enabled: boolean;
+  }
+
   export interface GlobalAuctionContextConfig {
     /**
      * Disable bidders that lack auction participation
@@ -735,6 +742,11 @@ export namespace auction {
      * - Configure waterfall scenarios for the interstitial ad format "gam > custom" or "custom > gam"
      */
     readonly interstitial?: InterstitialConfig;
+
+    /**
+     * Enable tracking the latest winning bidder per ad unit from the prebid `bidWon` event.
+     */
+    readonly trackWinningBidder?: TrackWinningBidderConfig;
   }
 }
 
