@@ -155,6 +155,18 @@ export namespace prebidjs {
     getUserIds(): userSync.UserIds;
 
     /**
+     * Returns a promise that resolves to the same value as `getUserIds()`, but only once all ID submodules have completed
+     * initialization. This can also be used to synchronize calls to other ID accessors, e.g.
+     *
+     * ```
+     * pbjs.getUserIdsAsync().then(() => {
+     *   const eids = pbjs.getUserIdsAsEids(); // guaranteed to be completely initialized at this point
+     * });
+     * ```
+     */
+    getUserIdsAsync(): Promise<userSync.UserIds>;
+
+    /**
      * Enable sending analytics data to the analytics provider of your choice.
      *
      * For usage, see Integrate with the [Prebid Analytics API](http://prebid.org/dev-docs/integrate-with-the-prebid-analytics-api.html)
@@ -1931,6 +1943,10 @@ export namespace prebidjs {
           /** information will come from the server */
           configVersion?: string;
 
+          /** Optional AB-test variant.
+           * Is defined when the moliConfig version belongs to an A/B test variant. Otherwise it's the main variant */
+          configVariant?: string;
+
           /** information set by the configureFromEndpoint bundle */
           configLabel?: string;
         };
@@ -1981,15 +1997,16 @@ export namespace prebidjs {
   }
 
   /**
-   * @see http://prebid.org/overview/analytics.html
-   * @see http://prebid.org/dev-docs/integrate-with-the-prebid-analytics-api.html
+   * @see https://docs.prebid.org/overview/analytics.html
+   * @see https://docs.prebid.org/dev-docs/integrate-with-the-prebid-analytics-api.html
    * @see https://docs.prebid.org/dev-docs/publisher-api-reference/enableAnalytics.html
    */
   export namespace analytics {
     export type AnalyticsAdapter =
       | IAdagioAnalyticsAdapter
       | IAgmaAnalyticsAdapter
-      | IGoogleAnalyticsAdapter;
+      | IGoogleAnalyticsAdapter
+      | IGenericAnalyticsAdapter;
     export type AnalyticsProviders = AnalyticsAdapter['provider'];
 
     /**
@@ -2015,6 +2032,60 @@ export namespace prebidjs {
        * Event blocklist; if provided, these events will not be forwarded to the adapter
        */
       readonly excludeEvents?: string[];
+    }
+
+    /**
+     * @see https://docs.prebid.org/dev-docs/modules/genericAnalyticsAdapter.html
+     */
+    export interface IGenericAnalyticsAdapterOptions {
+      /**
+       * Required. URL of the endpoint for data collection.
+       */
+      url: string;
+
+      /**
+       * Optional. Number of events to batch before sending to the url.
+       * Default is 1 (no batching)
+       */
+      batchSize?: number;
+
+      /**
+       * Global vendor list ID to use for the purpose of GDPR purpose 7 enforcement.
+       */
+      gvlid?: number;
+
+      /**
+       * Time (in milliseconds) to wait before calling handler or url with an incomplete batch (when
+       *  fewer than batchSize events have been collected).
+       * Defaults to 100
+       */
+      batchDelay?: number;
+
+      /**
+       * Sampling rate, expressed as a number between 0 and 1. Data is collected only on this ratio
+       *  of browser sessions.
+       * Defaults to 1
+       */
+      sampling?: number;
+
+      /**
+       * HTTP method used to call url. Defaults to 'POST'
+       */
+      method?: string;
+
+      /** Map from event name to a custom format function.
+       * Only events in this map will be collected, using the data returned by their corresponding function
+       */
+      events: {
+        [K in keyof prebidjs.event.PrebidEventMap]?: (
+          eventData: prebidjs.event.PrebidEventMap[K]
+        ) => any;
+      };
+    }
+
+    export interface IGenericAnalyticsAdapter
+      extends IAnalyticsAdapter<IGenericAnalyticsAdapterOptions> {
+      readonly provider: 'generic';
     }
 
     export interface IAgmaAnalyticsAdapterOptions {
@@ -2415,6 +2486,10 @@ export namespace prebidjs {
       ext?: OpenRtb2RegsExtDsa;
     }
 
+    export interface OpenRtb2Device {
+      ua: string;
+    }
+
     export interface PrebidFirstPartyData {
       site?: OpenRtb2Site;
 
@@ -2455,6 +2530,8 @@ export namespace prebidjs {
             };
           }
         | any;
+
+      device?: OpenRtb2Device;
     }
 
     /**
@@ -2793,6 +2870,13 @@ export namespace prebidjs {
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference/aliasBidder.html
      */
     readonly gvlMapping?: Record<string, number>;
+
+    /**
+     * Prebid events can carry an object of analytics labels that annotate the payload with experiment, rollout, or
+     * troubleshooting context. Custom labels can be declared through this configuration.
+     * @see https://docs.prebid.org/dev-docs/integrate-with-the-prebid-analytics-api
+     */
+    readonly analyticsLabels?: Object;
   }
 
   /**
@@ -3854,6 +3938,7 @@ export namespace prebidjs {
        * custom prebid extensions
        */
       readonly prebid?: IOrtb2ImpPrebid;
+      readonly gpid?: string;
     };
   }
 
@@ -3879,6 +3964,7 @@ export namespace prebidjs {
   export const Pubstack = 'pubstack';
   export const Ogury = 'ogury';
   export const OneTag = 'onetag';
+  export const Oms = 'oms';
   export const OpenX = 'openx';
   export const SmartAdServer = 'smartadserver';
   export const Smartx = 'smartx';
@@ -3928,6 +4014,7 @@ export namespace prebidjs {
     | typeof PubMatic
     | typeof Pubstack
     | typeof Ogury
+    | typeof Oms
     | typeof OneTag
     | typeof OpenX
     | typeof SmartAdServer
@@ -4996,6 +5083,23 @@ export namespace prebidjs {
    * @see https://docs.prebid.org/dev-docs/bidders/onetag.html
    */
   export interface IOneTagBid extends IBidObject<typeof OneTag, IOneTagParams> {}
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/oms.html
+   */
+  export interface IOmsBid extends IBidObject<typeof Oms, IOmsParams> {}
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/oms.html
+   */
+  export interface IOmsParams {
+    /**
+     * Unique publisher ID
+     * @type integer
+     * @example 12345
+     */
+    readonly publisherId: number;
+  }
 
   /**
    * OpenX bid parameters
