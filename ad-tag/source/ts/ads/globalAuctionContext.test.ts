@@ -104,7 +104,7 @@ describe('Global auction context', () => {
 
   describe('bidder disabling', () => {
     it('add auctionEnd event listener', () => {
-      const context = makeAuctionContext({
+      makeAuctionContext({
         biddersDisabling: {
           enabled: true,
           minRate: 0.5,
@@ -117,7 +117,7 @@ describe('Global auction context', () => {
     });
 
     it('should not add auctionEnd event listener if disabled', () => {
-      const context = makeAuctionContext({
+      makeAuctionContext({
         biddersDisabling: {
           enabled: false,
           minRate: 0.5,

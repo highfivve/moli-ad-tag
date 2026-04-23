@@ -28,7 +28,6 @@ import {
 import { AdSlot, googleAdManager, modules } from 'ad-tag/types/moliConfig';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { IntersectionObserverWindow } from 'ad-tag/types/dom';
-import { prebidjs } from 'ad-tag/types/prebidjs';
 import { isNotNull } from 'ad-tag/util/arrayUtils';
 import { isAdvertiserIncluded } from 'ad-tag/ads/isAdvertiserIncluded';
 import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
@@ -68,8 +67,6 @@ export const createAdReload = (): IAdReloadModule => {
 
   let moduleConfig: modules.adreload.AdReloadModuleConfig | null = null;
   let adVisibilityService: AdVisibilityService | undefined;
-  let bidWonListenerRegistered: boolean = false;
-  const lastWonBidderByAdUnitCode = new Map<string, prebidjs.BidderCode>();
   let globalAuctionContext: GlobalAuctionContext | undefined;
 
   const config__ = (): modules.adreload.AdReloadModuleConfig | null => moduleConfig;

@@ -99,6 +99,7 @@ export class AdVisibilityService {
    * @param refreshCallback   callback fired when the configured duration is up
    * @param advertiserId      optional advertiser id to check against disallowed advertisers
    * @param companyIds       optional list of company ids to check against disallowed advertisers
+   * @param lastWinningBidderCode       optional code of the bidder that won the last auction on the slot
    */
   trackSlot(
     slot: googletag.IAdSlot,
