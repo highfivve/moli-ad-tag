@@ -34,6 +34,14 @@ export interface GlobalAuctionContext {
   isBidderFrequencyCappedOnSlot(slotId: string, bidder: string): boolean;
   getLastBidCpmsOfAdUnit(slotId: string): number[];
 
+  /**
+   * Get the bidder code of the last winning bid for a given ad unit.
+   * Returns undefined if no winning bid exists for this slot.
+   *
+   * @param slotId the DOM ID of the ad slot
+   */
+  getLastWinningBidderOfAdUnit(slotId: string): prebidjs.BidderCode | undefined;
+
   isBidderDisabled(domId: string, bidder: prebidjs.BidderCode): boolean;
 
   isBidderFrequencyCappedOnSlot(slotId: string, bidder: prebidjs.BidderCode): boolean;
@@ -159,6 +167,10 @@ export const createGlobalAuctionContext = (
     },
     getLastBidCpmsOfAdUnit(slotId: string): number[] {
       return previousBidCpms?.getLastBidCpms(slotId) ?? [];
+    },
+    getLastWinningBidderOfAdUnit(slotId: string): prebidjs.BidderCode | undefined {
+      const winningBid = window.pbjs?.getAllWinningBids?.()?.find(bid => bid.adUnitCode === slotId);
+      return winningBid?.bidderCode;
     },
     isBidderDisabled(domId: string, bidder: prebidjs.BidderCode): boolean {
       return biddersDisabling?.isBidderDisabled(domId, bidder) ?? false;

@@ -1303,8 +1303,19 @@ export namespace modules {
   }
 
   export namespace adreload {
+    export type RefreshIntervalOverrideEntry = {
+      /**
+       * Default refresh interval override for this ad slot.
+       */
+      default?: number;
+      /**
+       * Optional bidder specific refresh interval overrides for this ad slot.
+       */
+      bidders?: Partial<Record<prebidjs.BidderCode, number>>;
+    };
+
     export type RefreshIntervalOverrides = {
-      [slotDomId: string]: number;
+      [slotDomId: string]: number | RefreshIntervalOverrideEntry;
     };
 
     export type ViewabilityOverrideEntryBase = {
@@ -1446,6 +1457,9 @@ export namespace modules {
       /**
        * Configures an override for the default refresh interval configured in
        * `refreshIntervalMs` per ad slot.
+       *
+       * Supports either a plain number (`slot -> interval`) or an object with
+       * a slot default and optional bidder specific overrides.
        */
       refreshIntervalMsOverrides?: RefreshIntervalOverrides;
 

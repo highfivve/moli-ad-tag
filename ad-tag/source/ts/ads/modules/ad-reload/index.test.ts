@@ -17,6 +17,7 @@ import { AdSlot, behaviour, modules, MoliConfig } from 'ad-tag/types/moliConfig'
 import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
 import { AdVisibilityService } from './adVisibilityService';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { prebidjs } from 'ad-tag/types/prebidjs';
 import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 
 use(sinonChai);
@@ -28,6 +29,7 @@ describe('Moli Ad Reload Module', () => {
   const debugSpy = sandbox.spy(noopLogger, 'debug');
 
   let { jsDomWindow } = createDomAndWindow();
+  let winningBids: prebidjs.BidResponse[] = [];
 
   const adPipelineContext = (config: MoliConfig): AdPipelineContext => {
     return {
@@ -142,6 +144,15 @@ describe('Moli Ad Reload Module', () => {
       }
     } as MoliRuntime.MoliTag;
     jsDomWindow.googletag = createGoogletagStub();
+    winningBids = [];
+    jsDomWindow.pbjs = {
+      que: {
+        push: (callback: Function) => {
+          callback();
+        }
+      },
+      getAllWinningBids: () => winningBids
+    } as unknown as prebidjs.IPrebidJs;
     testGoogleSlot = googleAdSlotStub('/123/foo', 'foo');
   });
 
@@ -776,6 +787,126 @@ describe('Moli Ad Reload Module', () => {
         expect(setTargetingSpy).to.have.been.calledOnceWithExactly('native-ad-reload', 'true');
         expect(refreshBucketSpy).to.have.been.calledOnce;
         expect(refreshBucketSpy).to.have.been.calledOnceWithExactly('page', { loaded: 'eager' });
+      });
+    });
+
+    describe('bidder-specific refresh intervals via globalAuctionContext', () => {
+      const stickyAdSlotDomId = 'sticky-ad';
+      const stickyAdSlot: AdSlot = {
+        domId: stickyAdSlotDomId,
+        behaviour: { loaded: 'eager' }
+      } as AdSlot;
+
+      const moduleConfigWithBidderOverrides: modules.adreload.AdReloadModuleConfig = {
+        ...defaultAdReloadConfig,
+        disableAdVisibilityChecks: true,
+        userActivityLevelControl: {
+          level: 'custom',
+          userActivityDuration: 60000,
+          userBecomingInactiveDuration: 30000
+        },
+        refreshIntervalMs: 20000,
+        refreshIntervalMsOverrides: {
+          [stickyAdSlotDomId]: {
+            default: 12000,
+            bidders: {
+              [prebidjs.Rubicon]: 3000
+            }
+          }
+        }
+      };
+
+      it('should use bidder-specific interval when the winning bidder is configured on the slot', async () => {
+        const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
+        const stickyElement = jsDomWindow.document.createElement('div');
+        sandbox.stub(jsDomWindow.document, 'getElementById').callsFake(id =>
+          id === stickyAdSlotDomId ? stickyElement : null
+        );
+        sandbox.stub(jsDomWindow.performance, 'now').callsFake(() => sandbox.clock.now + 1);
+
+        const refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
+
+        const module = createAdReload();
+        module.configure__({ adReload: moduleConfigWithBidderOverrides });
+
+        winningBids = [
+          {
+            adUnitCode: stickyAdSlotDomId,
+            bidderCode: prebidjs.Rubicon
+          } as prebidjs.BidResponse
+        ];
+
+        const adReloadContext = adPipelineContext({
+          ...emptyConfig,
+          slots: [stickyAdSlot]
+        });
+
+        await module.configureSteps__()[0](adReloadContext, [stickyAdSlot]);
+
+        const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
+          args => (args[0] as string) === 'slotRenderEnded'
+        )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
+
+        const stickyGoogleSlot = googleAdSlotStub('/ads/sticky', stickyAdSlotDomId);
+        slotRenderedCallback({
+          slot: stickyGoogleSlot,
+          advertiserId: 1337,
+          campaignId: 4711,
+          isEmpty: false
+        } as ISlotRenderEndedEvent);
+
+        sandbox.clock.tick(5000);
+
+        expect(refreshAdSlotSpy).to.have.been.calledOnce;
+        expect(refreshAdSlotSpy).to.have.been.calledWithMatch(stickyAdSlotDomId);
+      });
+
+      it('should fall back to slot default interval when winning bidder has no bidder-specific override', async () => {
+        const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
+        const stickyElement = jsDomWindow.document.createElement('div');
+        sandbox.stub(jsDomWindow.document, 'getElementById').callsFake(id =>
+          id === stickyAdSlotDomId ? stickyElement : null
+        );
+        sandbox.stub(jsDomWindow.performance, 'now').callsFake(() => sandbox.clock.now + 1);
+
+        const refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
+
+        const module = createAdReload();
+        module.configure__({ adReload: moduleConfigWithBidderOverrides });
+
+        winningBids = [
+          {
+            adUnitCode: stickyAdSlotDomId,
+            bidderCode: prebidjs.OpenX
+          } as prebidjs.BidResponse
+        ];
+
+        const adReloadContext = adPipelineContext({
+          ...emptyConfig,
+          slots: [stickyAdSlot]
+        });
+
+        await module.configureSteps__()[0](adReloadContext, [stickyAdSlot]);
+
+        const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
+          args => (args[0] as string) === 'slotRenderEnded'
+        )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
+
+        const stickyGoogleSlot = googleAdSlotStub('/ads/sticky', stickyAdSlotDomId);
+        slotRenderedCallback({
+          slot: stickyGoogleSlot,
+          advertiserId: 1337,
+          campaignId: 4711,
+          isEmpty: false
+        } as ISlotRenderEndedEvent);
+
+        // bidder override (3s) should NOT apply for openx
+        sandbox.clock.tick(5000);
+        expect(refreshAdSlotSpy).to.not.have.been.called;
+
+        // slot default (12s) should apply
+        sandbox.clock.tick(8000);
+        expect(refreshAdSlotSpy).to.have.been.calledOnce;
       });
     });
   });

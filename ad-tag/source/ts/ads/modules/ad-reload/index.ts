@@ -28,8 +28,10 @@ import {
 import { AdSlot, googleAdManager, modules } from 'ad-tag/types/moliConfig';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { IntersectionObserverWindow } from 'ad-tag/types/dom';
+import { prebidjs } from 'ad-tag/types/prebidjs';
 import { isNotNull } from 'ad-tag/util/arrayUtils';
 import { isAdvertiserIncluded } from 'ad-tag/ads/isAdvertiserIncluded';
+import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 
 export interface IAdReloadModule extends IModule {
   isInitialized(): boolean;
@@ -66,6 +68,9 @@ export const createAdReload = (): IAdReloadModule => {
 
   let moduleConfig: modules.adreload.AdReloadModuleConfig | null = null;
   let adVisibilityService: AdVisibilityService | undefined;
+  let bidWonListenerRegistered: boolean = false;
+  const lastWonBidderByAdUnitCode = new Map<string, prebidjs.BidderCode>();
+  let globalAuctionContext: GlobalAuctionContext | undefined;
 
   const config__ = (): modules.adreload.AdReloadModuleConfig | null => moduleConfig;
 
@@ -303,12 +308,15 @@ export const createAdReload = (): IAdReloadModule => {
       const slotAlreadyTracked = !!adVisibilityService?.isSlotTracked(slotDomId);
 
       if (trackingSlotAllowed) {
+        const bidderCode = globalAuctionContext?.getLastWinningBidderOfAdUnit(slotDomId);
+
         // add tracking for non-excluded slots
         adVisibilityService!.trackSlot(
           googleTagSlot,
           reloadAdSlotCallback,
           advertiserId,
-          companyIds
+          companyIds,
+          bidderCode
         );
       } else if (slotAlreadyTracked) {
         adVisibilityService!.removeSlotTracking(googleTagSlot);
@@ -333,6 +341,9 @@ export const createAdReload = (): IAdReloadModule => {
     }
 
     context.logger__.debug('AdReload', 'initialize moli ad reload module');
+
+    // keep a reference to auction context for bidder-aware refresh interval overrides
+    globalAuctionContext = context.auction__;
 
     setupAdVisibilityService(
       config,
