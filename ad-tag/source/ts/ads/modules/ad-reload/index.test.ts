@@ -822,17 +822,21 @@ describe('Moli Ad Reload Module', () => {
         }
       };
 
-      it('should use bidder-specific interval when the winning bidder is configured on the slot', async () => {
+      const setupBidderIntervalTest = () => {
         const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
         const stickyElement = jsDomWindow.document.createElement('div');
-        sandbox
-          .stub(jsDomWindow.document, 'getElementById')
-          .callsFake(id => (id === stickyAdSlotDomId ? stickyElement : null));
+        stickyElement.id = stickyAdSlotDomId;
+        jsDomWindow.document.body.appendChild(stickyElement);
 
         const refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
-
         const module = createAdReload();
         module.configure__({ adReload: moduleConfigWithBidderOverrides });
+
+        return { listenerSpy, refreshAdSlotSpy, module };
+      };
+
+      it('should use bidder-specific interval when the winning bidder is configured on the slot', async () => {
+        const { listenerSpy, refreshAdSlotSpy, module } = setupBidderIntervalTest();
 
         const auctionContext = newGlobalAuctionContext(jsDomWindow);
         sandbox
@@ -871,16 +875,7 @@ describe('Moli Ad Reload Module', () => {
       });
 
       it('should fall back to slot default interval when winning bidder has no bidder-specific override', async () => {
-        const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
-        const stickyElement = jsDomWindow.document.createElement('div');
-        sandbox
-          .stub(jsDomWindow.document, 'getElementById')
-          .callsFake(id => (id === stickyAdSlotDomId ? stickyElement : null));
-
-        const refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
-
-        const module = createAdReload();
-        module.configure__({ adReload: moduleConfigWithBidderOverrides });
+        const { listenerSpy, refreshAdSlotSpy, module } = setupBidderIntervalTest();
 
         winningBids = [
           {
