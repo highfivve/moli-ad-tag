@@ -130,8 +130,15 @@ describe('Moli Ad Reload Module', () => {
 
   beforeEach(() => {
     // AdService calls a setInterval method, which blocks tests before exiting.
-    sandbox.useFakeTimers();
     jsDomWindow = createDomAndWindow().jsDomWindow;
+
+    sandbox.useFakeTimers();
+
+    // Bridge the JSDOM window to the Sinon Global clock
+    jsDomWindow.setTimeout = global.setTimeout as any;
+    jsDomWindow.setInterval = global.setInterval as any;
+    jsDomWindow.performance.now = () => sandbox.clock.now;
+
     jsDomWindow.moli = {
       refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'> {
         return Promise.resolve('refreshed');
@@ -150,8 +157,7 @@ describe('Moli Ad Reload Module', () => {
         push: (callback: Function) => {
           callback();
         }
-      },
-      getAllWinningBids: () => winningBids
+      }
     } as unknown as prebidjs.IPrebidJs;
     testGoogleSlot = googleAdSlotStub('/123/foo', 'foo');
   });
@@ -822,7 +828,6 @@ describe('Moli Ad Reload Module', () => {
         sandbox
           .stub(jsDomWindow.document, 'getElementById')
           .callsFake(id => (id === stickyAdSlotDomId ? stickyElement : null));
-        sandbox.stub(jsDomWindow.performance, 'now').callsFake(() => sandbox.clock.now + 1);
 
         const refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
 
@@ -850,6 +855,8 @@ describe('Moli Ad Reload Module', () => {
         )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
 
         const stickyGoogleSlot = googleAdSlotStub('/ads/sticky', stickyAdSlotDomId);
+        // Advance fake time so performance.now() is not 0; the visibility tracker uses a truthy timestamp check.
+        sandbox.clock.tick(1);
         slotRenderedCallback({
           slot: stickyGoogleSlot,
           advertiserId: 1337,
@@ -869,7 +876,6 @@ describe('Moli Ad Reload Module', () => {
         sandbox
           .stub(jsDomWindow.document, 'getElementById')
           .callsFake(id => (id === stickyAdSlotDomId ? stickyElement : null));
-        sandbox.stub(jsDomWindow.performance, 'now').callsFake(() => sandbox.clock.now + 1);
 
         const refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
 
@@ -895,6 +901,8 @@ describe('Moli Ad Reload Module', () => {
         )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
 
         const stickyGoogleSlot = googleAdSlotStub('/ads/sticky', stickyAdSlotDomId);
+        // Advance fake time so performance.now() is not 0; the visibility tracker uses a truthy timestamp check.
+        sandbox.clock.tick(1);
         slotRenderedCallback({
           slot: stickyGoogleSlot,
           advertiserId: 1337,
