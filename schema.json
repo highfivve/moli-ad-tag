@@ -798,6 +798,10 @@
         "previousBidCpms": {
           "$ref": "#/definitions/auction.PreviousBidCpmsConfig",
           "description": "Save previous prebid bid cpms on this position"
+        },
+        "trackWinningBidder": {
+          "$ref": "#/definitions/auction.TrackWinningBidderConfig",
+          "description": "Enable tracking the latest winning bidder per ad unit from the prebid `bidWon` event."
         }
       },
       "type": "object"
@@ -945,6 +949,19 @@
       "properties": {
         "enabled": {
           "description": "enable or disable this feature",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "type": "object"
+    },
+    "auction.TrackWinningBidderConfig": {
+      "additionalProperties": false,
+      "description": "Track the latest winning bidder per ad unit based on the prebid `bidWon` event.",
+      "properties": {
+        "enabled": {
           "type": "boolean"
         }
       },
@@ -2186,7 +2203,7 @@
         },
         "refreshIntervalMsOverrides": {
           "$ref": "#/definitions/modules.adreload.RefreshIntervalOverrides",
-          "description": "Configures an override for the default refresh interval configured in `refreshIntervalMs` per ad slot."
+          "description": "Configures an override for the default refresh interval configured in `refreshIntervalMs` per ad slot.\n\nSupports either a plain number (`slot -> interval`) or an object with a slot default and optional bidder specific overrides."
         },
         "userActivityLevelControl": {
           "$ref": "#/definitions/modules.adreload.UserActivityLevelControl",
@@ -2208,9 +2225,171 @@
       ],
       "type": "object"
     },
+    "modules.adreload.RefreshIntervalOverrideEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "bidders": {
+          "additionalProperties": false,
+          "description": "Optional bidder specific refresh interval overrides for this ad slot.",
+          "properties": {
+            "adagio": {
+              "type": "number"
+            },
+            "adf": {
+              "type": "number"
+            },
+            "aduptech": {
+              "type": "number"
+            },
+            "amx": {
+              "type": "number"
+            },
+            "appnexus": {
+              "type": "number"
+            },
+            "appnexusAst": {
+              "type": "number"
+            },
+            "connectad": {
+              "type": "number"
+            },
+            "criteo": {
+              "type": "number"
+            },
+            "cwire": {
+              "type": "number"
+            },
+            "dspx": {
+              "type": "number"
+            },
+            "equativ": {
+              "type": "number"
+            },
+            "gumgum": {
+              "type": "number"
+            },
+            "improvedigital": {
+              "type": "number"
+            },
+            "inmobi": {
+              "type": "number"
+            },
+            "invibes": {
+              "type": "number"
+            },
+            "ix": {
+              "type": "number"
+            },
+            "nanointeractive": {
+              "type": "number"
+            },
+            "nextMillennium": {
+              "type": "number"
+            },
+            "ogury": {
+              "type": "number"
+            },
+            "oms": {
+              "type": "number"
+            },
+            "onetag": {
+              "type": "number"
+            },
+            "openx": {
+              "type": "number"
+            },
+            "orbidder": {
+              "type": "number"
+            },
+            "pubmatic": {
+              "type": "number"
+            },
+            "pubstack": {
+              "type": "number"
+            },
+            "ra": {
+              "type": "number"
+            },
+            "rads": {
+              "type": "number"
+            },
+            "rubicon": {
+              "type": "number"
+            },
+            "seedingAlliance": {
+              "type": "number"
+            },
+            "seedtag": {
+              "type": "number"
+            },
+            "showheroesBs": {
+              "type": "number"
+            },
+            "smartadserver": {
+              "type": "number"
+            },
+            "smartx": {
+              "type": "number"
+            },
+            "smilewanted": {
+              "type": "number"
+            },
+            "spotx": {
+              "type": "number"
+            },
+            "stailamedia": {
+              "type": "number"
+            },
+            "stroeerCore": {
+              "type": "number"
+            },
+            "taboola": {
+              "type": "number"
+            },
+            "teads": {
+              "type": "number"
+            },
+            "triplelift": {
+              "type": "number"
+            },
+            "ttd": {
+              "type": "number"
+            },
+            "unruly": {
+              "type": "number"
+            },
+            "visx": {
+              "type": "number"
+            },
+            "vlyby": {
+              "type": "number"
+            },
+            "xhb": {
+              "type": "number"
+            },
+            "yieldlab": {
+              "type": "number"
+            }
+          },
+          "type": "object"
+        },
+        "default": {
+          "description": "Default refresh interval override for this ad slot.",
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
     "modules.adreload.RefreshIntervalOverrides": {
       "additionalProperties": {
-        "type": "number"
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "$ref": "#/definitions/modules.adreload.RefreshIntervalOverrideEntry"
+          }
+        ]
       },
       "type": "object"
     },
