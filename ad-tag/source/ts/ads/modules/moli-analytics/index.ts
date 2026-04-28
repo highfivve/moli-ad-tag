@@ -93,7 +93,7 @@ export const MoliAnalytics = (): IModule => {
     logger: MoliRuntime.MoliLogger
   ): boolean => {
     if (!config) {
-      logger.error('moli-analytics: not configured');
+      logger.debug('moli-analytics: not configured');
       return false;
     }
     if (!config.publisher) {
@@ -117,7 +117,10 @@ export const MoliAnalytics = (): IModule => {
 
   const initMoliAnalytics = async (adPipelineContext: AdPipelineContext): Promise<void> => {
     if (!configValid(config, adPipelineContext.logger__)) {
-      return Promise.reject('failed to initialize moli analytics: invalid configuration');
+      adPipelineContext.logger__.error(
+        'failed to initialize moli analytics: invalid or no configuration'
+      );
+      return Promise.resolve();
     }
 
     eventContext = {
