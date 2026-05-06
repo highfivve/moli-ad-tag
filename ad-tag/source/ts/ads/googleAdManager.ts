@@ -417,11 +417,18 @@ export const gptDefineSlots =
               null
             ];
           case 'out-of-page-interstitial':
+            const interstitialSlot = context.window__.googletag.defineOutOfPageSlot(
+              resolvedAdUnitPath,
+              context.window__.googletag.enums.OutOfPageFormat.INTERSTITIAL
+            );
+
+            // `contentPause` interstitial trigger was rolled out by Google by default, with no
+            // possibility of configuration via AdManager UI.
+            // This restores the default behaviour of the `contentPause` trigger being off.
+            interstitialSlot?.setConfig({ interstitial: { triggers: { contentPause: false } } });
+
             return [
-              context.window__.googletag.defineOutOfPageSlot(
-                resolvedAdUnitPath,
-                context.window__.googletag.enums.OutOfPageFormat.INTERSTITIAL
-              ),
+              interstitialSlot,
               context.window__.googletag.enums.OutOfPageFormat.INTERSTITIAL
             ];
           case 'out-of-page-bottom-anchor':
