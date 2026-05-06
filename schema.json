@@ -1357,6 +1357,9 @@
           "additionalProperties": false,
           "description": "The interstitial trigger configuration for this interstitial ad.\n\nSetting the value of an interstitial trigger to true will enable it and false will disable it. This will override the default values configured in Google Ad Manager.",
           "properties": {
+            "contentPause": {
+              "type": "boolean"
+            },
             "navBar": {
               "type": "boolean"
             },
