@@ -714,7 +714,7 @@ export namespace googletag {
   /**
    * Supported interstitial ad triggers.
    */
-  export type GptInterstitialTrigger = 'unhideWindow' | 'navBar';
+  export type GptInterstitialTrigger = 'unhideWindow' | 'navBar' | 'contentPause';
 
   export interface GptInterstitialConfig {
     /**
