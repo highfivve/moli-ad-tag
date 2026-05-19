@@ -3958,6 +3958,7 @@ export namespace prebidjs {
   export const IndexExchange = 'ix';
   export const InMobi = 'inmobi';
   export const Invibes = 'invibes';
+  export const Missena = 'missena';
   export const NanoInteractive = 'nanointeractive';
   export const NextMillennium = 'nextMillennium';
   export const PubMatic = 'pubmatic';
@@ -4004,6 +4005,7 @@ export namespace prebidjs {
     | typeof AppNexusAst
     | typeof AppNexus
     | typeof GumGum
+    | typeof Missena
     | typeof Equativ
     | typeof ImproveDigital
     | typeof IndexExchange
@@ -5047,6 +5049,23 @@ export namespace prebidjs {
     readonly adSlotSelector?: string;
   }
 
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/missena.html
+   */
+  export interface IMissenaBid extends IBidObject<typeof Missena, IMissenaParams> {}
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/missena.html
+   */
+  export interface IMissenaParams {
+    /**
+     * The publisher’s ID provided by Missena
+     * @example `'PA-123456789'`
+     */
+    readonly apiKey: string;
+  }
+  
   /**
    * @see https://docs.prebid.org/dev-docs/bidders/ogury.html
    */
