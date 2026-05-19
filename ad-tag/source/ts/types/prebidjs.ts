@@ -5049,7 +5049,6 @@ export namespace prebidjs {
     readonly adSlotSelector?: string;
   }
 
-
   /**
    * @see https://docs.prebid.org/dev-docs/bidders/missena.html
    */
@@ -5065,7 +5064,7 @@ export namespace prebidjs {
      */
     readonly apiKey: string;
   }
-  
+
   /**
    * @see https://docs.prebid.org/dev-docs/bidders/ogury.html
    */
