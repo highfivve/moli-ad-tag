@@ -705,6 +705,13 @@ export namespace auction {
     readonly ttlStorage?: number;
   }
 
+  /**
+   * Track the latest winning bidder per ad unit based on the prebid `bidWon` event.
+   */
+  export interface TrackWinningBidderConfig {
+    readonly enabled: boolean;
+  }
+
   export interface GlobalAuctionContextConfig {
     /**
      * Disable bidders that lack auction participation
@@ -735,6 +742,11 @@ export namespace auction {
      * - Configure waterfall scenarios for the interstitial ad format "gam > custom" or "custom > gam"
      */
     readonly interstitial?: InterstitialConfig;
+
+    /**
+     * Enable tracking the latest winning bidder per ad unit from the prebid `bidWon` event.
+     */
+    readonly trackWinningBidder?: TrackWinningBidderConfig;
   }
 }
 
@@ -1303,8 +1315,19 @@ export namespace modules {
   }
 
   export namespace adreload {
+    export type RefreshIntervalOverrideEntry = {
+      /**
+       * Default refresh interval override for this ad slot.
+       */
+      default?: number;
+      /**
+       * Optional bidder specific refresh interval overrides for this ad slot.
+       */
+      bidders?: Partial<Record<prebidjs.BidderCode, number>>;
+    };
+
     export type RefreshIntervalOverrides = {
-      [slotDomId: string]: number;
+      [slotDomId: string]: number | RefreshIntervalOverrideEntry;
     };
 
     export type ViewabilityOverrideEntryBase = {
@@ -1446,6 +1469,9 @@ export namespace modules {
       /**
        * Configures an override for the default refresh interval configured in
        * `refreshIntervalMs` per ad slot.
+       *
+       * Supports either a plain number (`slot -> interval`) or an object with
+       * a slot default and optional bidder specific overrides.
        */
       refreshIntervalMsOverrides?: RefreshIntervalOverrides;
 

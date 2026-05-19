@@ -9,6 +9,7 @@ import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { EventService } from './eventService';
 import { ConfigureStep, mkConfigureStep } from './adPipeline';
 import { createInterstitialContext } from 'ad-tag/ads/auctions/interstitialContext';
+import { createTrackWinningBidder } from 'ad-tag/ads/auctions/trackWinningBidder';
 
 /**
  * ## Global Auction Context
@@ -33,6 +34,14 @@ export interface GlobalAuctionContext {
   isSlotThrottled(slot: googletag.IAdSlot): boolean;
   isBidderFrequencyCappedOnSlot(slotId: string, bidder: string): boolean;
   getLastBidCpmsOfAdUnit(slotId: string): number[];
+
+  /**
+   * Get the bidder code of the last winning bid for a given ad unit.
+   * Returns undefined if no winning bid exists for this slot.
+   *
+   * @param slotId the DOM ID of the ad slot
+   */
+  getLastWinningBidderOfAdUnit(slotId: string): prebidjs.BidderCode | undefined;
 
   isBidderDisabled(domId: string, bidder: prebidjs.BidderCode): boolean;
 
@@ -61,6 +70,10 @@ export const createGlobalAuctionContext = (
   eventService: EventService,
   config: auction.GlobalAuctionContextConfig = {}
 ): GlobalAuctionContext => {
+  const trackWinningBidder = config.trackWinningBidder?.enabled
+    ? createTrackWinningBidder()
+    : undefined;
+
   const biddersDisabling = config.biddersDisabling?.enabled
     ? createBiddersDisabling(config.biddersDisabling, window)
     : undefined;
@@ -112,15 +125,20 @@ export const createGlobalAuctionContext = (
     });
   }
 
-  if (config.frequencyCap?.enabled) {
+  if (config.frequencyCap?.enabled || config.trackWinningBidder?.enabled) {
     window.pbjs.que.push(() => {
       window.pbjs.onEvent('bidWon', bid => {
         if (config.frequencyCap) {
           frequencyCapping?.onBidWon(bid);
         }
+        if (config.trackWinningBidder) {
+          trackWinningBidder?.onBidWon(bid);
+        }
       });
     });
+  }
 
+  if (config.frequencyCap?.enabled) {
     eventService.addEventListener('beforeRequestAds', () => {
       frequencyCapping?.beforeRequestAds();
     });
@@ -159,6 +177,9 @@ export const createGlobalAuctionContext = (
     },
     getLastBidCpmsOfAdUnit(slotId: string): number[] {
       return previousBidCpms?.getLastBidCpms(slotId) ?? [];
+    },
+    getLastWinningBidderOfAdUnit(slotId: string): prebidjs.BidderCode | undefined {
+      return trackWinningBidder?.getLastWinningBidderOnAdUnit(slotId);
     },
     isBidderDisabled(domId: string, bidder: prebidjs.BidderCode): boolean {
       return biddersDisabling?.isBidderDisabled(domId, bidder) ?? false;

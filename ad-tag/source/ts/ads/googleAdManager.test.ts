@@ -756,7 +756,6 @@ describe('google ad manager', () => {
         const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
         const addServiceSpy = sandbox.spy(adSlotStub, 'addService');
         const setSlotConfigSpy = sandbox.spy(adSlotStub, 'setConfig');
-        const setCollapseEmptyDivSpy = sandbox.spy(adSlotStub, 'setCollapseEmptyDiv');
         const defineOutOfPageSlotStub = sandbox
           .stub(dom.window.googletag, 'defineOutOfPageSlot')
           .returns(adSlotStub);
@@ -767,7 +766,16 @@ describe('google ad manager', () => {
         expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly('/123/dom-id/mobile', 5);
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
-        expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
+        // GD-10011: disable `contentPause` trigger that is enabled by default
+        expect(setSlotConfigSpy).to.have.been.calledWithExactly({
+          interstitial: {
+            triggers: {
+              contentPause: false
+            }
+          }
+        });
+        expect(setSlotConfigSpy).to.have.been.calledWithExactly(gptSlotSettings);
+        expect(setSlotConfigSpy).to.have.callCount(2);
         expect(displaySpy).to.have.been.calledOnce;
         expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
         expect(slotDefinitions).to.have.length(1);

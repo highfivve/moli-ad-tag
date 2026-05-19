@@ -11,6 +11,7 @@ import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStu
 import { modules } from 'ad-tag/types/moliConfig';
 import RefreshIntervalOverrides = modules.adreload.RefreshIntervalOverrides;
 import type { IntersectionObserverWindow } from 'ad-tag/types/dom';
+import { prebidjs } from 'ad-tag/types/prebidjs';
 import { MockIntersectionObserver } from 'ad-tag/stubs/dom';
 
 use(sinonChai);
@@ -227,6 +228,84 @@ describe('AdVisibilityService', () => {
 
     // initial call for ad slot visibility + 11 calls accounting for 1..10s + final call when refreshing the slot
     expect(performanceNowStub).to.have.callCount(1 + 11 + 1);
+
+    expect(refreshCallback).to.have.been.calledOnceWithExactly(slot);
+  });
+
+  it('should prioritize bidder refresh interval override over slot default and global default', () => {
+    const bidderRefreshInterval = 7000;
+
+    const addEventListenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+    const performanceNowStub = sandbox.stub(jsDomWindow.performance, 'now');
+
+    Array.from({ length: 12 }).forEach((_, index) => {
+      performanceNowStub.onCall(index).returns((index + 1) * 1000);
+    });
+
+    const service = createAdVisibilityService(false, {
+      bar: {
+        default: 12000,
+        bidders: {
+          [prebidjs.PubMatic]: bidderRefreshInterval
+        }
+      }
+    });
+
+    const slot = googleAdSlotStub('bar', 'bar');
+
+    expect(addEventListenerSpy).to.have.been.calledOnce;
+    const visibilityChangedListener: (event: ISlotVisibilityChangedEvent) => void =
+      addEventListenerSpy.args[0][1];
+
+    sandbox
+      .stub(jsDomWindow.document, 'getElementById')
+      .returns(jsDomWindow.document.createElement('div'));
+
+    const refreshCallback = sandbox.stub();
+    service.trackSlot(slot, refreshCallback, undefined, undefined, prebidjs.PubMatic);
+
+    visibilityChangedListener({ inViewPercentage: 99, slot } as ISlotVisibilityChangedEvent);
+
+    sandbox.clock.tick(bidderRefreshInterval + tickInterval);
+
+    expect(refreshCallback).to.have.been.calledOnceWithExactly(slot);
+  });
+
+  it('should use slot default refresh interval when bidder override is missing', () => {
+    const slotDefaultRefreshInterval = 9000;
+
+    const addEventListenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+    const performanceNowStub = sandbox.stub(jsDomWindow.performance, 'now');
+
+    Array.from({ length: 14 }).forEach((_, index) => {
+      performanceNowStub.onCall(index).returns((index + 1) * 1000);
+    });
+
+    const service = createAdVisibilityService(false, {
+      bar: {
+        default: slotDefaultRefreshInterval,
+        bidders: {
+          [prebidjs.PubMatic]: 20000
+        }
+      }
+    });
+
+    const slot = googleAdSlotStub('bar', 'bar');
+
+    expect(addEventListenerSpy).to.have.been.calledOnce;
+    const visibilityChangedListener: (event: ISlotVisibilityChangedEvent) => void =
+      addEventListenerSpy.args[0][1];
+
+    sandbox
+      .stub(jsDomWindow.document, 'getElementById')
+      .returns(jsDomWindow.document.createElement('div'));
+
+    const refreshCallback = sandbox.stub();
+    service.trackSlot(slot, refreshCallback, undefined, undefined, prebidjs.OpenX);
+
+    visibilityChangedListener({ inViewPercentage: 99, slot } as ISlotVisibilityChangedEvent);
+
+    sandbox.clock.tick(slotDefaultRefreshInterval + tickInterval);
 
     expect(refreshCallback).to.have.been.calledOnceWithExactly(slot);
   });

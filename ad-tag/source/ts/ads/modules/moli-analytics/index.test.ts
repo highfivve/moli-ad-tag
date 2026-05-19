@@ -79,22 +79,21 @@ describe('Moli Analytics Module', () => {
       batchDelay: 100
     }
   ].forEach((config, index) => {
-    it('should not load if not configured, run: ' + index, async () => {
+    it('should skip initialization if not configured, run: ' + index, async () => {
       const createSessionSpy = sandbox.spy(createSession);
       const createEventTrackerStub = sandbox.stub(eventTracker, 'createEventTracker');
       const prebidStub = sandbox.stub(jsDomWindow.pbjs, 'onEvent');
       const gptStub = sandbox.stub(jsDomWindow.googletag.cmd, 'push');
       const module = createAndConfigureModule(config as modules.moliAnalytics.MoliAnalyticsConfig);
-      let initFailed = false;
+      let initResolved = false;
 
       await module
         .initSteps__()[0](defaultContext)
-        .catch(() => {
-          /* expected to fail */
-          initFailed = true;
+        .then(() => {
+          initResolved = true;
         });
 
-      expect(initFailed).to.be.true;
+      expect(initResolved).to.be.true;
       expect(createSessionSpy).to.not.have.been.called;
       expect(createEventTrackerStub).to.not.have.been.called;
       expect(prebidStub).to.not.have.been.called;
