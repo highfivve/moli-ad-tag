@@ -1081,10 +1081,18 @@ describe('moli', () => {
       const spaState1: ISinglePageApp = state as ISinglePageApp;
       expect(spaState1.config).to.be.ok;
       expect(spaState1.nextRuntimeConfig.keyValues).to.be.deep.equal({});
-      expect(googletagSetConfigSpy).calledWithMatch({ targeting: Sinon.match.has('dynamicKeyValuePre', 'value') });
-      expect(googletagSetConfigSpy).calledWithMatch({ targeting: Sinon.match.has('dynamicKeyValuePost', 'value') });
-      expect(googletagSetConfigSpy).calledWithMatch({ targeting: Sinon.match.has('keyFromAdConfig', 'value') });
-      expect(googletagSetConfigSpy).calledWithMatch({ targeting: Sinon.match.has('ABtest', Sinon.match.any) });
+      expect(googletagSetConfigSpy).calledWithMatch({
+        targeting: Sinon.match.has('dynamicKeyValuePre', 'value')
+      });
+      expect(googletagSetConfigSpy).calledWithMatch({
+        targeting: Sinon.match.has('dynamicKeyValuePost', 'value')
+      });
+      expect(googletagSetConfigSpy).calledWithMatch({
+        targeting: Sinon.match.has('keyFromAdConfig', 'value')
+      });
+      expect(googletagSetConfigSpy).calledWithMatch({
+        targeting: Sinon.match.has('ABtest', Sinon.match.any)
+      });
 
       googletagSetConfigSpy.resetHistory();
       dom.reconfigure({
@@ -1113,10 +1121,14 @@ describe('moli', () => {
       expect(keyValues).to.not.have.property('dynamicKeyValuePost', 'value');
 
       expect(googletagSetConfigSpy.callCount).to.be.gte(4);
-      expect(googletagSetConfigSpy).calledWithMatch({ targeting: Sinon.match.has('keyFromAdConfig', 'value') });
+      expect(googletagSetConfigSpy).calledWithMatch({
+        targeting: Sinon.match.has('keyFromAdConfig', 'value')
+      });
       expect(googletagSetConfigSpy).calledWithMatch({ targeting: Sinon.match.has('kv1', 'value') });
       expect(googletagSetConfigSpy).calledWithMatch({ targeting: Sinon.match.has('kv2', 'value') });
-      expect(googletagSetConfigSpy).calledWithMatch({ targeting: Sinon.match.has('ABtest', Sinon.match.any) });
+      expect(googletagSetConfigSpy).calledWithMatch({
+        targeting: Sinon.match.has('ABtest', Sinon.match.any)
+      });
     });
   });
 

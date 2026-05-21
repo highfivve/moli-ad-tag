@@ -276,7 +276,9 @@ describe('Yield Optimization module', () => {
 
       expect(getBrowserStub).to.have.been.calledOnce;
       expect(setConfigSpy).to.have.been.calledOnce;
-      expect(setConfigSpy).to.have.been.calledOnceWithExactly({ targeting: { upr_browser: 'Chrome' } });
+      expect(setConfigSpy).to.have.been.calledOnceWithExactly({
+        targeting: { upr_browser: 'Chrome' }
+      });
     });
   });
 });

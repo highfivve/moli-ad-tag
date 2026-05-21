@@ -162,7 +162,9 @@ describe('google ad manager', () => {
 
       await step(adPipelineContext('production', configWithServerSideTargeting), []);
       expect(setConfigSpy).to.have.been.calledOnce;
-      expect(setConfigSpy).to.have.been.calledWith({ targeting: { foo: 'bar', tags: ['one', 'two'] } });
+      expect(setConfigSpy).to.have.been.calledWith({
+        targeting: { foo: 'bar', tags: ['one', 'two'] }
+      });
     });
 
     it('setConfig should not include excluded targeting key-values', async () => {
@@ -336,7 +338,9 @@ describe('google ad manager', () => {
       await step(adPipelineContext('production', configWithTargeting), []);
       expect(setConfigSpy).to.have.been.calledTwice;
       expect(setConfigSpy.firstCall).calledWith({ targeting: null });
-      expect(setConfigSpy.secondCall).calledWith({ targeting: { foo: 'bar', tags: ['car', 'truck'] } });
+      expect(setConfigSpy.secondCall).calledWith({
+        targeting: { foo: 'bar', tags: ['car', 'truck'] }
+      });
     });
 
     it('should only be executed once per requestAds cycle', async () => {

@@ -328,7 +328,9 @@ describe('BlocklistedUrls Module', () => {
             const { initStep, config } = createInitializedModule([pattern]);
             return initStep(adPipelineContext(config), []).then(() => {
               expect(setConfigSpy).to.have.been.calledOnce;
-              expect(setConfigSpy).to.have.been.calledOnceWithExactly({ targeting: { isBlocklisted: 'true' } });
+              expect(setConfigSpy).to.have.been.calledOnceWithExactly({
+                targeting: { isBlocklisted: 'true' }
+              });
             });
           })
         );
@@ -336,7 +338,9 @@ describe('BlocklistedUrls Module', () => {
           const { initStep, config } = createInitializedModule(['blocklisted'], 'yes');
           return initStep(adPipelineContext(config), []).then(() => {
             expect(setConfigSpy).to.have.been.calledOnce;
-            expect(setConfigSpy).to.have.been.calledOnceWithExactly({ targeting: { isBlocklisted: 'yes' } });
+            expect(setConfigSpy).to.have.been.calledOnceWithExactly({
+              targeting: { isBlocklisted: 'yes' }
+            });
           });
         });
       });

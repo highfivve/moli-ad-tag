@@ -245,8 +245,9 @@ export const createSkin = (): ISkinModule => {
 
           if (skinConfig.targeting) {
             try {
-              ctx.window__.googletag
-                .setConfig({ targeting: { [skinConfig.targeting.key]: skinConfig.targeting.value ?? '1' } });
+              ctx.window__.googletag.setConfig({
+                targeting: { [skinConfig.targeting.key]: skinConfig.targeting.value ?? '1' }
+              });
             } catch (e) {
               ctx.logger__.error('SkinModule', e);
             }
