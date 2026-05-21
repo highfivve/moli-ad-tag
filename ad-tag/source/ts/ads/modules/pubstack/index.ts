@@ -83,7 +83,7 @@ export const createPubstack = (): IModule => {
             }
             const pubstackAbTestCohort = extractPubstackAbTestCohort(ctx);
             if (pubstackAbTestCohort) {
-              ctx.window__.googletag.pubads().setTargeting('pbstck_ab_test', pubstackAbTestCohort);
+              ctx.window__.googletag.setConfig({ targeting: { pbstck_ab_test: pubstackAbTestCohort } });
             }
 
             return Promise.resolve();

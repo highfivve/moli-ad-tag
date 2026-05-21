@@ -71,7 +71,7 @@ describe('InterstitialContext', () => {
   afterEach(() => {
     sandbox.reset();
     jsDomWindow.sessionStorage.clear();
-    slot.clearTargeting();
+    slot.setConfig({ targeting: null });
   });
 
   describe('gam only setup', () => {
@@ -237,7 +237,7 @@ describe('InterstitialContext', () => {
     };
 
     beforeEach(() => {
-      slot.clearTargeting();
+      slot.setConfig({ targeting: null });
     });
 
     it('should use resolved ad unit path in onSlotRenderEnded to skip events', () => {

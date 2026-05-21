@@ -211,8 +211,7 @@ export const createBlocklistedUrls = (): IModule => {
                 )().then(blocklist => {
                   if (isBlocklisted(blocklist, ctx.window__.location.href, ctx.logger__)) {
                     (ctx.window__ as Window & googletag.IGoogleTagWindow).googletag
-                      .pubads()
-                      .setTargeting(key, value);
+                      .setConfig({ targeting: { [key]: value } });
                   }
                 });
               case 'block':

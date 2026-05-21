@@ -186,23 +186,6 @@ export namespace googletag {
     disableInitialLoad(): void;
 
     /**
-     * Sets custom targeting parameters for a given key that apply to all pubads service ad slots.
-     *
-     * Calling this multiple times for the same key will overwrite old values.
-     * These keys are defined in your DFP account.
-     *
-     * @param key Targeting parameter key.
-     * @param value Targeting parameter value or array of values.
-     */
-    setTargeting(key: string, value: string | Array<string>): IPubAdsService;
-
-    /**
-     * Clears custom targeting parameters for a specific key or for all keys.
-     * @param key Targeting parameter key. The key is optional; all targeting parameters will be cleared if it is unspecified.
-     */
-    clearTargeting(key?: string): IPubAdsService;
-
-    /**
      * Sets values for AdSense attributes that apply to all ad slots under the publisher ads service.
      *
      * See AdSense Attributes for a list of available keys and values.
@@ -813,8 +796,9 @@ export namespace googletag {
     /**
      * Setting to configure key-value targeting.
      * Targeting configured via this setting will only apply to the ad slot.
+     * Set a key's value to null to clear that key. Set targeting to null to clear all slot-level targeting.
      */
-    readonly targeting?: Record<string, string | string[]>;
+    readonly targeting?: Record<string, string | string[] | null> | null;
   }
 
   export namespace enums {
@@ -895,13 +879,6 @@ export namespace googletag {
      * @returns {string[]} Array of targeting keys. Ordering is undefined.
      */
     getTargetingKeys(): string[];
-
-    /**
-     * Clears specific or all custom slot-level targeting parameters for this slot.
-     * @param {string} key - optional key, if unspecified all slot targetings will be cleared
-     * @see https://developers.google.com/doubleclick-gpt/reference#googletag.Slot_clearTargeting
-     */
-    clearTargeting(key?: string): void;
 
     /**
      * Returns the ad response information. This is based on the last ad response for the slot.

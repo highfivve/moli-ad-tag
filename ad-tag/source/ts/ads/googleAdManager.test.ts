@@ -138,17 +138,17 @@ describe('google ad manager', () => {
   });
 
   describe('gptConfigure', () => {
-    it('setTargeting should not be called if targeting is empty', async () => {
+    it('setConfig should not be called with targeting if targeting is empty', async () => {
       const step = gptConfigure();
-      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+      const setConfigSpy = sandbox.spy(dom.window.googletag, 'setConfig');
 
       await step(adPipelineContext(), []);
-      expect(setTargetingSpy).to.have.not.been.called;
+      expect(setConfigSpy).to.have.not.been.called;
     });
 
-    it('setTargeting should be called if targeting contains key-values', async () => {
+    it('setConfig should be called with targeting if targeting contains key-values', async () => {
       const step = gptConfigure();
-      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+      const setConfigSpy = sandbox.spy(dom.window.googletag, 'setConfig');
 
       const configWithServerSideTargeting: MoliConfig = {
         ...emptyConfig,
@@ -161,14 +161,13 @@ describe('google ad manager', () => {
       };
 
       await step(adPipelineContext('production', configWithServerSideTargeting), []);
-      expect(setTargetingSpy).to.have.been.calledTwice;
-      expect(setTargetingSpy).to.have.been.calledWith('foo', 'bar');
-      expect(setTargetingSpy).to.have.been.calledWith('tags', ['one', 'two']);
+      expect(setConfigSpy).to.have.been.calledOnce;
+      expect(setConfigSpy).to.have.been.calledWith({ targeting: { foo: 'bar', tags: ['one', 'two'] } });
     });
 
-    it('setTargeting should not be called if targeting key-value is excluded', async () => {
+    it('setConfig should not include excluded targeting key-values', async () => {
       const step = gptConfigure();
-      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+      const setConfigSpy = sandbox.spy(dom.window.googletag, 'setConfig');
 
       const configWithServerSideTargeting: MoliConfig = {
         ...emptyConfig,
@@ -182,8 +181,8 @@ describe('google ad manager', () => {
       };
 
       await step(adPipelineContext('production', configWithServerSideTargeting), []);
-      expect(setTargetingSpy).to.have.been.calledOnce;
-      expect(setTargetingSpy).to.have.been.calledWith('foo', 'bar');
+      expect(setConfigSpy).to.have.been.calledOnce;
+      expect(setConfigSpy).to.have.been.calledWith({ targeting: { foo: 'bar' } });
     });
   });
 
@@ -334,14 +333,10 @@ describe('google ad manager', () => {
         }
       };
       const setConfigSpy = sandbox.spy(dom.window.googletag, 'setConfig');
-      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
       await step(adPipelineContext('production', configWithTargeting), []);
-      Sinon.assert.callOrder(setConfigSpy, setTargetingSpy);
-      expect(setConfigSpy).to.have.been.calledOnce;
-      expect(setConfigSpy).calledWith({ targeting: null });
-      expect(setTargetingSpy).to.have.been.calledTwice;
-      expect(setTargetingSpy).to.have.been.calledWith('foo', 'bar');
-      expect(setTargetingSpy).to.have.been.calledWith('tags', ['car', 'truck']);
+      expect(setConfigSpy).to.have.been.calledTwice;
+      expect(setConfigSpy.firstCall).calledWith({ targeting: null });
+      expect(setConfigSpy.secondCall).calledWith({ targeting: { foo: 'bar', tags: ['car', 'truck'] } });
     });
 
     it('should only be executed once per requestAds cycle', async () => {
@@ -413,68 +408,68 @@ describe('google ad manager', () => {
 
     it('should set mobile as a device label', async () => {
       const step = gptLDeviceLabelKeyValue();
-      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+      const setConfigSpy = sandbox.spy(dom.window.googletag, 'setConfig');
       getDeviceLabelStub.returns('mobile');
       await step(ctxWithLabelServiceStub, []);
-      expect(setTargetingSpy).to.have.been.calledOnce;
-      expect(setTargetingSpy).to.have.been.calledWith('device_label', 'mobile');
+      expect(setConfigSpy).to.have.been.calledOnce;
+      expect(setConfigSpy).to.have.been.calledWith({ targeting: { device_label: 'mobile' } });
     });
 
     it('should set desktop as a device label', async () => {
       const step = gptLDeviceLabelKeyValue();
-      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+      const setConfigSpy = sandbox.spy(dom.window.googletag, 'setConfig');
 
       getDeviceLabelStub.returns('desktop');
 
       await step(ctxWithLabelServiceStub, []);
-      expect(setTargetingSpy).to.have.been.calledOnce;
-      expect(setTargetingSpy).to.have.been.calledWith('device_label', 'desktop');
+      expect(setConfigSpy).to.have.been.calledOnce;
+      expect(setConfigSpy).to.have.been.calledWith({ targeting: { device_label: 'desktop' } });
     });
 
-    it('should not call googletag.pubads.setTargeting in env test', async () => {
+    it('should not call googletag.setConfig in env test', async () => {
       const step = gptLDeviceLabelKeyValue();
-      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+      const setConfigSpy = sandbox.spy(dom.window.googletag, 'setConfig');
       getDeviceLabelStub.returns('mobile');
 
       await step(adPipelineContext('test'), []);
-      expect(setTargetingSpy).to.have.not.been.called;
+      expect(setConfigSpy).to.have.not.been.called;
     });
   });
 
   describe('gptConsentKeyValue', () => {
     it('should set full if gdpr does not apply', async () => {
-      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+      const setConfigSpy = sandbox.spy(dom.window.googletag, 'setConfig');
       const step = gptConsentKeyValue();
       await step({ ...adPipelineContext(), tcData__: tcDataNoGdpr }, []);
-      expect(setTargetingSpy).to.have.been.calledOnce;
-      expect(setTargetingSpy).to.have.been.calledOnceWithExactly('consent', 'full');
+      expect(setConfigSpy).to.have.been.calledOnce;
+      expect(setConfigSpy).to.have.been.calledOnceWithExactly({ targeting: { consent: 'full' } });
     });
 
     it('should set full if consent is available for all purposes', async () => {
-      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+      const setConfigSpy = sandbox.spy(dom.window.googletag, 'setConfig');
       const step = gptConsentKeyValue();
       await step(adPipelineContext(), []);
-      expect(setTargetingSpy).to.have.been.calledOnce;
-      expect(setTargetingSpy).to.have.been.calledOnceWithExactly('consent', 'full');
+      expect(setConfigSpy).to.have.been.calledOnce;
+      expect(setConfigSpy).to.have.been.calledOnceWithExactly({ targeting: { consent: 'full' } });
     });
 
     ['1', '2', '3', '4', '7', '9', '10'].forEach(purpose => {
       it(`should set none if consent is missing for purpose ${purpose}`, async () => {
-        const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+        const setConfigSpy = sandbox.spy(dom.window.googletag, 'setConfig');
         const step = gptConsentKeyValue();
         const tcData = fullConsent();
         tcData.purpose.consents[purpose] = false;
 
         await step({ ...adPipelineContext(), tcData__: tcData }, []);
-        expect(setTargetingSpy).to.have.been.calledOnceWithExactly('consent', 'none');
+        expect(setConfigSpy).to.have.been.calledOnceWithExactly({ targeting: { consent: 'none' } });
       });
     });
 
-    it('should not call googletag.pubads.setTargeting in env test', async () => {
-      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+    it('should not call googletag.setConfig in env test', async () => {
+      const setConfigSpy = sandbox.spy(dom.window.googletag, 'setConfig');
       const step = gptConsentKeyValue();
       await step(adPipelineContext('test'), []);
-      expect(setTargetingSpy).to.have.not.been.called;
+      expect(setConfigSpy).to.have.not.been.called;
     });
   });
 
@@ -540,7 +535,7 @@ describe('google ad manager', () => {
         );
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
-        expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
+        expect(setSlotConfigSpy).to.have.been.calledWith(gptSlotSettings);
         expect(displaySpy).to.have.been.calledOnce;
         expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
         expect(slotDefinitions).to.have.length(1);
@@ -576,7 +571,7 @@ describe('google ad manager', () => {
         );
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
-        expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
+        expect(setSlotConfigSpy).to.have.been.calledWith(gptSlotSettings);
         expect(displaySpy).to.have.been.calledOnce;
         expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
         expect(slotDefinitions).to.have.length(1);
@@ -622,7 +617,7 @@ describe('google ad manager', () => {
         );
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
-        expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
+        expect(setSlotConfigSpy).to.have.been.calledWith(gptSlotSettings);
         expect(displaySpy).to.have.been.calledOnce;
         expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
         expect(slotDefinitions).to.have.length(1);
@@ -704,7 +699,7 @@ describe('google ad manager', () => {
         );
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
-        expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
+        expect(setSlotConfigSpy).to.have.been.calledWith(gptSlotSettings);
         expect(displaySpy).to.have.been.calledOnce;
         expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
         expect(slotDefinitions).to.have.length(1);
@@ -824,7 +819,7 @@ describe('google ad manager', () => {
         expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly('/123/dom-id/mobile', 2);
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
-        expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
+        expect(setSlotConfigSpy).to.have.been.calledWith(gptSlotSettings);
         expect(displaySpy).to.have.been.calledOnce;
         expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
         expect(slotDefinitions).to.have.length(1);
@@ -873,7 +868,7 @@ describe('google ad manager', () => {
         expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly('/123/dom-id/mobile', 3);
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
-        expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
+        expect(setSlotConfigSpy).to.have.been.calledWith(gptSlotSettings);
         expect(displaySpy).to.have.been.calledOnce;
         expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
         expect(slotDefinitions).to.have.length(1);
@@ -989,7 +984,7 @@ describe('google ad manager', () => {
 
       it('should set to true if undefined', async () => {
         await defineSlots();
-        expect(setConfig).to.have.been.calledOnceWithExactly({ collapseDiv: undefined });
+        expect(setConfig).to.have.been.calledWith({ collapseDiv: undefined });
       });
 
       const behaviours: googletag.GptCollapseDivBehavior[] = [
@@ -1000,7 +995,7 @@ describe('google ad manager', () => {
       behaviours.forEach(behaviour => {
         it(`should set to ${behaviour} if ${behaviour}`, async () => {
           await defineSlots(behaviour);
-          expect(setConfig).to.have.been.calledOnceWithExactly({ collapseDiv: behaviour });
+          expect(setConfig).to.have.been.calledWith({ collapseDiv: behaviour });
         });
       });
     });

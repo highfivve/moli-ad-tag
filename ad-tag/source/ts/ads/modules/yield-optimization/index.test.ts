@@ -266,7 +266,7 @@ describe('Yield Optimization module', () => {
         yieldOptimizationService
       );
 
-      const setTargetingSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'setTargeting');
+      const setConfigSpy = sandbox.spy(jsDomWindow.googletag, 'setConfig');
 
       const getBrowserStub = sandbox
         .stub(yieldOptimizationService, 'getBrowser')
@@ -275,8 +275,8 @@ describe('Yield Optimization module', () => {
       await prepareRequestAdsStep(newAdPipelineContext(jsDomWindow), []);
 
       expect(getBrowserStub).to.have.been.calledOnce;
-      expect(setTargetingSpy).to.have.been.calledOnce;
-      expect(setTargetingSpy).to.have.been.calledOnceWithExactly('upr_browser', 'Chrome');
+      expect(setConfigSpy).to.have.been.calledOnce;
+      expect(setConfigSpy).to.have.been.calledOnceWithExactly({ targeting: { upr_browser: 'Chrome' } });
     });
   });
 });

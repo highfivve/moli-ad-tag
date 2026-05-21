@@ -161,7 +161,7 @@ export const YieldOptimization = (
           .then(() => yieldOptimizationService.getBrowser())
           .then(browser => {
             if (context.env__ === 'production' && adServer === 'gam') {
-              context.window__.googletag.pubads().setTargeting('upr_browser', browser);
+              context.window__.googletag.setConfig({ targeting: { upr_browser: browser } });
             }
           });
       }

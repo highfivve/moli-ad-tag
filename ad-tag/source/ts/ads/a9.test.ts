@@ -744,12 +744,12 @@ describe('a9', () => {
       const step = a9ClearTargetingStep();
       const slot = createSlotDefinitions(getDomId(), {});
 
-      const clearTargetingSpy = sandbox.spy(slot.adSlot, 'clearTargeting');
+      const setConfigSpy = sandbox.spy(slot.adSlot, 'setConfig');
       const getTargetingKeysStub = makeGetTargetingKeysStub(slot.adSlot);
       const ctx: AdPipelineContext = { ...adPipelineContext(), requestId__: 0 };
 
       await step(ctx, [slot]);
-      expect(clearTargetingSpy).to.have.not.been.called;
+      expect(setConfigSpy).to.have.not.been.called;
       expect(getTargetingKeysStub).to.have.not.been.called;
     });
 
@@ -757,30 +757,30 @@ describe('a9', () => {
       const step = a9ClearTargetingStep();
       const slot = createSlotDefinitions(getDomId(), {});
 
-      const clearTargetingSpy = sandbox.spy(slot.adSlot, 'clearTargeting');
+      const setConfigSpy = sandbox.spy(slot.adSlot, 'setConfig');
       const getTargetingKeysStub = makeGetTargetingKeysStub(slot.adSlot);
       const ctx: AdPipelineContext = { ...contextWithConsent, requestId__: 1 };
 
       await step(ctx, [slot]);
       expect(getTargetingKeysStub).to.have.been.calledOnce;
-      expect(clearTargetingSpy).to.have.been.calledThrice;
-      expect(clearTargetingSpy).to.have.been.calledWith('amznp');
-      expect(clearTargetingSpy).to.have.been.calledWith('amznsz');
-      expect(clearTargetingSpy).to.have.been.calledWith('amznbid');
+      expect(setConfigSpy).to.have.been.calledThrice;
+      expect(setConfigSpy).to.have.been.calledWith({ targeting: { amznp: null } });
+      expect(setConfigSpy).to.have.been.calledWith({ targeting: { amznsz: null } });
+      expect(setConfigSpy).to.have.been.calledWith({ targeting: { amznbid: null } });
     });
 
     it('should clear targeting only for the available keys', async () => {
       const step = a9ClearTargetingStep();
       const slot = createSlotDefinitions(getDomId(), {});
 
-      const clearTargetingSpy = sandbox.spy(slot.adSlot, 'clearTargeting');
+      const setConfigSpy = sandbox.spy(slot.adSlot, 'setConfig');
       const getTargetingKeysStub = makeGetTargetingKeysStub(slot.adSlot, ['amznp', 'foo']);
       const ctx: AdPipelineContext = { ...contextWithConsent, requestId__: 1 };
 
       await step(ctx, [slot]);
       expect(getTargetingKeysStub).to.have.been.calledOnce;
-      expect(clearTargetingSpy).to.have.been.calledOnce;
-      expect(clearTargetingSpy).to.have.been.calledWith('amznp');
+      expect(setConfigSpy).to.have.been.calledOnce;
+      expect(setConfigSpy).to.have.been.calledWith({ targeting: { amznp: null } });
     });
   });
 });

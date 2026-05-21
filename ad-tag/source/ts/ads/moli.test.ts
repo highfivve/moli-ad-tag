@@ -1056,10 +1056,7 @@ describe('moli', () => {
     });
 
     it('should persists the initial key-values in spa mode for all requestAd() calls', async () => {
-      const googletagPubAdsSetTargetingSpy = sandbox.spy(
-        jsDomWindow.googletag.pubads(),
-        'setTargeting'
-      );
+      const googletagSetConfigSpy = sandbox.spy(jsDomWindow.googletag, 'setConfig');
       dom.reconfigure({
         url: 'https://localhost/1'
       });
@@ -1084,12 +1081,12 @@ describe('moli', () => {
       const spaState1: ISinglePageApp = state as ISinglePageApp;
       expect(spaState1.config).to.be.ok;
       expect(spaState1.nextRuntimeConfig.keyValues).to.be.deep.equal({});
-      expect(googletagPubAdsSetTargetingSpy).calledWithExactly('dynamicKeyValuePre', 'value');
-      expect(googletagPubAdsSetTargetingSpy).calledWithExactly('dynamicKeyValuePost', 'value');
-      expect(googletagPubAdsSetTargetingSpy).calledWithExactly('keyFromAdConfig', 'value');
-      expect(googletagPubAdsSetTargetingSpy).calledWithMatch('ABtest', Sinon.match.any);
+      expect(googletagSetConfigSpy).calledWithMatch({ targeting: Sinon.match.has('dynamicKeyValuePre', 'value') });
+      expect(googletagSetConfigSpy).calledWithMatch({ targeting: Sinon.match.has('dynamicKeyValuePost', 'value') });
+      expect(googletagSetConfigSpy).calledWithMatch({ targeting: Sinon.match.has('keyFromAdConfig', 'value') });
+      expect(googletagSetConfigSpy).calledWithMatch({ targeting: Sinon.match.has('ABtest', Sinon.match.any) });
 
-      googletagPubAdsSetTargetingSpy.resetHistory();
+      googletagSetConfigSpy.resetHistory();
       dom.reconfigure({
         url: 'https://localhost/2'
       });
@@ -1115,11 +1112,11 @@ describe('moli', () => {
       expect(keyValues).to.not.have.property('dynamicKeyValuePre', 'value');
       expect(keyValues).to.not.have.property('dynamicKeyValuePost', 'value');
 
-      expect(googletagPubAdsSetTargetingSpy.callCount).to.be.gte(4);
-      expect(googletagPubAdsSetTargetingSpy).calledWithExactly('keyFromAdConfig', 'value');
-      expect(googletagPubAdsSetTargetingSpy).calledWithExactly('kv1', 'value');
-      expect(googletagPubAdsSetTargetingSpy).calledWithExactly('kv2', 'value');
-      expect(googletagPubAdsSetTargetingSpy).calledWithMatch('ABtest', Sinon.match.any);
+      expect(googletagSetConfigSpy.callCount).to.be.gte(4);
+      expect(googletagSetConfigSpy).calledWithMatch({ targeting: Sinon.match.has('keyFromAdConfig', 'value') });
+      expect(googletagSetConfigSpy).calledWithMatch({ targeting: Sinon.match.has('kv1', 'value') });
+      expect(googletagSetConfigSpy).calledWithMatch({ targeting: Sinon.match.has('kv2', 'value') });
+      expect(googletagSetConfigSpy).calledWithMatch({ targeting: Sinon.match.has('ABtest', Sinon.match.any) });
     });
   });
 
