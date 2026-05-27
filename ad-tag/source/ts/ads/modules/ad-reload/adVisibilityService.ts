@@ -340,8 +340,8 @@ export class AdVisibilityService {
     return overrideElement
       ? { target: overrideElement, targetOverride: true, viewabilityOverride }
       : adSlotElement
-        ? { target: adSlotElement, targetOverride: false, viewabilityOverride }
-        : null;
+      ? { target: adSlotElement, targetOverride: false, viewabilityOverride }
+      : null;
   }
 }
 

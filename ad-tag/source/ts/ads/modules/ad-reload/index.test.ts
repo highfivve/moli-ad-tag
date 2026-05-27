@@ -71,7 +71,7 @@ describe('Moli Ad Reload Module', () => {
       advertiserId,
       campaignId,
       yieldGroupIds
-    }) as ISlotRenderEndedEvent;
+    } as ISlotRenderEndedEvent);
 
   const createAdReloadModuleInitialized = (moduleConfig: modules.adreload.AdReloadModuleConfig) => {
     const module = createAdReload();

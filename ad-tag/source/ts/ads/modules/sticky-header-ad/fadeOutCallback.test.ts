@@ -52,7 +52,7 @@ describe('intersection observer fadeOut callback', () => {
       boundingClientRect: {
         y
       } as any
-    }) as any;
+    } as any);
 
   afterEach(() => {
     dom = createDom();
