@@ -55,9 +55,6 @@ const testAdSlot = (domId: string, adUnitPath: string): googletag.IAdSlot => ({
     return [];
   },
 
-  clearTargeting(_key?: string): void {
-    return;
-  },
   getResponseInformation(): null | googletag.IResponseInformation {
     return null;
   },
@@ -78,18 +75,17 @@ const configureTargeting = (
   const staticKeyValues = serverSideTargeting ? serverSideTargeting.keyValues : {};
   const excludes = serverSideTargeting?.adManagerExcludes ?? [];
 
-  // first use the static targeting and override if necessary with the runtime key values
-  // TODO use googletag.setConfig(targeting) instead as setTargeting is deprecated
+  const targeting: Record<string, string | string[]> = {};
   [staticKeyValues, runtimeKeyValues].forEach(keyValues => {
-    Object.keys(keyValues)
-      .filter(key => !excludes.includes(key))
-      .forEach(key => {
-        const value = keyValues[key];
-        if (value) {
-          window.googletag.pubads().setTargeting(key, value);
-        }
-      });
+    Object.entries(keyValues).forEach(([key, value]) => {
+      if (!excludes.includes(key) && value) {
+        targeting[key] = value;
+      }
+    });
   });
+  if (Object.keys(targeting).length > 0) {
+    window.googletag.setConfig({ targeting });
+  }
 };
 
 /**
@@ -295,7 +291,7 @@ export const gptLDeviceLabelKeyValue = (): PrepareRequestAdsStep =>
     return new Promise<void>(resolve => {
       const deviceLabel = ctx.labelConfigService__.getDeviceLabel();
       ctx.logger__.debug('GAM', 'adding "device_label" key-value with values', deviceLabel);
-      ctx.window__.googletag.pubads().setTargeting('device_label', deviceLabel);
+      ctx.window__.googletag.setConfig({ targeting: { device_label: deviceLabel } });
 
       resolve();
     });
@@ -329,7 +325,7 @@ export const gptConsentKeyValue = (): PrepareRequestAdsStep =>
           tcfapi.responses.TCPurpose.APPLY_MARKET_RESEARCH,
           tcfapi.responses.TCPurpose.DEVELOP_IMPROVE_PRODUCTS
         ].every(purpose => tcData.purpose.consents[purpose]);
-      ctx.window__.googletag.pubads().setTargeting('consent', fullConsent ? 'full' : 'none');
+      ctx.window__.googletag.setConfig({ targeting: { consent: fullConsent ? 'full' : 'none' } });
       resolve();
     });
   });
@@ -468,7 +464,7 @@ export const gptDefineSlots =
             }
             // GAM interstitials already have format set above via the format parameter
           } else {
-            adSlot.clearTargeting(formatKey);
+            adSlot.setConfig({ targeting: { [formatKey]: null } });
           }
 
           // required method call, but doesn't trigger ad loading as we use the disableInitialLoad

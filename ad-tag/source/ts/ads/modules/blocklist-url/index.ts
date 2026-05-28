@@ -210,9 +210,9 @@ export const createBlocklistedUrls = (): IModule => {
                   ctx.logger__
                 )().then(blocklist => {
                   if (isBlocklisted(blocklist, ctx.window__.location.href, ctx.logger__)) {
-                    (ctx.window__ as Window & googletag.IGoogleTagWindow).googletag
-                      .pubads()
-                      .setTargeting(key, value);
+                    (ctx.window__ as Window & googletag.IGoogleTagWindow).googletag.setConfig({
+                      targeting: { [key]: value }
+                    });
                   }
                 });
               case 'block':

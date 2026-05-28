@@ -85,21 +85,31 @@
               "description": "Settings to configure the use of SafeFrame in GPT."
             },
             "targeting": {
-              "additionalProperties": {
-                "anyOf": [
-                  {
-                    "type": "string"
+              "anyOf": [
+                {
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
-                  {
-                    "items": {
-                      "type": "string"
-                    },
-                    "type": "array"
-                  }
-                ]
-              },
-              "description": "Setting to configure key-value targeting. Targeting configured via this setting will only apply to the ad slot.",
-              "type": "object"
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Setting to configure key-value targeting. Targeting configured via this setting will only apply to the ad slot. Set a key's value to null to clear that key. Set targeting to null to clear all slot-level targeting."
             }
           },
           "type": "object"
