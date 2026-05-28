@@ -2486,6 +2486,12 @@ export namespace prebidjs {
       ext?: OpenRtb2RegsExtDsa;
     }
 
+    export interface OpenRtb2Source {
+      schain?: SupplyChainObject.ISupplyChainNode;
+
+      ext?: any;
+    }
+
     export interface OpenRtb2Device {
       ua: string;
     }
@@ -2501,6 +2507,11 @@ export namespace prebidjs {
        * regulations for the United States Children’s Online Privacy Protection Act (“COPPA”)
        */
       regs?: OpenRtb2Regs;
+
+      /**
+       * Carries schain (supply chain) information
+       */
+      source?: OpenRtb2Source;
 
       /**
        * community extensions
