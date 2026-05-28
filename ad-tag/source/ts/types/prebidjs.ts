@@ -2487,7 +2487,7 @@ export namespace prebidjs {
     }
 
     export interface OpenRtb2Source {
-      schain?: SupplyChainObject.ISupplyChainNode;
+      schain?: SupplyChainObject.ISupplyChainObject;
 
       ext?: any;
     }
