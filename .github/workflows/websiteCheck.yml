@@ -1,4 +1,4 @@
-name: Check JSON Schema
+name: Check Website Build
 
 on:
   push:

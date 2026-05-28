@@ -3,11 +3,12 @@ import { expect, use } from 'chai';
 import { createDomAndWindow } from '../stubs/browserEnvSetup';
 import { createGlobalAuctionContext, GlobalAuctionContext } from './globalAuctionContext';
 import { createPbjsStub } from '../stubs/prebidjsStubs';
-import { createGoogletagStub } from '../stubs/googletagStubs';
+import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
 import sinonChai from 'sinon-chai';
 import { noopLogger } from 'ad-tag/stubs/moliStubs';
 import { createEventService } from './eventService';
 import { auction } from 'ad-tag/types/moliConfig';
+import { prebidjs } from 'ad-tag/types/prebidjs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -51,9 +52,59 @@ describe('Global auction context', () => {
     expect(googletagAddEventListenerSpy).to.have.not.been.called;
   });
 
+  describe('last winning bidder cache', () => {
+    it('should overwrite the cached winning bidder when a newer bid wins on the same slot', () => {
+      const context = makeAuctionContext({ trackWinningBidder: { enabled: true } });
+      const bidWonHandler = pbjsOnEventSpy.args.find(args => args[0] === 'bidWon')?.[1] as
+        | ((bid: prebidjs.BidResponse) => void)
+        | undefined;
+
+      expect(bidWonHandler).to.exist;
+
+      bidWonHandler?.({
+        adUnitCode: 'slot-1',
+        bidderCode: 'appnexus'
+      } as unknown as prebidjs.BidResponse);
+      expect(context.getLastWinningBidderOfAdUnit('slot-1')).to.equal('appnexus');
+
+      bidWonHandler?.({
+        adUnitCode: 'slot-1',
+        bidderCode: 'rubicon'
+      } as unknown as prebidjs.BidResponse);
+
+      expect(context.getLastWinningBidderOfAdUnit('slot-1')).to.equal('rubicon');
+    });
+
+    it('should track bidWon winners if trackWinningBidder is enabled', () => {
+      const context = makeAuctionContext({
+        trackWinningBidder: {
+          enabled: true
+        }
+      });
+
+      const bidWonHandler = pbjsOnEventSpy.args.find(args => args[0] === 'bidWon')?.[1] as
+        | ((bid: prebidjs.BidResponse) => void)
+        | undefined;
+
+      expect(pbjsOnEventSpy).to.have.been.calledOnceWithExactly('bidWon', sinon.match.func);
+      expect(bidWonHandler).to.exist;
+
+      bidWonHandler?.({
+        adUnitCode: 'slot-1',
+        bidderCode: 'appnexus'
+      } as unknown as prebidjs.BidResponse);
+      bidWonHandler?.({
+        adUnitCode: 'slot-1',
+        bidderCode: 'rubicon'
+      } as unknown as prebidjs.BidResponse);
+
+      expect(context.getLastWinningBidderOfAdUnit('slot-1')).to.equal('rubicon');
+    });
+  });
+
   describe('bidder disabling', () => {
     it('add auctionEnd event listener', () => {
-      const context = makeAuctionContext({
+      makeAuctionContext({
         biddersDisabling: {
           enabled: true,
           minRate: 0.5,
@@ -66,7 +117,7 @@ describe('Global auction context', () => {
     });
 
     it('should not add auctionEnd event listener if disabled', () => {
-      const context = makeAuctionContext({
+      makeAuctionContext({
         biddersDisabling: {
           enabled: false,
           minRate: 0.5,
@@ -88,20 +139,42 @@ describe('Global auction context', () => {
         }
       };
 
+      it('should add slotRequested event listener', () => {
+        makeAuctionContext(auctionContextConfig);
+        expect(googletagAddEventListenerSpy).to.have.been.calledWithExactly(
+          'slotRequested',
+          sinon.match.func
+        );
+      });
+
       it('should add slotRenderEnded event listener', () => {
         makeAuctionContext(auctionContextConfig);
-        expect(googletagAddEventListenerSpy).to.have.been.calledOnce;
-        expect(googletagAddEventListenerSpy).to.have.been.calledOnceWithExactly(
+        expect(googletagAddEventListenerSpy).to.have.been.calledWithExactly(
           'slotRenderEnded',
+          sinon.match.func
+        );
+      });
+
+      it('should add impressionViewable event listener', () => {
+        makeAuctionContext(auctionContextConfig);
+        expect(googletagAddEventListenerSpy).to.have.been.calledWithExactly(
+          'impressionViewable',
           sinon.match.func
         );
       });
 
       it('should add afterRequestAds event listener', () => {
         makeAuctionContext(auctionContextConfig);
-        expect(eventServiceAddEventListenerSpy).to.have.been.calledOnce;
-        expect(eventServiceAddEventListenerSpy).to.have.been.calledOnceWithExactly(
+        expect(eventServiceAddEventListenerSpy).to.have.been.calledWithExactly(
           'afterRequestAds',
+          sinon.match.func
+        );
+      });
+
+      it('should add beforeRequestAds event listener', () => {
+        makeAuctionContext(auctionContextConfig);
+        expect(eventServiceAddEventListenerSpy).to.have.been.calledWithExactly(
+          'beforeRequestAds',
           sinon.match.func
         );
       });
@@ -119,7 +192,7 @@ describe('Global auction context', () => {
 
       it('should never throttle requests in initial state', () => {
         const context = makeAuctionContext(auctionContextConfig);
-        expect(context.isSlotThrottled('slot-1', '/123/slot-1')).to.be.false;
+        expect(context.isSlotThrottled(googleAdSlotStub('/123/slot-1', 'slot-1'))).to.be.false;
       });
 
       it('should add slotRequested event listener', () => {
@@ -142,7 +215,7 @@ describe('Global auction context', () => {
 
       it('should never throttle requests', () => {
         const context = makeAuctionContext(auctionContextConfig);
-        expect(context.isSlotThrottled('slot-1', '/123/slot-1')).to.be.false;
+        expect(context.isSlotThrottled(googleAdSlotStub('/123/slot-1', 'slot-1'))).to.be.false;
       });
 
       it('should not add slotRequested event listener if disabled', () => {
@@ -171,10 +244,11 @@ describe('Global auction context', () => {
         expect(context.isBidderFrequencyCappedOnSlot('slot-1', 'dspx')).to.be.false;
       });
 
-      it('should add bidWon event listener', () => {
+      it('should add bidWon and auctionEnd event listener', () => {
         makeAuctionContext(auctionContextConfig);
-        expect(pbjsOnEventSpy).to.have.been.calledOnce;
-        expect(pbjsOnEventSpy).to.have.been.calledOnceWithExactly('bidWon', sinon.match.func);
+        expect(pbjsOnEventSpy).to.have.been.calledTwice;
+        expect(pbjsOnEventSpy).to.have.been.calledWithExactly('bidWon', sinon.match.func);
+        expect(pbjsOnEventSpy).to.have.been.calledWithExactly('auctionEnd', sinon.match.func);
       });
     });
 

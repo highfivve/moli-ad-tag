@@ -104,6 +104,13 @@ export namespace MoliRuntime {
     setAdUnitPathVariables(variables: AdUnitPathVariables): void;
 
     /**
+     * Provide additional information about the user visiting the page.
+     *
+     * @param audience contains all advertising relevant information about the user
+     */
+    setAudience(audience: AudienceTargeting): void;
+
+    /**
      * Resolves an ad unit path by replacing the ad unit path variables.
      * Optionally the networkChildId can be removed.
      *
@@ -258,6 +265,47 @@ export namespace MoliRuntime {
     refreshBucket(bucket: string, options?: RefreshAdSlotsOptions): Promise<'queued' | 'refreshed'>;
 
     /**
+     * Resumes all ad pipelines that have been delayed through a `refreshAdSlots()` call with a
+     * delay option:
+     *
+     * ```ts
+     * moli.refreshAdSlots(['content_1'], { delay: { } });
+     * ```
+     *
+     * ## Use cases
+     *
+     * Slots are cleaned up when `requestAds()` is called, when a slot is refreshed through the
+     * ad reload module or when `refreshAdSlot` is being called.
+     *
+     * Use this method if there is an on-page interaction that requires the ad slot to be cleaned up,
+     * but refreshed after another interaction. A common example would be modal popups that are opened.
+     *
+     * 1. User opens a modal
+     * 2. Refresh ad slot with delay option
+     * 3. User closes the modal
+     * 4. Call `moli.triggerDelay()` to resume the ad pipeline and refresh the ad slot
+     *
+     * ## Note
+     *
+     * The current implementation uses `window` event listeners to trigger the delayed ad pipeline.
+     * This might change in the future, so don't try to send those events manually.
+     *
+     * ### Event
+     *
+     * The current implementation sends a custom event like this
+     *
+     * ```ts
+     * window.dispatchEvent(new CustomEvent('h5v.trigger-delay'))
+     * ```
+     *
+     * In the future, we might add a `detail` property to the event that contains the domIds for,
+     * which the pipeline should be resumed. This is not trivial as the pipeline can't be resumed for
+     * a subset of ad slots, but only for all ad slots that have been delayed.
+     *
+     */
+    triggerDelay(): void;
+
+    /**
      * Returns the  current state of the configuration. This configuration may not be final!
      * If you need to access the final configuration use the `beforeRequestAds` method to configure
      * a callback.
@@ -378,6 +426,15 @@ export namespace MoliRuntime {
     adUnitPathVariables: AdUnitPathVariables;
 
     /**
+     * Publishers may set additional audience targeting during runtime, which can be used for
+     *
+     * - ORTB2 enrichments, e.g. age, gender or yob
+     * - UserID module configuration, e.g. for hashed emails (HEM)
+     * - DMP module configuration, e.g. for age, gender or custom segments
+     */
+    audience?: AudienceTargeting;
+
+    /**
      * A list of ad slots that should be refreshed
      */
     readonly refreshSlots: string[];
@@ -433,6 +490,19 @@ export namespace MoliRuntime {
      * will be filtered out and may lead to the ad slot not being refreshed.
      */
     readonly sizesOverride?: googleAdManager.SlotSize[];
+
+    /**
+     * If set to true, the ad slot will be refreshed after `moli.triggerDelay` is called.
+     */
+    readonly delay?: {
+      /**
+       * The delay in milliseconds after which the ad pipeline run will be rejected to avoid
+       * memory leaks and unwanted behaviour.
+       *
+       * If not set the default is 5 minutes (300000 ms).
+       */
+      readonly timeoutMs?: number;
+    };
   }
 
   export type IRefreshBucket = {
@@ -1133,4 +1203,40 @@ export namespace MoliRuntime {
      */
     moli: MoliRuntime.MoliTag;
   };
+
+  export interface AudienceTargeting {
+    /**
+     * ## User ID
+     *
+     * Let publishers provide their own user IDs for audience targeting.
+     */
+    userId?: string;
+
+    /**
+     * ## Hashed Email (HEM)
+     *
+     * Let publishers provide hashed email addresses of logged-in users to audience targeting.
+     */
+    hem?: {
+      /**
+       * hashed email address (sha-256) of the logged-in user, provided by the publisher
+       */
+      readonly md5?: string;
+
+      /**
+       * hashed email address (sha-1) of the logged-in user, provided by the publisher
+       */
+      readonly sha1?: string;
+
+      /**
+       * hashed email address (sha-256) of the logged-in user, provided by the publisher
+       */
+      readonly sha256?: string;
+
+      /**
+       * hased email address(sha-256 of m5) of the logged-in user, provided by NMMS
+       */
+      readonly sha256ofMD5?: string;
+    };
+  }
 }

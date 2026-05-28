@@ -1,12 +1,18 @@
 import { googletag } from 'ad-tag/types/googletag';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { Environment } from 'ad-tag/types/moliConfig';
+import { isAdvertiserIncluded } from 'ad-tag/ads/isAdvertiserIncluded';
 
 const adStickyContainerDataRef = '[data-ref=h5v-sticky-ad]';
 const adStickyCloseButtonDataRef = '[data-ref=h5v-sticky-ad-close]';
 // is initialized after init
 const adStickyCloseButtonContent = '.h5v-closeButtonContent';
-const adStickHidingClass = 'h5v-footerAd--hidden';
+const adStickyHidingClass = 'h5v-footerAd--hidden';
+
+// hiding classes only used to control initial container display
+const desktopInitialHidingClass = 'h5v-footerAd--hidden-d';
+const mobileInitialHidingClass = 'h5v-footerAd--hidden-m';
+
 /**
  * empty: mobile sticky load was empty
  * disallowed: an advertiser that brings its own creative was rendered
@@ -30,7 +36,7 @@ const stickyRenderedEvent = (
 
       if (event.isEmpty) {
         resolve('empty');
-      } else if (event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
+      } else if (isAdvertiserIncluded(event, disallowedAdvertiserIds)) {
         resolve('disallowed');
       } else {
         resolve('standard');
@@ -63,11 +69,15 @@ const stickyOnLoadEvent = (
   });
 
 const hideAdSlot = (element: HTMLElement): void => {
-  element.classList.add(adStickHidingClass);
+  element.classList.add(adStickyHidingClass);
 };
 
 const showAdSlot = (element: HTMLElement): void => {
-  element.classList.remove(adStickHidingClass);
+  element.classList.remove(
+    adStickyHidingClass,
+    desktopInitialHidingClass,
+    mobileInitialHidingClass
+  );
 };
 /**
  * ## Ad Sticky

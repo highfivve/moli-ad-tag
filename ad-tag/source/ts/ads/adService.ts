@@ -21,6 +21,7 @@ import {
 } from './googleAdManager';
 import domready from '../util/domready';
 import {
+  prebidClearAuction,
   prebidConfigure,
   prebidDefineSlots,
   prebidInit,
@@ -237,16 +238,19 @@ export class AdService {
       configure.push(prebidConfigure(config.prebid, config.schain));
       if (isSinglePageApp) {
         configure.push(prebidRemoveAdUnits(config.prebid));
+        if (config.prebid.clearAllAuctions) {
+          configure.push(prebidClearAuction());
+        }
       }
       prepareRequestAds.push(prebidPrepareRequestAds(config.prebid));
       requestBids.push(prebidRequestBids(config.prebid, adServer));
     }
 
     // amazon a9
-    if (config.a9 && env === 'production' && isGam) {
+    if (config.a9 && config.a9.enabled !== false && env === 'production' && isGam) {
       init.push(a9Init(config.a9, this.assetService));
       configure.push(a9Configure(config.a9, config.schain));
-      configure.push(a9PublisherAudiences(config.a9));
+      configure.push(a9PublisherAudiences(config.a9, runtimeConfig.audience));
       prepareRequestAds.push(a9ClearTargetingStep());
       requestBids.push(a9RequestBids(config.a9));
     }
@@ -367,16 +371,23 @@ export class AdService {
           }
         });
 
-        const arr = await Promise.all(
-          Array.from(buckets.entries()).map(([bucketId, bucketSlots]) => {
-            this.logger.debug('AdPipeline', `running bucket ${bucketId}, slots:`, bucketSlots);
-            return this.adPipeline
-              .run(bucketSlots, config, runtimeConfig, this.requestAdsCalls)
-              .then(() => bucketSlots);
-          })
-        );
+        const result =
+          buckets.size === 0
+            ? this.adPipeline.run([], config, runtimeConfig, this.requestAdsCalls).then(() => [])
+            : Promise.all(
+                Array.from(buckets.entries()).map(([bucketId, bucketSlots]) => {
+                  this.logger.debug(
+                    'AdPipeline',
+                    `running bucket ${bucketId}, slots:`,
+                    bucketSlots
+                  );
+                  return this.adPipeline
+                    .run(bucketSlots, config, runtimeConfig, this.requestAdsCalls)
+                    .then(() => bucketSlots);
+                })
+              );
         this.eventService.emit('afterRequestAds', { state: 'finished' });
-        return flatten(arr);
+        return result.then(slots => flatten(slots));
       } else {
         await this.adPipeline.run(
           immediatelyLoadedSlots,
@@ -406,11 +417,19 @@ export class AdService {
 
     const { loaded } = { ...{ loaded: 'manual' }, ...options };
 
+    const allowedLoadingBehaviours = new Set<behaviour.ISlotLoading['loaded']>(['infinite']);
+    if (loaded === 'eager') {
+      allowedLoadingBehaviours.add('manual');
+      allowedLoadingBehaviours.add('eager');
+    } else {
+      allowedLoadingBehaviours.add(loaded as behaviour.ISlotLoading['loaded']);
+    }
+
     const availableSlots = config.slots
       .filter(
         slot =>
           domIds.some(domId => domId === slot.domId) &&
-          (slot.behaviour.loaded === loaded || slot.behaviour.loaded === 'infinite')
+          allowedLoadingBehaviours.has(slot.behaviour.loaded)
       )
       .filter(isSlotAvailable(this.window))
       // if sizesOverride is provided, override the sizes of the slots
@@ -441,7 +460,9 @@ export class AdService {
     }
 
     this.logger.debug('AdService', 'refresh ad slots', availableSlots);
-    return this.adPipeline.run(availableSlots, config, runtimeConfig, this.requestAdsCalls);
+    return this.adPipeline.run(availableSlots, config, runtimeConfig, this.requestAdsCalls, {
+      options
+    });
   }
 
   public refreshBucket(
@@ -472,7 +493,7 @@ export class AdService {
       config,
       runtimeConfig,
       this.requestAdsCalls,
-      bucket
+      { bucketName: bucket, options: options }
     );
   }
 

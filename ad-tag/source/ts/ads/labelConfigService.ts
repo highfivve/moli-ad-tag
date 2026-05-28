@@ -21,24 +21,63 @@ export interface ILabelledSlot {
   readonly labelAll?: string[];
 }
 
+export type LabelCondition =
+  | {
+      labelAll: string[];
+    }
+  | {
+      labelAny: string[];
+    }
+  | {
+      labelNone: string[];
+    };
+
 /**
  * Service that holds the labels configuration.
  *
  * It provides methods for evaluating if a given slot matches the configured criteria.
  */
 export interface LabelConfigService {
+  /**
+   * @param slot check the `labelAny` and `labelAll` properties of the slot against the configured labels.
+   */
   filterSlot(slot: ILabelledSlot): boolean;
+
+  /**
+   * Returns all labels currently available. Sources labels can come from:
+   *
+   * - the sizeConfig object in the top level moli configuration
+   * - the `labels` property in the runtime config
+   * - `addLabel` calls during adPipeline#run calls
+   */
   getSupportedLabels(): string[];
   getDeviceLabel(): Device;
+
+  /**
+   * Adds a label to the list of supported labels. This API is for pipeline steps that want to add
+   * labels dynamically during the ad pipeline run.
+   *
+   * Note: each adPipeline run creates a new labelConfigService instance, so this method only
+   *       ever alters a single ad pipeline run.
+   *
+   * @param label - device labels are not allowed and will be ignored.
+   */
+  addLabel(label: string): void;
+
+  /**
+   * Checks if the given label condition is met by the current supported labels.
+   * @param labelCondition
+   */
+  isLabelConditionMet(labelCondition: LabelCondition): boolean;
 }
+
+const possibleDevices: Device[] = ['mobile', 'desktop', 'android', 'ios'];
 
 export const createLabelConfigService = (
   labelSizeConfig: sizeConfigs.LabelSizeConfigEntry[],
   extraLabels: string[],
   window: Window
 ): LabelConfigService => {
-  const possibleDevices: Device[] = ['mobile', 'desktop', 'android', 'ios'];
-
   const isPublisherDeviceDefined: boolean = extraLabels.some(
     (label): label is Device => possibleDevices.indexOf(<Device>label) > -1
   );
@@ -80,10 +119,34 @@ export const createLabelConfigService = (
     );
   };
 
+  const addLabel = (label: string): void => {
+    // do not allow device labels to be added
+    if (!possibleDevices.includes(<Device>label)) {
+      supportedLabels.push(label);
+    }
+  };
+
+  const isLabelConditionMet = (labelCondition: LabelCondition) => {
+    if ('labelAll' in labelCondition) {
+      return labelCondition.labelAll.every(label => supportedLabels.includes(label));
+    }
+
+    if ('labelAny' in labelCondition) {
+      return labelCondition.labelAny.some(label => supportedLabels.includes(label));
+    }
+
+    if ('labelNone' in labelCondition) {
+      return labelCondition.labelNone.every(label => !supportedLabels.includes(label));
+    }
+    return false;
+  };
+
   return {
     filterSlot,
     getSupportedLabels,
-    getDeviceLabel
+    getDeviceLabel,
+    addLabel,
+    isLabelConditionMet
   };
 };
 

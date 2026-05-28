@@ -2,7 +2,7 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { Pubstack } from './index';
+import { createPubstack } from './index';
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 import {
@@ -56,7 +56,6 @@ describe('Pubstack Module', () => {
       tagId: '1234-5678-910a'
     }
   };
-  const createPubstack = (): Pubstack => new Pubstack();
 
   beforeEach(() => {
     loadScriptStub.resolves();

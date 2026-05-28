@@ -6,7 +6,9 @@
     "blocklistUrls",
     "cleanup",
     "confiant",
+    "custom",
     "emetriq",
+    "geoedge",
     "identityLink",
     "lazyLoad",
     "prebidFirstPartyData",
@@ -17,6 +19,8 @@
     "skin",
     "utiq",
     "yieldOptimization",
-    "configureFromEndpoint"
+    "configureFromEndpoint",
+    "interstitialModule",
+    "moliAnalytics"
   ]
 }

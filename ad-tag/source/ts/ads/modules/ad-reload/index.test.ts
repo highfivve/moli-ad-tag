@@ -2,7 +2,7 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { AdReload } from './index';
+import { createAdReload } from './index';
 import { googletag } from 'ad-tag/types/googletag';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
@@ -17,6 +17,7 @@ import { AdSlot, behaviour, modules, MoliConfig } from 'ad-tag/types/moliConfig'
 import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
 import { AdVisibilityService } from './adVisibilityService';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { prebidjs } from 'ad-tag/types/prebidjs';
 import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 
 use(sinonChai);
@@ -28,6 +29,7 @@ describe('Moli Ad Reload Module', () => {
   const debugSpy = sandbox.spy(noopLogger, 'debug');
 
   let { jsDomWindow } = createDomAndWindow();
+  let winningBids: prebidjs.BidResponse[] = [];
 
   const adPipelineContext = (config: MoliConfig): AdPipelineContext => {
     return {
@@ -72,7 +74,7 @@ describe('Moli Ad Reload Module', () => {
     }) as ISlotRenderEndedEvent;
 
   const createAdReloadModuleInitialized = (moduleConfig: modules.adreload.AdReloadModuleConfig) => {
-    const module = new AdReload();
+    const module = createAdReload();
     module.configure__({ adReload: moduleConfig });
     const configureStep = module.configureSteps__()[0];
     // this is awkward, but it works. Alternative would be to inject the service into the module via the constructor for tests
@@ -128,8 +130,15 @@ describe('Moli Ad Reload Module', () => {
 
   beforeEach(() => {
     // AdService calls a setInterval method, which blocks tests before exiting.
-    sandbox.useFakeTimers();
     jsDomWindow = createDomAndWindow().jsDomWindow;
+
+    sandbox.useFakeTimers();
+
+    // Bridge the JSDOM window to the Sinon Global clock
+    jsDomWindow.setTimeout = global.setTimeout as any;
+    jsDomWindow.setInterval = global.setInterval as any;
+    jsDomWindow.performance.now = () => sandbox.clock.now;
+
     jsDomWindow.moli = {
       refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'> {
         return Promise.resolve('refreshed');
@@ -142,12 +151,80 @@ describe('Moli Ad Reload Module', () => {
       }
     } as MoliRuntime.MoliTag;
     jsDomWindow.googletag = createGoogletagStub();
+    winningBids = [];
+    jsDomWindow.pbjs = {
+      que: {
+        push: (callback: Function) => {
+          callback();
+        }
+      }
+    } as unknown as prebidjs.IPrebidJs;
     testGoogleSlot = googleAdSlotStub('/123/foo', 'foo');
   });
 
   afterEach(() => {
     sandbox.reset();
     sandbox.clock.restore();
+  });
+
+  describe('refresh interval configuration', () => {
+    it('should store the provided refresh interval from config in configure step', () => {
+      const customRefreshInterval = 30000;
+      const moduleConfig: modules.adreload.AdReloadModuleConfig = {
+        ...defaultAdReloadConfig,
+        refreshIntervalMs: customRefreshInterval
+      };
+
+      const module = createAdReload();
+      expect(module.config__()).to.be.null;
+      module.configure__({ adReload: moduleConfig });
+
+      const storedConfig = module.config__() as modules.adreload.AdReloadModuleConfig | null;
+      expect(storedConfig).to.not.be.null;
+      expect(storedConfig!.refreshIntervalMs).to.equal(customRefreshInterval);
+    });
+
+    // Helper to initialize module and return the internal AdVisibilityService instance
+    const initAdReloadModuleWithConfig = (
+      configOverrides: Partial<modules.adreload.AdReloadModuleConfig>
+    ) => {
+      const fullConfig = { ...defaultAdReloadConfig, ...configOverrides };
+      const module = createAdReload();
+      module.configure__({ adReload: fullConfig });
+      module.initialize(
+        adPipelineContext(testSlotMoliConfig),
+        fullConfig,
+        [testAdSlotDomId],
+        () => {
+          // No-op callback for test purposes
+        }
+      );
+      // Access the internal AdVisibilityService instance
+      return (module as any).adVisibilityService;
+    };
+
+    [
+      { name: 'default', config: {}, expected: 20000 },
+      { name: 'custom', config: { refreshIntervalMs: 15000 }, expected: 15000 },
+      { name: 'zero', config: { refreshIntervalMs: 0 }, expected: 0 },
+      { name: 'undefined', config: { refreshIntervalMs: undefined }, expected: 20000 }
+    ].forEach(({ name, config, expected }) => {
+      it(`should use ${expected}ms in visibility service for ${name} config`, () => {
+        const service = initAdReloadModuleWithConfig(config);
+        expect(service.refreshInterval).to.equal(expected);
+      });
+    });
+
+    it('should pass both refresh interval and overrides correctly to the visibility service', () => {
+      const overrides = { slot1: 10000, slot2: 40000 };
+      const service = initAdReloadModuleWithConfig({
+        refreshIntervalMs: 25000,
+        refreshIntervalMsOverrides: overrides
+      });
+
+      expect(service.refreshInterval).to.equal(25000);
+      expect(service.refreshIntervalOverrides).to.deep.equal(overrides);
+    });
   });
 
   describe('initialize', () => {
@@ -179,7 +256,7 @@ describe('Moli Ad Reload Module', () => {
   });
 
   it('should not return any pipeline steps if unconfigured', () => {
-    const module = new AdReload();
+    const module = createAdReload();
 
     expect(module.initSteps__()).to.be.empty;
     expect(module.configureSteps__()).to.be.empty;
@@ -187,7 +264,7 @@ describe('Moli Ad Reload Module', () => {
   });
 
   it('should not return any pipeline steps if disabled', () => {
-    const module = new AdReload();
+    const module = createAdReload();
     module.configure__({ adReload: { enabled: false } as modules.adreload.AdReloadModuleConfig });
 
     expect(module.initSteps__()).to.be.empty;
@@ -196,7 +273,7 @@ describe('Moli Ad Reload Module', () => {
   });
 
   it('should return any init and configure steps if unconfigured', () => {
-    const module = new AdReload();
+    const module = createAdReload();
 
     expect(module.initSteps__()).to.be.empty;
     expect(module.configureSteps__()).to.be.empty;
@@ -715,6 +792,126 @@ describe('Moli Ad Reload Module', () => {
 
         expect(setTargetingSpy).to.have.been.calledOnceWithExactly('native-ad-reload', 'true');
         expect(refreshBucketSpy).to.have.been.calledOnce;
+        expect(refreshBucketSpy).to.have.been.calledOnceWithExactly('page', { loaded: 'eager' });
+      });
+    });
+
+    describe('bidder-specific refresh intervals via globalAuctionContext', () => {
+      const stickyAdSlotDomId = 'sticky-ad';
+      const stickyAdSlot: AdSlot = {
+        domId: stickyAdSlotDomId,
+        behaviour: { loaded: 'eager' }
+      } as AdSlot;
+
+      const moduleConfigWithBidderOverrides: modules.adreload.AdReloadModuleConfig = {
+        ...defaultAdReloadConfig,
+        disableAdVisibilityChecks: true,
+        userActivityLevelControl: {
+          level: 'custom',
+          userActivityDuration: 60000,
+          userBecomingInactiveDuration: 30000
+        },
+        refreshIntervalMs: 20000,
+        refreshIntervalMsOverrides: {
+          [stickyAdSlotDomId]: {
+            default: 12000,
+            bidders: {
+              [prebidjs.Rubicon]: 3000
+            }
+          }
+        }
+      };
+
+      const setupBidderIntervalTest = () => {
+        const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
+        const stickyElement = jsDomWindow.document.createElement('div');
+        stickyElement.id = stickyAdSlotDomId;
+        jsDomWindow.document.body.appendChild(stickyElement);
+
+        const refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
+        const module = createAdReload();
+        module.configure__({ adReload: moduleConfigWithBidderOverrides });
+
+        return { listenerSpy, refreshAdSlotSpy, module };
+      };
+
+      it('should use bidder-specific interval when the winning bidder is configured on the slot', async () => {
+        const { listenerSpy, refreshAdSlotSpy, module } = setupBidderIntervalTest();
+
+        const auctionContext = newGlobalAuctionContext(jsDomWindow);
+        sandbox
+          .stub(auctionContext, 'getLastWinningBidderOfAdUnit')
+          .withArgs(stickyAdSlotDomId)
+          .returns(prebidjs.Rubicon);
+
+        const adReloadContext = {
+          ...adPipelineContext({
+            ...emptyConfig,
+            slots: [stickyAdSlot]
+          }),
+          auction__: auctionContext
+        };
+
+        await module.configureSteps__()[0](adReloadContext, [stickyAdSlot]);
+
+        const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
+          args => (args[0] as string) === 'slotRenderEnded'
+        )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
+
+        const stickyGoogleSlot = googleAdSlotStub('/ads/sticky', stickyAdSlotDomId);
+        // Advance fake time so performance.now() is not 0; the visibility tracker uses a truthy timestamp check.
+        sandbox.clock.tick(1);
+        slotRenderedCallback({
+          slot: stickyGoogleSlot,
+          advertiserId: 1337,
+          campaignId: 4711,
+          isEmpty: false
+        } as ISlotRenderEndedEvent);
+
+        sandbox.clock.tick(5000);
+
+        expect(refreshAdSlotSpy).to.have.been.calledOnce;
+        expect(refreshAdSlotSpy).to.have.been.calledWithMatch(stickyAdSlotDomId);
+      });
+
+      it('should fall back to slot default interval when winning bidder has no bidder-specific override', async () => {
+        const { listenerSpy, refreshAdSlotSpy, module } = setupBidderIntervalTest();
+
+        winningBids = [
+          {
+            adUnitCode: stickyAdSlotDomId,
+            bidderCode: prebidjs.OpenX
+          } as prebidjs.BidResponse
+        ];
+
+        const adReloadContext = adPipelineContext({
+          ...emptyConfig,
+          slots: [stickyAdSlot]
+        });
+
+        await module.configureSteps__()[0](adReloadContext, [stickyAdSlot]);
+
+        const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
+          args => (args[0] as string) === 'slotRenderEnded'
+        )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
+
+        const stickyGoogleSlot = googleAdSlotStub('/ads/sticky', stickyAdSlotDomId);
+        // Advance fake time so performance.now() is not 0; the visibility tracker uses a truthy timestamp check.
+        sandbox.clock.tick(1);
+        slotRenderedCallback({
+          slot: stickyGoogleSlot,
+          advertiserId: 1337,
+          campaignId: 4711,
+          isEmpty: false
+        } as ISlotRenderEndedEvent);
+
+        // bidder override (3s) should NOT apply for openx
+        sandbox.clock.tick(5000);
+        expect(refreshAdSlotSpy).to.not.have.been.called;
+
+        // slot default (12s) should apply
+        sandbox.clock.tick(8000);
+        expect(refreshAdSlotSpy).to.have.been.calledOnce;
       });
     });
   });

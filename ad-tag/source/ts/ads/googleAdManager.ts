@@ -20,6 +20,7 @@ import { tcfapi } from '../types/tcfapi';
 import { createTestSlots } from '../util/test-slots';
 import { resolveAdUnitPath } from './adUnitPath';
 import { AdSlot, consent, googleAdManager } from '../types/moliConfig';
+import { formatKey, CUSTOM_INTERSTITIAL_FORMAT } from './keyValues';
 
 /**
  * A dummy googletag ad slot for the test mode
@@ -30,7 +31,7 @@ const testAdSlot = (domId: string, adUnitPath: string): googletag.IAdSlot => ({
   setCollapseEmptyDiv(): void {
     return;
   },
-  addService(service: googletag.IService<any>): void {
+  addService(_service: googletag.IService<any>): void {
     return;
   },
 
@@ -42,11 +43,11 @@ const testAdSlot = (domId: string, adUnitPath: string): googletag.IAdSlot => ({
     return adUnitPath;
   },
 
-  setTargeting(key: string, value: string | string[]): googletag.IAdSlot {
+  setTargeting(_key: string, _value: string | string[]): googletag.IAdSlot {
     return this;
   },
 
-  getTargeting(key: string): string[] {
+  getTargeting(_key: string): string[] {
     return [];
   },
 
@@ -54,11 +55,18 @@ const testAdSlot = (domId: string, adUnitPath: string): googletag.IAdSlot => ({
     return [];
   },
 
-  clearTargeting(key?: string): void {
+  clearTargeting(_key?: string): void {
     return;
   },
   getResponseInformation(): null | googletag.IResponseInformation {
     return null;
+  },
+
+  setConfig(_config: googletag.GptSlotSettingsConfig) {
+    return;
+  },
+  getConfig(_key): any {
+    return;
   }
 });
 
@@ -71,6 +79,7 @@ const configureTargeting = (
   const excludes = serverSideTargeting?.adManagerExcludes ?? [];
 
   // first use the static targeting and override if necessary with the runtime key values
+  // TODO use googletag.setConfig(targeting) instead as setTargeting is deprecated
   [staticKeyValues, runtimeKeyValues].forEach(keyValues => {
     Object.keys(keyValues)
       .filter(key => !excludes.includes(key))
@@ -156,24 +165,48 @@ export const gptDestroyAdSlots = (): ConfigureStep => {
     if (context.env__ === 'test') {
       return Promise.resolve();
     }
-    if (context.config__.spa?.destroyAllAdSlots === false) {
-      const allGptSlots = context.window__.googletag.pubads().getSlots();
-      const gptSlots = slots
-        .map(slot => allGptSlots.find(s => s.getSlotElementId() === slot.domId))
-        .filter(isNotNull);
-      if (gptSlots.length === 0) {
-        context.logger__.debug('GAM', 'no ad slots to destroy');
-      } else {
-        context.logger__.debug('GAM', `destroy ${gptSlots.length} ad slots`, gptSlots);
-        context.window__.googletag.destroySlots(gptSlots);
-      }
-    } else if (currentRequestAdsCalls !== context.requestAdsCalls__) {
-      currentRequestAdsCalls = context.requestAdsCalls__;
-      context.logger__.debug('GAM', 'destroy all ad slots');
-      context.window__.googletag.destroySlots();
-    }
 
-    return Promise.resolve();
+    const cleanup = context.config__.spa?.cleanup ?? { slots: 'all' };
+
+    const destroySelectedSlots = (slots: googletag.IAdSlot[]): Promise<void> => {
+      if (slots.length === 0) {
+        context.logger__.debug('GAM', 'no ad slots to destroy');
+        return Promise.resolve();
+      }
+      context.logger__.debug('GAM', `destroy ${slots.length} ad slots`, slots);
+      context.window__.googletag.destroySlots(slots);
+      return Promise.resolve();
+    };
+    const isNextRequestAdsCall = currentRequestAdsCalls !== context.requestAdsCalls__;
+    currentRequestAdsCalls = context.requestAdsCalls__;
+
+    context.logger__.debug('GAM', `destroy ${cleanup.slots} ad slots`);
+    switch (cleanup.slots) {
+      case 'all':
+        if (isNextRequestAdsCall) {
+          context.window__.googletag.destroySlots();
+        }
+        return Promise.resolve();
+      case 'requested':
+        const allGptSlots = context.window__.googletag.pubads().getSlots();
+        const gptSlots = slots
+          .map(slot => allGptSlots.find(s => s.getSlotElementId() === slot.domId))
+          .filter(isNotNull);
+        // destroy all slots that are in the provided slot array
+        return destroySelectedSlots(gptSlots);
+      case 'excluded':
+        if (isNextRequestAdsCall) {
+          // destroy all slots that are not in the provided slot array
+          const destroyableSlots = context.window__.googletag
+            .pubads()
+            .getSlots()
+            .filter(slot => !cleanup.slotIds.includes(slot.getSlotElementId()));
+          return destroySelectedSlots(destroyableSlots);
+        }
+        return Promise.resolve();
+      default:
+        return Promise.resolve();
+    }
   });
 };
 
@@ -192,7 +225,7 @@ export const gptResetTargeting = (): ConfigureStep =>
       new Promise<void>(resolve => {
         if (context.env__ === 'production') {
           context.logger__.debug('GAM', 'reset top level targeting');
-          context.window__.googletag.pubads().clearTargeting();
+          context.window__.googletag.setConfig({ targeting: null });
           configureTargeting(
             context.window__,
             context.runtimeConfig__.keyValues,
@@ -341,38 +374,79 @@ export const gptDefineSlots =
       };
 
       // define an ad slot depending on the `position` parameter
-      const defineAdSlot = (): googletag.IAdSlot | null => {
+      const defineAdSlot = (): [
+        googletag.IAdSlot | null,
+        googletag.enums.OutOfPageFormat | null
+      ] => {
         switch (moliSlot.position) {
           case 'in-page':
-            return context.window__.googletag.defineSlot(resolvedAdUnitPath, sizes, moliSlot.domId);
+            return [
+              context.window__.googletag.defineSlot(resolvedAdUnitPath, sizes, moliSlot.domId),
+              null
+            ];
           case 'interstitial':
             // note that the interstitial position first requests prebid demand and if none, switches
             // to the out-of-page-interstitial position if there are no bids or low quality bids
             createDivIfMissing(moliSlot.domId);
-            return context.window__.googletag.defineSlot(resolvedAdUnitPath, sizes, moliSlot.domId);
+
+            switch (context.auction__.interstitialChannel()) {
+              case 'gam':
+                return [
+                  context.window__.googletag.defineOutOfPageSlot(
+                    resolvedAdUnitPath,
+                    context.window__.googletag.enums.OutOfPageFormat.INTERSTITIAL
+                  ),
+                  context.window__.googletag.enums.OutOfPageFormat.INTERSTITIAL
+                ];
+              // if the interstitial channel is not gam, we use the in-page position and treat it
+              // like a regular ad slot.
+              case 'c':
+              default:
+                return [
+                  context.window__.googletag.defineSlot(resolvedAdUnitPath, sizes, moliSlot.domId),
+                  null
+                ];
+            }
+
           case 'out-of-page':
             // this the custom out-of-page position format provided by google ad manager, which
             // requires a div element to be present in the DOM.
             createDivIfMissing(moliSlot.domId);
-            return context.window__.googletag.defineOutOfPageSlot(
-              resolvedAdUnitPath,
-              moliSlot.domId
-            );
+            return [
+              context.window__.googletag.defineOutOfPageSlot(resolvedAdUnitPath, moliSlot.domId),
+              null
+            ];
           case 'out-of-page-interstitial':
-            return context.window__.googletag.defineOutOfPageSlot(
+            const interstitialSlot = context.window__.googletag.defineOutOfPageSlot(
               resolvedAdUnitPath,
               context.window__.googletag.enums.OutOfPageFormat.INTERSTITIAL
             );
+
+            // `contentPause` interstitial trigger was rolled out by Google by default, with no
+            // possibility of configuration via AdManager UI.
+            // This restores the default behaviour of the `contentPause` trigger being off.
+            interstitialSlot?.setConfig({ interstitial: { triggers: { contentPause: false } } });
+
+            return [
+              interstitialSlot,
+              context.window__.googletag.enums.OutOfPageFormat.INTERSTITIAL
+            ];
           case 'out-of-page-bottom-anchor':
-            return context.window__.googletag.defineOutOfPageSlot(
-              resolvedAdUnitPath,
+            return [
+              context.window__.googletag.defineOutOfPageSlot(
+                resolvedAdUnitPath,
+                context.window__.googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR
+              ),
               context.window__.googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR
-            );
+            ];
           case 'out-of-page-top-anchor':
-            return context.window__.googletag.defineOutOfPageSlot(
-              resolvedAdUnitPath,
+            return [
+              context.window__.googletag.defineOutOfPageSlot(
+                resolvedAdUnitPath,
+                context.window__.googletag.enums.OutOfPageFormat.TOP_ANCHOR
+              ),
               context.window__.googletag.enums.OutOfPageFormat.TOP_ANCHOR
-            );
+            ];
         }
       };
 
@@ -382,8 +456,21 @@ export const gptDefineSlots =
         if (context.env__ === 'test') {
           return null;
         }
-        const adSlot = defineAdSlot();
+        const [adSlot, format] = defineAdSlot();
         if (adSlot) {
+          // transport the special GAM formats through the ad slot targeting
+          if (format) {
+            adSlot.setTargeting(formatKey, format.toString());
+          } else if (moliSlot.position === 'interstitial') {
+            // For custom interstitials, use the custom format value
+            if (context.auction__.interstitialChannel() === 'c') {
+              adSlot.setTargeting(formatKey, CUSTOM_INTERSTITIAL_FORMAT);
+            }
+            // GAM interstitials already have format set above via the format parameter
+          } else {
+            adSlot.clearTargeting(formatKey);
+          }
+
           // required method call, but doesn't trigger ad loading as we use the disableInitialLoad
           context.window__.googletag.display(adSlot);
         }
@@ -404,7 +491,14 @@ export const gptDefineSlots =
       switch (context.env__) {
         case 'production':
           if (adSlot) {
-            adSlot.setCollapseEmptyDiv(moliSlot.gpt?.collapseEmptyDiv !== false);
+            if (moliSlot.gpt) {
+              adSlot.setConfig(moliSlot.gpt);
+              context.logger__.debug(
+                'GAM',
+                `Add slot settings: [AdSlot] ${adSlot.getSlotElementId()}`,
+                moliSlot.gpt
+              );
+            }
             adSlot.addService(context.window__.googletag.pubads());
             context.logger__.debug(
               'GAM',
@@ -449,7 +543,7 @@ export const gptDefineSlots =
  * @param context ad pipeline context to access googletag, logger and window
  */
 const checkAndSwitchToWebInterstitial = (
-  slotsToRefresh: MoliRuntime.SlotDefinition<AdSlot>[],
+  slotsToRefresh: MoliRuntime.SlotDefinition[],
   context: AdPipelineContext
 ) => {
   // check demand of interstitial position and remap if there are no bids
@@ -457,34 +551,35 @@ const checkAndSwitchToWebInterstitial = (
     ({ moliSlot }) => moliSlot.position === 'interstitial'
   );
 
-  if (interstitialSlot) {
-    // for now, we only check if a bid is available. This can be more sophisticated in the future
-    // to check for a certain bid CPM. However prebid.js floor price feature should already filter
-    // out all bids below a certain CPM
-    const priceBuckets = interstitialSlot.adSlot.getTargeting('hb_pb');
-    if (priceBuckets.length === 0) {
-      // if there are no bids, we switch to the out-of-page-interstitial position
-      context.window__.googletag.destroySlots([interstitialSlot.adSlot]);
+  if (interstitialSlot && context.auction__.interstitialChannel() === 'gam') {
+    const targeting = { ...interstitialSlot.adSlot.getConfig('targeting').targeting };
+    // if there are no bids, we switch to the out-of-page-interstitial position
+    context.window__.googletag.destroySlots([interstitialSlot.adSlot]);
 
-      const gamWebInterstitial = context.window__.googletag.defineOutOfPageSlot(
-        resolveAdUnitPath(interstitialSlot.moliSlot.adUnitPath, context.adUnitPathVariables__),
-        context.window__.googletag.enums.OutOfPageFormat.INTERSTITIAL
-      );
-      if (gamWebInterstitial) {
-        console.log('GAM', 'Display out-of-page-interstitial slot');
+    const gamWebInterstitial = context.window__.googletag.defineOutOfPageSlot(
+      resolveAdUnitPath(interstitialSlot.moliSlot.adUnitPath, context.adUnitPathVariables__),
+      context.window__.googletag.enums.OutOfPageFormat.INTERSTITIAL
+    );
+    if (gamWebInterstitial) {
+      context.logger__.debug('GAM', 'Display out-of-page-interstitial slot');
 
-        // this little dance is annoying - refresh is done afterwards
-        gamWebInterstitial.addService(context.window__.googletag.pubads());
-        context.window__.googletag.display(gamWebInterstitial);
+      // this little dance is annoying - refresh is done afterwards
+      gamWebInterstitial.addService(context.window__.googletag.pubads());
+      gamWebInterstitial.setConfig({
+        targeting: {
+          ...targeting,
+          [formatKey]: context.window__.googletag.enums.OutOfPageFormat.INTERSTITIAL.toString()
+        }
+      });
+      context.window__.googletag.display(gamWebInterstitial);
 
-        // early return to swap the interstitial slot
-        return [
-          ...slotsToRefresh.filter(({ moliSlot }) => moliSlot.position !== 'interstitial'),
-          { ...interstitialSlot, adSlot: gamWebInterstitial }
-        ];
-      } else {
-        context.logger__.error('GAM', 'Failed to define out-of-page-interstitial slot');
-      }
+      // early return to swap the interstitial slot
+      return [
+        ...slotsToRefresh.filter(({ moliSlot }) => moliSlot.position !== 'interstitial'),
+        { ...interstitialSlot, adSlot: gamWebInterstitial }
+      ];
+    } else {
+      context.logger__.error('GAM', 'Failed to define out-of-page-interstitial slot');
     }
   }
 
@@ -501,8 +596,7 @@ export const gptRequestAds =
           break;
         case 'production':
           const slotsToRefresh = slots.filter(
-            ({ moliSlot, adSlot }) =>
-              !context.auction__.isSlotThrottled(moliSlot.domId, adSlot.getAdUnitPath())
+            ({ adSlot }) => !context.auction__.isSlotThrottled(adSlot)
           );
           if (slotsToRefresh.length === 0) {
             break;

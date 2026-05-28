@@ -4,7 +4,7 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 import { emptyConfig, emptyRuntimeConfig, newNoopLogger } from 'ad-tag/stubs/moliStubs';
-import { Cleanup } from './index';
+import { createCleanup, ICleanupModule } from './index';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
 import { createMoliTag } from 'ad-tag/ads/moli';
 import { AdSlot, modules } from 'ad-tag/types/moliConfig';
@@ -35,8 +35,10 @@ describe('Cleanup Module', () => {
   const specialFormatClass2 = 'seedtag-container2';
   const specialFormatClass3 = 'other-container';
 
-  const createAndConfigureModule = (cleanup: modules.cleanup.CleanupModuleConfig): Cleanup => {
-    const module = new Cleanup();
+  const createAndConfigureModule = (
+    cleanup: modules.cleanup.CleanupModuleConfig
+  ): ICleanupModule => {
+    const module = createCleanup();
     module.configure__({ cleanup });
     return module;
   };
@@ -129,7 +131,7 @@ describe('Cleanup Module', () => {
   };
 
   it('should not add a configure and prepare request ads pipeline step if disabled', () => {
-    const module = new Cleanup();
+    const module = createCleanup();
 
     module.configure__({ cleanup: { enabled: false, configs: [] } });
 
@@ -270,120 +272,172 @@ describe('Cleanup Module', () => {
     expect(consoleLogSpy.calledWith(`JS for slot ${domId3} is being executed`)).to.be.true;
   });
 
-  it('should only clean if the configured bidder has won the last auction on the slot in the configure step (prevents cleaning on first page load)', async () => {
-    jsDomWindow.pbjs = {
-      ...jsDomWindow.pbjs,
-      getAllWinningBids: () => [{ adUnitCode: domId2, bidder: 'dspx' }]
-    };
-    const module = createAndConfigureModule({
-      enabled: true,
-      configs: [
-        {
-          bidder: 'seedtag',
-          domId: domId1,
-          deleteMethod: {
-            cssSelectors: [`.${specialFormatClass1}`]
+  describe('only call clean up for the bidder winning the last auction on the given slot', () => {
+    it('should clean up in configure step (prevents cleaning on first page load)', async () => {
+      jsDomWindow.pbjs = {
+        ...jsDomWindow.pbjs,
+        getAllWinningBids: () => [{ adUnitCode: domId2, bidder: 'dspx' }]
+      };
+      const module = createAndConfigureModule({
+        enabled: true,
+        configs: [
+          {
+            bidder: 'seedtag',
+            domId: domId1,
+            deleteMethod: {
+              cssSelectors: [`.${specialFormatClass1}`]
+            }
+          },
+          {
+            bidder: 'seedtag',
+            domId: domId2,
+            deleteMethod: {
+              cssSelectors: [`.${specialFormatClass2}`]
+            }
+          },
+          {
+            bidder: 'dspx',
+            domId: domId2,
+            deleteMethod: {
+              jsAsString: [
+                `globalThis.console.log('JS for slot ${domId2} and bidder dspx is being executed');`
+              ]
+            }
           }
-        },
-        {
-          bidder: 'seedtag',
-          domId: domId2,
-          deleteMethod: {
-            cssSelectors: [`.${specialFormatClass2}`]
-          }
-        },
-        {
-          bidder: 'dspx',
-          domId: domId2,
-          deleteMethod: {
-            jsAsString: [
-              `globalThis.console.log('JS for slot ${domId2} and bidder dspx is being executed');`
-            ]
-          }
-        }
-      ]
+        ]
+      });
+
+      const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
+      const consoleLogSpy = sandbox.spy(globalThis.console, 'log');
+
+      const configure = module.configureSteps__()[0];
+      await configure(adPipelineContext(), slots);
+
+      const specialFormatElementsInDom = [
+        ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass1}`),
+        ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass2}`)
+      ];
+
+      expect(specialFormatElementsInDom).to.have.length(2);
+      expect(consoleLogSpy).to.be.calledWith(
+        `JS for slot ${domId2} and bidder dspx is being executed`
+      );
     });
 
-    const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
-    const consoleLogSpy = sandbox.spy(globalThis.console, 'log');
-
-    const configure = module.configureSteps__()[0];
-    await configure(adPipelineContext(), slots);
-
-    const specialFormatElementsInDom = [
-      ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass1}`),
-      ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass2}`)
-    ];
-
-    expect(specialFormatElementsInDom).to.have.length(2);
-    expect(consoleLogSpy.calledWith(`JS for slot ${domId2} and bidder dspx is being executed`)).to
-      .be.true;
-  });
-
-  it('should remove the configured element only in the prepare request ads step if the configured slot is reloaded and the corresponding configured bidder has won the last auction', async () => {
-    jsDomWindow.pbjs = {
-      ...jsDomWindow.pbjs,
-      getAllWinningBids: () => [{ adUnitCode: domId2, bidder: 'dspx' }]
-    };
-    const module = createAndConfigureModule({
-      enabled: true,
-      configs: [
-        {
-          bidder: 'seedtag',
-          domId: domId1,
-          deleteMethod: {
-            cssSelectors: [`.${specialFormatClass1}`]
+    it('should clean up in the prepare request ads step if the configured slot is reloaded and the corresponding configured bidder has won the last auction', async () => {
+      jsDomWindow.pbjs = {
+        ...jsDomWindow.pbjs,
+        getAllWinningBids: () => [{ adUnitCode: domId2, bidder: 'dspx' }]
+      };
+      const module = createAndConfigureModule({
+        enabled: true,
+        configs: [
+          {
+            bidder: 'seedtag',
+            domId: domId1,
+            deleteMethod: {
+              cssSelectors: [`.${specialFormatClass1}`]
+            }
+          },
+          {
+            bidder: 'seedtag',
+            domId: domId2,
+            deleteMethod: {
+              cssSelectors: [`.${specialFormatClass2}`]
+            }
+          },
+          {
+            bidder: 'dspx',
+            domId: domId2,
+            deleteMethod: {
+              jsAsString: [
+                `globalThis.console.log('JS for slot ${domId2} and bidder dspx is being executed');`
+              ]
+            }
+          },
+          {
+            bidder: 'visx',
+            domId: domId3,
+            deleteMethod: {
+              jsAsString: [
+                `globalThis.console.log('JS for slot ${domId3} and bidder visx is being executed');`
+              ]
+            }
           }
-        },
-        {
-          bidder: 'seedtag',
-          domId: domId2,
-          deleteMethod: {
-            cssSelectors: [`.${specialFormatClass2}`]
-          }
-        },
-        {
-          bidder: 'dspx',
-          domId: domId2,
-          deleteMethod: {
-            jsAsString: [
-              `globalThis.console.log('JS for slot ${domId2} and bidder dspx is being executed');`
-            ]
-          }
-        },
-        {
-          bidder: 'visx',
-          domId: domId3,
-          deleteMethod: {
-            jsAsString: [
-              `globalThis.console.log('JS for slot ${domId3} and bidder visx is being executed');`
-            ]
-          }
-        }
-      ]
+        ]
+      });
+
+      const consoleLogSpy = sandbox.spy(globalThis.console, 'log');
+
+      const prepareRequestAds = module.prepareRequestAdsSteps__()[0];
+
+      expect(prepareRequestAds?.name).to.be.eq('cleanup-before-ad-reload');
+      // only one of the configured slots is reloaded
+      await prepareRequestAds(adPipelineContext(), [createSlotDefinition(domId2)]);
+
+      const specialFormatElementsSeedtagInDom = [
+        ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass1}`),
+        ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass2}`)
+      ];
+
+      // seedtag did not win the last auction on the slot that is reloaded and should not be cleaned
+      expect(specialFormatElementsSeedtagInDom).to.have.length(2);
+      // dspx won the last auction on the slot that is reloaded and should be cleaned
+      expect(consoleLogSpy).to.be.calledWith(
+        `JS for slot ${domId2} and bidder dspx is being executed`
+      );
+      // visx is not reloaded and should therefore not be cleaned
+      expect(consoleLogSpy).not.to.be.calledWith(
+        `JS for slot ${domId3} and bidder visx is being executed`
+      );
     });
 
-    const consoleLogSpy = sandbox.spy(globalThis.console, 'log');
+    it('choose the last auction if there were multiple', async () => {
+      jsDomWindow.pbjs = {
+        ...jsDomWindow.pbjs,
+        getAllWinningBids: () => [
+          { adUnitCode: domId1, bidder: 'seedtag' },
+          { adUnitCode: domId1, bidder: 'dspx' }
+        ]
+      };
+      const module = createAndConfigureModule({
+        enabled: true,
+        configs: [
+          {
+            bidder: 'seedtag',
+            domId: domId1,
+            deleteMethod: {
+              cssSelectors: [`.${specialFormatClass2}`]
+            }
+          },
+          {
+            bidder: 'dspx',
+            domId: domId1,
+            deleteMethod: {
+              jsAsString: [
+                `globalThis.console.log('JS for slot ${domId1} and bidder dspx is being executed');`
+              ]
+            }
+          }
+        ]
+      });
 
-    const prepareRequestAds = module.prepareRequestAdsSteps__()[0];
+      const slots = createAdSlots(jsDomWindow, [domId1]);
+      const consoleLogSpy = sandbox.spy(globalThis.console, 'log');
 
-    expect(prepareRequestAds?.name).to.be.eq('cleanup-before-ad-reload');
-    // only one of the configured slots is reloaded
-    await prepareRequestAds(adPipelineContext(), [createSlotDefinition(domId2)]);
+      const configure = module.configureSteps__()[0];
+      await configure(adPipelineContext(), slots);
 
-    const specialFormatElementsSeedtagInDom = [
-      ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass1}`),
-      ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass2}`)
-    ];
+      const specialFormatElementsInDom = [
+        ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass1}`),
+        ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass2}`)
+      ];
 
-    // seedtag did not win the last auction on the slot that is reloaded and should not be cleaned
-    expect(specialFormatElementsSeedtagInDom).to.have.length(2);
-    // dspx won the last auction on the slot that is reloaded and should be cleaned
-    expect(consoleLogSpy.calledWith(`JS for slot ${domId2} and bidder dspx is being executed`)).to
-      .be.true;
-    // visx is not reloaded and should therefore not be cleaned
-    expect(consoleLogSpy.calledWith(`JS for slot ${domId3} and bidder visx is being executed`)).not
-      .to.be.true;
+      expect(specialFormatElementsInDom).to.have.length(2);
+      expect(consoleLogSpy).to.be.calledWith(
+        `JS for slot ${domId1} and bidder dspx is being executed`
+      );
+    });
   });
 
   it('should log an error message if the javascript in the deleteMethod is broken and continue without crashing ', async () => {

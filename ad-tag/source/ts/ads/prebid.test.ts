@@ -295,7 +295,120 @@ describe('prebid', () => {
               nodes: [dummySchainConfig.supplyChainStartNode]
             }
           }
-        }
+        },
+        ...{ userSync: pbjsTestConfig.userSync }
+      });
+    });
+
+    describe('setBidderConfig options', () => {
+      it('should not call pbjs.setBidderConfig if bidderConfigs is not defined', () => {
+        const step = prebidConfigure(moliPrebidTestConfig, dummySchainConfig);
+        const setBidderConfigSpy = sandbox.spy(dom.window.pbjs, 'setBidderConfig');
+
+        step(adPipelineContext(), []);
+        expect(setBidderConfigSpy).to.have.not.been.called;
+      });
+
+      it('should call pbjs.setBidderConfig for criteo if the criteo userId is present and there is new runtime fpd', () => {
+        // given
+        const context = {
+          ...adPipelineContext(),
+          runtimeConfig__: {
+            ...emptyRuntimeConfig,
+            audience: { hem: { sha256: 'sha256-hash', sha256ofMD5: 'sha256ofmd5-hash' } }
+          }
+        };
+        const expectedCriteoConfig = {
+          bidders: ['criteo'],
+          config: {
+            ortb2: {
+              user: {
+                ext: {
+                  data: {
+                    eids: [
+                      {
+                        source: context.window__.location.host,
+                        uids: [
+                          {
+                            id: context.runtimeConfig__.audience.hem.sha256,
+                            atype: 3,
+                            ext: { stype: 'hemsha256' }
+                          },
+                          {
+                            id: context.runtimeConfig__.audience.hem.sha256ofMD5,
+                            atype: 3,
+                            ext: { stype: 'hemsha256md5' }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        };
+
+        // when
+        const step = prebidConfigure(
+          {
+            ...moliPrebidTestConfig,
+            config: { userSync: { userIds: [{ name: 'criteo' }] } }
+          },
+          dummySchainConfig
+        );
+        const setBidderConfigSpy = sandbox.spy(dom.window.pbjs, 'setBidderConfig');
+        step(context, []);
+
+        // then
+        expect(setBidderConfigSpy).to.have.been.calledOnce;
+        expect(setBidderConfigSpy.firstCall).to.have.been.calledWithExactly(
+          expectedCriteoConfig,
+          true
+        );
+      });
+
+      it('should not call pbjs.setBidderConfig if the criteo userId is present but there is not new runtime information', () => {
+        const step = prebidConfigure(
+          {
+            ...moliPrebidTestConfig,
+            config: { userSync: { userIds: [{ name: 'criteo' }] } }
+          },
+          dummySchainConfig
+        );
+        const setBidderConfigSpy = sandbox.spy(dom.window.pbjs, 'setBidderConfig');
+
+        step(adPipelineContext(), []);
+        expect(setBidderConfigSpy).to.have.not.been.called;
+      });
+
+      it('should call pbjs.setBidderConfig with the bidderConfigs', () => {
+        const bidderConfigA: prebidjs.IBidderConfig = {
+          bidders: ['appnexus'],
+          config: { ortb2: { site: { page: 'example.com' } } }
+        };
+        const bidderConfigB: prebidjs.IBidderConfig = {
+          bidders: ['rubicon'],
+          config: {
+            schain: { validation: 'relaxed', config: { ver: '1.0', complete: 1, nodes: [] } }
+          }
+        };
+        const step = prebidConfigure(
+          {
+            ...moliPrebidTestConfig,
+            bidderConfigs: [
+              { options: bidderConfigA, merge: true },
+              { options: bidderConfigB, merge: false }
+            ]
+          },
+          dummySchainConfig
+        );
+        const setBidderConfigSpy = sandbox.spy(dom.window.pbjs, 'setBidderConfig');
+
+        step(adPipelineContext(), []);
+        expect(setBidderConfigSpy).to.have.been.calledTwice;
+        expect(setBidderConfigSpy.firstCall).to.have.been.calledWithExactly(bidderConfigA, true);
+        expect(setBidderConfigSpy.secondCall).to.have.been.calledWithExactly(bidderConfigB, false);
       });
     });
 
@@ -1101,14 +1214,15 @@ describe('prebid', () => {
       const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
       const step = prebidRequestBids(moliPrebidTestConfig, 'gam');
       const slot = createAdSlot('none-prebid');
+      const googleAdSlot = googleAdSlotStub(slot.adUnitPath, slot.domId);
       const ctx = adPipelineContext();
       const isThrottledStub = sandbox.stub(ctx.auction__, 'isSlotThrottled');
-      isThrottledStub.withArgs(slot.domId, slot.adUnitPath).returns(true);
+      isThrottledStub.withArgs(googleAdSlot).returns(true);
 
       await step(ctx, [
         {
           moliSlot: slot,
-          adSlot: googleAdSlotStub(slot.adUnitPath, slot.domId),
+          adSlot: googleAdSlot,
           filterSupportedSizes: sizes => sizes
         }
       ]);
@@ -1140,8 +1254,8 @@ describe('prebid', () => {
 
       const ctx = adPipelineContext();
       const isThrottledStub = sandbox.stub(ctx.auction__, 'isSlotThrottled');
-      isThrottledStub.withArgs(domId1, slotDef1.adSlot.getAdUnitPath()).returns(false);
-      isThrottledStub.withArgs(domId2, slotDef2.adSlot.getAdUnitPath()).returns(true);
+      isThrottledStub.withArgs(slotDef1.adSlot).returns(false);
+      isThrottledStub.withArgs(slotDef2.adSlot).returns(true);
 
       await step(ctx, [slotDef1, slotDef2]);
       expect(requestBidsSpy).to.have.been.calledOnce;
@@ -1232,9 +1346,9 @@ describe('prebid', () => {
       const ctx = adPipelineContext();
       sandbox
         .stub(ctx.auction__, 'isSlotThrottled')
-        .withArgs(domId1, slotDef1.adSlot.getAdUnitPath())
+        .withArgs(slotDef1.adSlot)
         .returns(false)
-        .withArgs(domId2, slotDef2.adSlot.getAdUnitPath())
+        .withArgs(slotDef2.adSlot)
         .returns(true);
 
       await step(ctx, [slotDef1, slotDef2]);

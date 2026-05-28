@@ -1,5 +1,4 @@
 import { MoliRuntime } from '../types/moliRuntime';
-import { parseQueryString } from '../util/query';
 import { AssetLoadMethod, createAssetLoaderService } from '../util/assetLoaderService';
 import { getLogger } from '../util/logging';
 import { addNewInfiniteSlotToConfig } from '../util/addNewInfiniteSlotToConfig';
@@ -7,13 +6,15 @@ import { IModule } from '../types/module';
 import { AdService } from './adService';
 import { createEventService } from './eventService';
 import {
+  getAbTestValues,
   getActiveEnvironmentOverride,
   setEnvironmentOverrideInStorage
 } from '../util/environmentOverride';
 import { packageJson } from '../gen/packageJson';
 import * as adUnitPath from './adUnitPath';
 import { extractTopPrivateDomainFromHostname } from '../util/extractTopPrivateDomainFromHostname';
-import { createLabelConfigService, LabelConfigService } from './labelConfigService';
+import { detectGeoFromBrowser } from '../util/detectGeoFromTimezone';
+import { createLabelConfigService } from './labelConfigService';
 import { allowRefreshAdSlot, allowRequestAds } from './spa';
 import {
   AdUnitPathVariables,
@@ -21,6 +22,8 @@ import {
   MoliConfig,
   ResolveAdUnitPathOptions
 } from '../types/moliConfig';
+import { QueryParameters } from 'ad-tag/util/queryParameters';
+import { BrowserStorageKeys } from 'ad-tag/util/browserStorageKeys';
 
 export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
@@ -252,7 +255,6 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       case 'configurable': {
         const shouldInitialize = state.initialize;
         const envOverride = getActiveEnvironmentOverride(window);
-        const modules = state.modules;
 
         // if an override is available, update the environment in the runtime config
         if (envOverride) {
@@ -266,46 +268,11 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
           setEnvironmentOverrideInStorage(envOverride.value, window.sessionStorage);
         }
 
-        // configure modules
-        const log = getLogger(state.runtimeConfig, window);
-        log.debug('MoliGlobal', 'configure modules', config.modules ?? {});
-        modules.forEach(module => {
-          try {
-            module.configure__(config.modules ?? {});
-            log.debug(
-              'MoliGlobal',
-              `configure ${module.moduleType} module ${module.name}`,
-              module.config__()
-            );
-            state.runtimeConfig.adPipelineConfig.initSteps.push(...module.initSteps__());
-            state.runtimeConfig.adPipelineConfig.configureSteps.push(...module.configureSteps__());
-            state.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps.push(
-              ...module.prepareRequestAdsSteps__()
-            );
-            if (module.requestBidsSteps__) {
-              state.runtimeConfig.adPipelineConfig.requestBidsSteps.push(
-                ...module.requestBidsSteps__()
-              );
-            }
-            if (module.prebidBidsBackHandler__) {
-              state.runtimeConfig.adPipelineConfig.prebidBidsBackHandler.push(
-                ...module.prebidBidsBackHandler__()
-              );
-            }
-          } catch (e) {
-            log.error(
-              'MoliGlobal',
-              `failed to configure ${module.moduleType} module ${module.name}`,
-              e
-            );
-          }
-        });
-
         state = {
           state: 'configured',
           config: config,
           runtimeConfig: state.runtimeConfig,
-          modules: modules
+          modules: state.modules
         };
 
         if (shouldInitialize || config.requestAds === true) {
@@ -361,6 +328,77 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       case 'configured': {
         setABtestTargeting();
         addDomainLabel(state.config.domain);
+        addGeoLabels(state.config.targeting?.geo);
+
+        const modules = state.modules;
+        getLogger(state.runtimeConfig, window).debug(
+          'MoliGlobal',
+          'configure modules',
+          state.config.modules ?? {}
+        );
+
+        const labelService = createLabelConfigService(
+          state.config?.labelSizeConfig || [],
+          state.runtimeConfig.labels,
+          window
+        );
+
+        modules
+          .filter(module => {
+            const moduleName = module.name;
+            const moduleConfig = state.config?.modules?.[moduleName];
+
+            if (moduleConfig?.labelCondition) {
+              const areLabelConditionsMet = labelService.isLabelConditionMet(
+                moduleConfig.labelCondition
+              );
+
+              if (!areLabelConditionsMet) {
+                getLogger(state.runtimeConfig, window).debug(
+                  'MoliGlobal',
+                  `skipping configuration of ${module.moduleType} module ${moduleName} due to label condition not met.`
+                );
+                return false;
+              }
+            }
+
+            // if no labelCondition is available or labelConditions are met, the module should be configured
+            return true;
+          })
+          .forEach(module => {
+            try {
+              module.configure__(state.config?.modules ?? {});
+              getLogger(state.runtimeConfig, window).debug(
+                'MoliGlobal',
+                `configure ${module.moduleType} module ${module.name}`,
+                module.config__()
+              );
+              state.runtimeConfig.adPipelineConfig.initSteps.push(...module.initSteps__());
+              state.runtimeConfig.adPipelineConfig.configureSteps.push(
+                ...module.configureSteps__()
+              );
+              state.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps.push(
+                ...module.prepareRequestAdsSteps__()
+              );
+              if (module.requestBidsSteps__) {
+                state.runtimeConfig.adPipelineConfig.requestBidsSteps.push(
+                  ...module.requestBidsSteps__()
+                );
+              }
+              if (module.prebidBidsBackHandler__) {
+                state.runtimeConfig.adPipelineConfig.prebidBidsBackHandler.push(
+                  ...module.prebidBidsBackHandler__()
+                );
+              }
+            } catch (e) {
+              getLogger(state.runtimeConfig, window).error(
+                'MoliGlobal',
+                `failed to configure ${module.moduleType} module ${module.name}`,
+                e
+              );
+            }
+          });
+
         const { refreshInfiniteSlots } = state.runtimeConfig;
         let config = state.config;
 
@@ -504,6 +542,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         // create new ABTest values
         setABtestTargeting();
         addDomainLabel(state.config.domain);
+        addGeoLabels(state.config.targeting?.geo);
 
         const { modules } = state;
         const afterRequestAds = state.nextRuntimeConfig.hooks.afterRequestAds;
@@ -762,7 +801,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             .then(() => 'refreshed');
         } else {
           // requestAds() hasn't been called yet, but some ad slot is already ready to be requested
-          state.runtimeConfig.refreshBuckets.push({ bucket, options });
+          state.nextRuntimeConfig.refreshBuckets.push({ bucket, options });
           return Promise.resolve('queued');
         }
       }
@@ -783,6 +822,11 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         return Promise.reject(`not allowed in state ${state.state}`);
       }
     }
+  }
+
+  function triggerDelay(): void {
+    window.dispatchEvent(new CustomEvent('h5v.trigger-delay'));
+    return;
   }
 
   function getState(): MoliRuntime.state.States {
@@ -822,12 +866,11 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
    *
    */
   function setABtestTargeting(): void {
-    const key = 'ABtest';
-    const params = parseQueryString(window.location.search);
-    const param = params.get(key);
-    const abTest = param ? Number(param) : Math.floor(Math.random() * 100) + 1;
+    const abTestValues = getAbTestValues(window, QueryParameters.abTest, BrowserStorageKeys.abTest);
+    const abTestValue =
+      abTestValues.length > 0 ? Number(abTestValues[0].value) : Math.floor(Math.random() * 100) + 1;
 
-    setTargeting(key, abTest.toString());
+    setTargeting(QueryParameters.abTest, abTestValue.toString());
   }
 
   function addDomainLabel(domainFromConfig?: string): void {
@@ -837,6 +880,44 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       domainFromConfig || extractTopPrivateDomainFromHostname(window.location.hostname);
     if (domain) {
       addLabel(domain);
+    }
+  }
+
+  function addGeoLabels(geoFromConfig?: googleAdManager.GeoConfig): void {
+    const { country, continent } = geoFromConfig ?? detectGeoFromBrowser();
+    if (country) {
+      addLabel(country);
+    }
+    if (continent) {
+      addLabel(continent);
+    }
+  }
+
+  /**
+   * Provide additional targeting insights about the user.
+   *
+   * @param audience contains information about the user
+   */
+  function setAudience(audience: MoliRuntime.AudienceTargeting): void {
+    switch (state.state) {
+      case 'configurable':
+      case 'configured': {
+        state.runtimeConfig.audience = audience;
+        break;
+      }
+
+      case 'spa-finished':
+      case 'spa-requestAds': {
+        state.nextRuntimeConfig.audience = audience;
+        break;
+      }
+      default: {
+        getLogger(state.runtimeConfig, window).error(
+          'MoliGlobal',
+          `Setting audience targeting after configuration: ${JSON.stringify(audience)}`
+        );
+        break;
+      }
     }
   }
 
@@ -889,7 +970,10 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         configureSteps: [],
         prepareRequestAdsSteps: [],
         requestBidsSteps: [],
-        prebidBidsBackHandler: []
+        // this handler must be kept in order to have it available in single page applications for
+        // in later calls - The prebidBidsBackHandler is a strange construct, only necessary because
+        // we cannot deterministicly know the auction end and react on it.
+        prebidBidsBackHandler: previous?.adPipelineConfig.prebidBidsBackHandler ?? []
       }
     };
   }
@@ -919,8 +1003,10 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     refreshAdSlot: refreshAdSlot,
     refreshBucket: refreshBucket,
     refreshInfiniteAdSlot: refreshInfiniteAdSlot,
+    triggerDelay: triggerDelay,
     getState: getState,
     openConsole: openConsole,
+    setAudience: setAudience,
     addEventListener: eventService.addEventListener,
     removeEventListener: eventService.removeEventListener
   };

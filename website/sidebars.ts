@@ -29,7 +29,10 @@ const sidebars: SidebarsConfig = {
         'features/debugging',
         'features/logger',
         'features/environments',
-        'features/passback'
+        'features/passback',
+        'features/hooks',
+        'features/ad-unit-path-variables',
+        'features/events'
       ],
       collapsed: false
     },
@@ -50,8 +53,10 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Guides',
       items: [
-        'guides/conditional-ad-slots',
-        'guides/immutable-ad-tags',
+        'guides/getting-started',
+        'guides/single-page-applications',
+        'guides/performance-optimization',
+        'guides/troubleshooting',
         'guides/logging',
         'guides/styleguide'
       ],

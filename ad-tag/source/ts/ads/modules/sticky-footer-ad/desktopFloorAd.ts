@@ -1,6 +1,7 @@
 import { googletag } from 'ad-tag/types/googletag';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { Environment } from 'ad-tag/types/moliConfig';
+import { isAdvertiserIncluded } from 'ad-tag/ads/isAdvertiserIncluded';
 
 const closeButtonDataRef = 'footer-ad-close-button';
 const containerDataRefSelector = '[data-ref=h5-footer-ad-container]';
@@ -52,7 +53,7 @@ const renderFooterAd =
       // don't render anything if slot render returns empty
       event.isEmpty ||
       // don't render for excluded advertiser ids
-      (!!event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) ||
+      isAdvertiserIncluded(event, disallowedAdvertiserIds) ||
       // minimum is 768px width - h5_footer_ad only on desktop!
       window.matchMedia('(max-width: 767px)').matches
     ) {

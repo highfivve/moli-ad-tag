@@ -4,10 +4,12 @@ import { createBiddersDisabling } from './auctions/biddersDisabling';
 import { createAdRequestThrottling } from './auctions/adRequestThrottling';
 import { auction } from '../types/moliConfig';
 import { createFrequencyCapping } from './auctions/frequencyCapping';
-import { createPreviousBidCpms, PreviousBidCpms } from './auctions/previousBidCpms';
+import { createPreviousBidCpms } from './auctions/previousBidCpms';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { EventService } from './eventService';
 import { ConfigureStep, mkConfigureStep } from './adPipeline';
+import { createInterstitialContext } from 'ad-tag/ads/auctions/interstitialContext';
+import { createTrackWinningBidder } from 'ad-tag/ads/auctions/trackWinningBidder';
 
 /**
  * ## Global Auction Context
@@ -25,13 +27,37 @@ import { ConfigureStep, mkConfigureStep } from './adPipeline';
  * Every new feature must be enabled separately and should not share any data with other features.
  */
 export interface GlobalAuctionContext {
-  isSlotThrottled(slotId: string, adUnitPath: string): boolean;
+  /**
+   *
+   * @param slot The GPT ad slot to check
+   */
+  isSlotThrottled(slot: googletag.IAdSlot): boolean;
   isBidderFrequencyCappedOnSlot(slotId: string, bidder: string): boolean;
   getLastBidCpmsOfAdUnit(slotId: string): number[];
+
+  /**
+   * Get the bidder code of the last winning bid for a given ad unit.
+   * Returns undefined if no winning bid exists for this slot.
+   *
+   * @param slotId the DOM ID of the ad slot
+   */
+  getLastWinningBidderOfAdUnit(slotId: string): prebidjs.BidderCode | undefined;
 
   isBidderDisabled(domId: string, bidder: prebidjs.BidderCode): boolean;
 
   isBidderFrequencyCappedOnSlot(slotId: string, bidder: prebidjs.BidderCode): boolean;
+
+  interstitialChannel(): auction.InterstitialChannel | null | undefined;
+
+  /**
+   * Check if the minimum number of ad requests/page impressions has been reached.
+   * We treat requestAds() calls and page impressions as equivalent.
+   * @param minRequestAds The minimum number of requestAds calls required
+   * @returns true if the minimum number of ad requests has been reached, false otherwise.
+   *          Always returns true if frequency capping is not enabled (since we can't track counts).
+   */
+  hasMinimumRequestAds(minRequestAds: number): boolean;
+
   configureStep(): ConfigureStep;
 }
 
@@ -44,6 +70,10 @@ export const createGlobalAuctionContext = (
   eventService: EventService,
   config: auction.GlobalAuctionContextConfig = {}
 ): GlobalAuctionContext => {
+  const trackWinningBidder = config.trackWinningBidder?.enabled
+    ? createTrackWinningBidder()
+    : undefined;
+
   const biddersDisabling = config.biddersDisabling?.enabled
     ? createBiddersDisabling(config.biddersDisabling, window)
     : undefined;
@@ -58,71 +88,111 @@ export const createGlobalAuctionContext = (
 
   const previousBidCpms = config.previousBidCpms?.enabled ? createPreviousBidCpms() : undefined;
 
+  const interstitial = config.interstitial?.enabled
+    ? createInterstitialContext(config.interstitial, window, window.Date.now, logger)
+    : undefined;
+
   // Ensure pbjs and googletag are initialized
   window.pbjs = window.pbjs || ({ que: [] } as unknown as prebidjs.IPrebidJs);
-  window.googletag = window.googletag || ({ cmd: [] } as unknown as googletag.IGoogleTag);
+  window.googletag = window.googletag || ({} as unknown as googletag.IGoogleTag);
+  window.googletag.cmd = window.googletag.cmd || [];
 
   // Register events
-  if (config.biddersDisabling?.enabled || config.previousBidCpms?.enabled) {
+  if (
+    config.biddersDisabling?.enabled ||
+    config.previousBidCpms?.enabled ||
+    config.frequencyCap?.enabled ||
+    config.interstitial?.enabled
+  ) {
     window.pbjs.que.push(() => {
       window.pbjs.onEvent('auctionEnd', auction => {
-        if (config.biddersDisabling?.enabled) {
-          biddersDisabling?.onAuctionEnd(auction);
-        }
+        biddersDisabling?.onAuctionEnd(auction);
+        interstitial?.onAuctionEnd(auction);
         if (config.previousBidCpms?.enabled && auction.bidsReceived) {
           previousBidCpms?.onAuctionEnd(auction.bidsReceived);
         }
+        frequencyCapping?.onAuctionEnd(auction);
       });
     });
   }
 
-  if (config.adRequestThrottling?.enabled) {
+  if (config.adRequestThrottling?.enabled || config.frequencyCap?.enabled) {
     window.googletag.cmd.push(() => {
       window.googletag.pubads().addEventListener('slotRequested', event => {
         adRequestThrottling?.onSlotRequested(event);
+        frequencyCapping?.onSlotRequested(event);
       });
     });
   }
 
-  if (config.frequencyCap?.enabled) {
+  if (config.frequencyCap?.enabled || config.trackWinningBidder?.enabled) {
     window.pbjs.que.push(() => {
       window.pbjs.onEvent('bidWon', bid => {
         if (config.frequencyCap) {
           frequencyCapping?.onBidWon(bid);
         }
+        if (config.trackWinningBidder) {
+          trackWinningBidder?.onBidWon(bid);
+        }
       });
     });
+  }
 
-    window.googletag.cmd.push(() => {
-      window.googletag.pubads().addEventListener('slotRenderEnded', event => {
-        frequencyCapping?.onSlotRenderEnded(event);
-      });
+  if (config.frequencyCap?.enabled) {
+    eventService.addEventListener('beforeRequestAds', () => {
+      frequencyCapping?.beforeRequestAds();
     });
-
     eventService.addEventListener('afterRequestAds', () => {
       frequencyCapping?.afterRequestAds();
     });
   }
 
+  if (config.frequencyCap?.enabled || config.interstitial?.enabled) {
+    window.googletag.cmd.push(() => {
+      window.googletag.pubads().addEventListener('slotRenderEnded', event => {
+        frequencyCapping?.onSlotRenderEnded(event);
+        interstitial?.onSlotRenderEnded(event);
+      });
+      window.googletag.pubads().addEventListener('impressionViewable', event => {
+        frequencyCapping?.onImpressionViewable(event);
+      });
+    });
+  }
+
   const configureStep = mkConfigureStep('GlobalAuctionContext', context => {
     frequencyCapping?.updateAdUnitPaths(context.adUnitPathVariables__);
+    interstitial?.updateAdUnitPaths(context.adUnitPathVariables__);
     return Promise.resolve();
   });
 
   return {
-    isSlotThrottled(slotId: string, adUnitPath: string): boolean {
+    isSlotThrottled(slot: googletag.IAdSlot): boolean {
       return !!(
-        adRequestThrottling?.isThrottled(slotId) || frequencyCapping?.isAdUnitCapped(adUnitPath)
+        adRequestThrottling?.isThrottled(slot.getSlotElementId()) ||
+        frequencyCapping?.isAdUnitCapped(slot)
       );
     },
     isBidderFrequencyCappedOnSlot(slotId: string, bidder: prebidjs.BidderCode): boolean {
-      return frequencyCapping?.isFrequencyCapped(slotId, bidder) ?? false;
+      return frequencyCapping?.isBidderCapped(slotId, bidder) ?? false;
     },
     getLastBidCpmsOfAdUnit(slotId: string): number[] {
       return previousBidCpms?.getLastBidCpms(slotId) ?? [];
     },
+    getLastWinningBidderOfAdUnit(slotId: string): prebidjs.BidderCode | undefined {
+      return trackWinningBidder?.getLastWinningBidderOnAdUnit(slotId);
+    },
     isBidderDisabled(domId: string, bidder: prebidjs.BidderCode): boolean {
       return biddersDisabling?.isBidderDisabled(domId, bidder) ?? false;
+    },
+    interstitialChannel: (): auction.InterstitialChannel | null | undefined => {
+      return interstitial?.interstitialChannel();
+    },
+    hasMinimumRequestAds(minRequestAds: number): boolean {
+      if (!frequencyCapping) {
+        return true;
+      }
+      const currentPageImpression = frequencyCapping.getTotalNumAdRequests();
+      return currentPageImpression >= minRequestAds;
     },
     configureStep(): ConfigureStep {
       return configureStep;

@@ -17,7 +17,6 @@ import { isSizeEqual } from '../util/sizes';
 import { SizeConfigService } from './sizeConfigService';
 import { apstag } from '../types/apstag';
 import { tcfapi } from '../types/tcfapi';
-import TCPurpose = tcfapi.responses.TCPurpose;
 import * as adUnitPath from './adUnitPath';
 import { AdUnitPathVariables } from './adUnitPath';
 import { AdSlot, headerbidding, schain } from '../types/moliConfig';
@@ -32,13 +31,13 @@ const hasRequiredConsent = (tcData: tcfapi.responses.TCData): boolean =>
   !tcData.gdprApplies ||
   (tcData.vendor.consents['793'] &&
     [
-      TCPurpose.STORE_INFORMATION_ON_DEVICE,
-      TCPurpose.SELECT_BASIC_ADS,
-      TCPurpose.CREATE_PERSONALISED_ADS_PROFILE,
-      TCPurpose.SELECT_PERSONALISED_ADS,
-      TCPurpose.MEASURE_AD_PERFORMANCE,
-      TCPurpose.APPLY_MARKET_RESEARCH,
-      TCPurpose.DEVELOP_IMPROVE_PRODUCTS
+      tcfapi.responses.TCPurpose.STORE_INFORMATION_ON_DEVICE,
+      tcfapi.responses.TCPurpose.SELECT_BASIC_ADS,
+      tcfapi.responses.TCPurpose.CREATE_PERSONALISED_ADS_PROFILE,
+      tcfapi.responses.TCPurpose.SELECT_PERSONALISED_ADS,
+      tcfapi.responses.TCPurpose.MEASURE_AD_PERFORMANCE,
+      tcfapi.responses.TCPurpose.APPLY_MARKET_RESEARCH,
+      tcfapi.responses.TCPurpose.DEVELOP_IMPROVE_PRODUCTS
     ].every(purpose => tcData.purpose.consents[purpose]));
 
 /**
@@ -86,7 +85,17 @@ export const a9Init = (
         };
 
         // only load a9 if consent is given for all purposes and Amazon Advertising (793)
-        if (context.env__ !== 'test' && hasRequiredConsent(context.tcData__)) {
+        const supportedByLabels =
+          !config.labelAll ||
+          config.labelAll.every(label =>
+            context.labelConfigService__.getSupportedLabels().includes(label)
+          );
+        if (
+          context.env__ !== 'test' &&
+          hasRequiredConsent(context.tcData__) &&
+          config.enabled !== false &&
+          supportedByLabels
+        ) {
           // async fetch as everything is already initialized
           assetService
             .loadScript({
@@ -131,13 +140,21 @@ export const a9Configure = (
     });
   });
 
-export const a9PublisherAudiences = (config: headerbidding.A9Config): ConfigureStep =>
+export const a9PublisherAudiences = (
+  config: headerbidding.A9Config,
+  audienceTargeting?: MoliRuntime.AudienceTargeting
+): ConfigureStep =>
   mkConfigureStepOnce(
     'a9-publisher-audiences',
     (context: AdPipelineContext, _slots: AdSlot[]) =>
       new Promise<void>(resolve => {
-        const publisherAudience = config.publisherAudience;
-        if (publisherAudience && publisherAudience.enabled) {
+        const runtimeHem = audienceTargeting?.hem?.sha256;
+        const publisherAudience =
+          runtimeHem !== undefined
+            ? { enabled: !!config.publisherAudience?.enabled, sha256Email: runtimeHem }
+            : config.publisherAudience;
+
+        if (publisherAudience !== undefined && publisherAudience.enabled) {
           const tokenConfig: apstag.ITokenConfig = {
             hashedRecords: [
               {
@@ -210,7 +227,7 @@ export const a9RequestBids = (config: headerbidding.A9Config): RequestBidsStep =
     'a9-fetch-bids',
     (context: AdPipelineContext, slotDefinitions: MoliRuntime.SlotDefinition[]) =>
       new Promise<void>(resolve => {
-        if (!hasRequiredConsent(context.tcData__)) {
+        if (!hasRequiredConsent(context.tcData__) || config.enabled === false) {
           context.logger__.debug('A9', 'Skip any due to missing consent');
           resolve();
           return;
@@ -218,10 +235,7 @@ export const a9RequestBids = (config: headerbidding.A9Config): RequestBidsStep =
 
         const slots = slotDefinitions
           .filter(isA9SlotDefinition)
-          .filter(
-            slot =>
-              !context.auction__.isSlotThrottled(slot.moliSlot.domId, slot.adSlot.getAdUnitPath())
-          )
+          .filter(slot => !context.auction__.isSlotThrottled(slot.adSlot))
           .filter(slot => {
             const isVideo = slot.moliSlot.a9.mediaType === 'video';
             const filterSlot = context.labelConfigService__.filterSlot(slot.moliSlot.a9);

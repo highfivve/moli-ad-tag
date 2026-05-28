@@ -18,7 +18,6 @@ This section highlights some of Moli's features.
 * [TCF 2 integration](features/consent)
 * [Rich debugging console](features/debugging)
 
-
 ## Requirements
 
 In order to run Moli your ad stack must meet the following requirements
@@ -26,7 +25,6 @@ In order to run Moli your ad stack must meet the following requirements
 * TCF 2 CMP on your page. Moli expects a working `__tcfapi` implementation
 * Google Ad Manager as an ad manager. There is no support for Xandr, Freewheel or any other
   ad server yet
-
 
 ## How does it work?
 

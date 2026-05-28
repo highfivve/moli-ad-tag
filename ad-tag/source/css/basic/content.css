@@ -1,10 +1,11 @@
 .h5v-content {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
 
   /** sticky content */
-  & > div {
-    top: 0;
+  & > div:first-of-type {
+    top: var(--h5v-navbar-height);
     position: sticky;
   }
 

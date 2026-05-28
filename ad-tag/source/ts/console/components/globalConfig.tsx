@@ -37,6 +37,13 @@ import styles from './../debug.pcss';
 import { resolveOverrides } from 'ad-tag/util/resolveOverrides';
 import { QueryParameters } from 'ad-tag/util/queryParameters';
 import { BrowserStorageKeys } from 'ad-tag/util/browserStorageKeys';
+import { calculateAdDensity } from 'ad-tag/console/util/calculateAdDensity';
+import { extractPositionFromPath } from 'ad-tag/console/util/extractPositionFromPath';
+import {
+  getBrowserStorageValue,
+  removeBrowserStorageValue,
+  setBrowserStorageValue
+} from 'ad-tag/util/localStorage';
 
 declare const window: Window &
   prebidjs.IPrebidjsWindow &
@@ -50,6 +57,12 @@ type IGlobalConfigProps = {
   labelConfigService: LabelConfigService;
   windowResizeService: WindowResizeService;
   themingService: ThemingService;
+  showOverlays: boolean;
+  onShowOverlaysChange: (show: boolean) => void;
+};
+type AdDensityState = {
+  totalAdDensity: number | undefined;
+  percentagePerSlot: { adSlotId: string | undefined; percentage: string | undefined }[];
 };
 type IGlobalConfigState = {
   sidebarHidden: boolean;
@@ -64,6 +77,7 @@ type IGlobalConfigState = {
     consent: boolean;
     yieldOptimization: boolean;
     supplyChain: boolean;
+    adDensity: boolean;
   };
   messages: Message[];
   browserResized: boolean;
@@ -72,6 +86,7 @@ type IGlobalConfigState = {
   adstxtEntry: string[];
   adstxtDomain: string;
   adstxtError: string;
+  adDensity: AdDensityState;
   configVersion: string;
 };
 
@@ -100,7 +115,8 @@ export class GlobalConfig
         labelSizeConfig: false,
         consent: false,
         yieldOptimization: false,
-        supplyChain: false
+        supplyChain: false,
+        adDensity: false
       },
       messages: [],
       browserResized: false,
@@ -109,6 +125,10 @@ export class GlobalConfig
       adstxtEntry: [],
       adstxtDomain: '',
       adstxtError: '',
+      adDensity: {
+        totalAdDensity: undefined,
+        percentagePerSlot: []
+      },
       configVersion: 'not available'
     };
 
@@ -159,6 +179,21 @@ export class GlobalConfig
       }
     } catch (error) {
       console.error(error);
+    }
+  }
+
+  refreshInterstitial(interstitialSlot?: AdSlot): void {
+    if (interstitialSlot) {
+      if (interstitialSlot.behaviour.loaded !== 'infinite') {
+        window.moli.refreshAdSlot(interstitialSlot.domId, {
+          loaded: interstitialSlot.behaviour.loaded
+        });
+        this.toggleSidebar();
+      } else {
+        console.error("Interstitial slot's loading behaviour can not be of type 'infinite'.");
+      }
+    } else {
+      console.error('Interstitial slot not found in the current config.');
     }
   }
 
@@ -221,11 +256,17 @@ export class GlobalConfig
       expandSection,
       theme,
       adstxtEntry,
-      adstxtDomain
+      adstxtDomain,
+      adDensity
     } = this.state;
+    const interstitialSlot = window.moli
+      .getConfig()
+      ?.slots.find(slot => slot.position === 'interstitial');
     const classes = classList('MoliDebug-sidebar', [sidebarHidden, 'is-hidden']);
     const showHideMessage = `${sidebarHidden ? 'Show' : 'Hide'} moli global config panel`;
     const isEnvironmentOverridden = !!getActiveEnvironmentOverride(window);
+    const interstitialTestKey = 'test-interstitial';
+    const isInterstitialTestEnabled = !!getBrowserStorageValue(interstitialTestKey, localStorage);
     const debugDelay = getDebugDelayFromLocalStorage(window);
     const isDarkTheme = theme === 'dark';
     const switchToDarkTheme = () => this.setTheme('dark');
@@ -307,7 +348,7 @@ export class GlobalConfig
               {expandSection.moli && (
                 <div>
                   <div className="MoliDebug-tagContainer">
-                    <TagLabel>Mode</TagLabel>
+                    <TagLabel>Overall Mode</TagLabel>
                     {runtimeConfig.environment === 'test' ? (
                       <Tag variant="yellow">Test</Tag>
                     ) : (
@@ -328,7 +369,47 @@ export class GlobalConfig
                         ▶ Override to test
                       </button>
                     )}
+                    <button
+                      className="MoliDebug-button MoliDebug-button--blue"
+                      onClick={() => this.props.onShowOverlaysChange(!this.props.showOverlays)}
+                    >
+                      {this.props.showOverlays ? '◀ Hide overlays' : '▶ Show overlays'}
+                    </button>
                   </div>
+                  {interstitialSlot && (
+                    <div className="MoliDebug-tagContainer">
+                      <TagLabel>Interstitital Test Mode</TagLabel>
+                      {isInterstitialTestEnabled ? (
+                        <button
+                          className="MoliDebug-button MoliDebug-button--green"
+                          onClick={() => {
+                            removeBrowserStorageValue(interstitialTestKey, localStorage);
+                            this.refreshInterstitial(interstitialSlot);
+                          }}
+                        >
+                          ◀ Reset interstitial test
+                        </button>
+                      ) : (
+                        <button
+                          className={`MoliDebug-button MoliDebug-button--yellow MoliDebug-button--greyText ${
+                            !isEnvironmentOverridden ? 'MoliDebug-button--disabled' : ''
+                          }`}
+                          onClick={() => {
+                            setBrowserStorageValue(interstitialTestKey, 'true', localStorage);
+                            this.refreshInterstitial(interstitialSlot);
+                          }}
+                          disabled={!isEnvironmentOverridden}
+                        >
+                          ▶ Test interstitial
+                        </button>
+                      )}
+                      {!isEnvironmentOverridden && (
+                        <p className="MoliDebug-info">
+                          ❗️Please activate the overall test mode before testing the interstitial.
+                        </p>
+                      )}
+                    </div>
+                  )}
                   <div className="MoliDebug-tagContainer">
                     <TagLabel>Delay loading ads (only in test environment)</TagLabel>
                     <input
@@ -358,8 +439,6 @@ export class GlobalConfig
                     >
                       ▶ Reset all test slot sizes
                     </button>
-                    <br />
-                    <br />
                   </div>
                   {modules && (
                     <>
@@ -619,15 +698,23 @@ export class GlobalConfig
                     <h5>Currency</h5>
                     <div className="MoliDebug-tagContainer">
                       <TagLabel>Ad server currency</TagLabel>
-                      <Tag>{config.prebid.config.currency.adServerCurrency}</Tag>
+                      <Tag>
+                        {config.prebid.config.currency?.adServerCurrency ?? 'EUR (default)'}
+                      </Tag>
                     </div>
                     <div className="MoliDebug-tagContainer">
                       <TagLabel>Granularity multiplier</TagLabel>
-                      <Tag>{config.prebid.config.currency.granularityMultiplier.toString()}</Tag>
+                      <Tag>
+                        {config.prebid.config.currency?.granularityMultiplier.toString() ??
+                          'not set'}
+                      </Tag>
                     </div>
                     <div className="MoliDebug-tagContainer">
                       <TagLabel>Default Rates, USD → EUR</TagLabel>
-                      <Tag>{config.prebid.config.currency.defaultRates.USD.EUR?.toString()}</Tag>
+                      <Tag>
+                        {config.prebid.config.currency?.defaultRates.USD.EUR?.toString() ??
+                          'not set'}
+                      </Tag>
                     </div>
                   </div>
                 )}
@@ -721,41 +808,93 @@ export class GlobalConfig
                     <label htmlFor="newDomain">
                       Use different ads.txt domain for seller id comparison:
                     </label>
-                    <input
-                      type="text"
-                      placeholder="Enter new domain"
-                      name="newDomain"
-                      id="newDomain"
-                    ></input>
-                    <button className="MoliDebug-button" type="submit">
-                      Go!
-                    </button>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Enter new domain"
+                        name="newDomain"
+                        id="newDomain"
+                      ></input>
+                      <button className="MoliDebug-button" type="submit">
+                        Go!
+                      </button>
+                    </div>
                   </form>
                 </>
               )}
             </div>
 
-            <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--linting">
-              <h4>Moli configuration issues and warnings</h4>
-              {this.state.messages.map((message, index) => (
-                <div
-                  key={`${message.text}-${index}`}
-                  className={classList(
-                    'MoliDebug-configMessage',
-                    `MoliDebug-configMessage--${message.kind}`
+            <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--supplyChain">
+              <h4>
+                {this.collapseToggle('adDensity')}
+                Ad Density
+              </h4>
+
+              {expandSection.adDensity && (
+                <>
+                  <form
+                    className="MoliDebug-formContainer MoliDebug-panel MoliDebug-panel--blue"
+                    onSubmit={async event => {
+                      event.preventDefault();
+                      const contentSelector = event.target[0].value;
+                      const { totalAdDensity, adAreaPerSlot } = calculateAdDensity(
+                        contentSelector,
+                        undefined
+                      );
+
+                      const percentagePerSlot = adAreaPerSlot.map(adArea => {
+                        if (!adArea || !adDensity.totalAdDensity) {
+                          return {
+                            adSlotId: adArea?.adSlot ? adArea.adSlot : 'unknown',
+                            percentage: '0.00'
+                          };
+                        }
+                        return {
+                          adSlotId: adArea.adSlot,
+                          percentage: ((adArea.adArea / adDensity.totalAdDensity) * 100).toFixed(2)
+                        };
+                      });
+
+                      this.setState({
+                        adDensity: { totalAdDensity, percentagePerSlot }
+                      });
+                    }}
+                  >
+                    <label htmlFor="adDensitySelector">
+                      Calculate ad density of the content element
+                    </label>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Enter CSS selector"
+                        name="adDensitySelector"
+                        id="adDensitySelector"
+                      ></input>
+                      <button className="MoliDebug-button" type="submit">
+                        Go!
+                      </button>
+                    </div>
+                  </form>
+                  <div className="MoliDebug-tagContainer">
+                    <TagLabel>Ad Density</TagLabel>
+                    <Tag variant={'green'}>{adDensity.totalAdDensity}</Tag>
+                  </div>
+                  {adDensity.percentagePerSlot.length > 0 && (
+                    <>
+                      <hr />
+                      <h4>Percentage of ad slot area on total ad area</h4>
+                      {adDensity.percentagePerSlot.map(percentage => {
+                        return (
+                          <div className="MoliDebug-tagContainer" key={percentage.adSlotId}>
+                            <TagLabel>{extractPositionFromPath(percentage.adSlotId)}</TagLabel>
+                            <Tag variant={'green'}>{percentage.percentage}%</Tag>
+                          </div>
+                        );
+                      })}
+                      <hr />
+                    </>
                   )}
-                >
-                  {this.iconForMessageKind(message.kind)}
-                  {message.text}
-                </div>
-              ))}
-              {this.state.messages.length === 0 && (
-                <div
-                  className={classList('MoliDebug-configMessage', `MoliDebug-configMessage--empty`)}
-                >
-                  {this.iconForMessageKind('empty')}
-                  No errors or warnings found. You're all set!
-                </div>
+                </>
               )}
             </div>
           </div>
@@ -927,6 +1066,7 @@ export class GlobalConfig
       | 'labelSizeConfig'
       | 'consent'
       | 'supplyChain'
+      | 'adDensity'
     >
   ): React.ReactElement => {
     const toggleValue = (
@@ -941,6 +1081,7 @@ export class GlobalConfig
         | 'labelSizeConfig'
         | 'consent'
         | 'supplyChain'
+        | 'adDensity'
       >
     ) => {
       const oldVal = this.state.expandSection[section];

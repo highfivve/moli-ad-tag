@@ -107,7 +107,7 @@ describe('AdPipeline', () => {
   });
 
   describe('run', () => {
-    it('should not run when the slots array is empty', async () => {
+    it('should run when the slots array is empty to initialize modules', async () => {
       let callCount: number = 0;
       const initSteps: InitStep[] = [
         () => {
@@ -117,7 +117,7 @@ describe('AdPipeline', () => {
       ];
       const pipeline = newAdPipeline({ ...emptyPipelineConfig, init: initSteps });
       await pipeline.run([], emptyConfig, emptyRuntimeConfig, 1);
-      expect(callCount).to.be.equals(0);
+      expect(callCount).to.be.equals(1);
     });
 
     it('should use the proper timeout', () => {
@@ -138,7 +138,7 @@ describe('AdPipeline', () => {
           },
           emptyRuntimeConfig,
           1,
-          'one'
+          { bucketName: 'one' }
         )
         .then(() => {
           expect(timeout).to.be.equals(3000);
@@ -163,7 +163,7 @@ describe('AdPipeline', () => {
           },
           emptyRuntimeConfig,
           1,
-          'bla'
+          { bucketName: 'bla' }
         )
         .then(() => {
           expect(timeout).not.to.equals(3000);

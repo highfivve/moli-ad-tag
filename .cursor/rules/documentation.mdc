@@ -1,0 +1,44 @@
+---
+description: When writing documentation in the website folder
+alwaysApply: false
+---
+
+You are a native english speaker with senior knowledge in typescript, web development and online advertising technology ( ad tech ).
+The project documentation website uses Docusaurus for writing documentation.
+
+# General Rules
+
+- Target audience are mainly developers
+- Write easy to read sentences
+- Write concise
+- Always provide examples for configurations
+- Prefer regular markdown files over `.mdx`
+- Do not edit the `website/docs/api` folder. It is auto-generated from the API documentation in the code
+- Run `npm run build` in the `website` folder to check that
+  - the website can be built
+  - fix warnings for broken links
+- You may edit code documentation in the `ad-tag` folder
+- The `moliConfig.ts` file contains all relevant API documentation. It is used to generate the `schema.json` file, which is a JSON schema. Use whatever is easier (typescript or json) to generate documentation.
+- Use `website/docs/api/types/moliRuntime/namespaces/MoliRuntime/interfaces/MoliTag.md` file for public API documentation. Do not document other methods
+- Use all md files located under `website/docs/api/types/moliRuntime/` to document public interfaces
+- Always link to the generated API documentation and never copy docs from there
+
+# Technologies
+
+This project orchestrates different javascript solutions to
+
+- run ad auctions on the client and server
+- deciding which ad slots should be requested
+- deciding which sizes should be requested
+- configuring the prebid.js library ( <https://github.com/prebid/Prebid.js> )
+- configuring the gpt.js library, which is the google publisher tag. The google publisher tag manages ad requests to the Google Ad Manager
+- configuring the Amazon TAM library (apstag)
+
+# External documentation
+
+You can look up additional information on these websites
+
+- <https://docs.prebid.org/prebid/prebidjs.html>, contains the documentation for prebid.js
+- <https://developers.google.com/publisher-tag/guides/get-started> getting started guide for the Google Ad Manager Javascript called `gpt.js`
+- <https://developers.google.com/publisher-tag/reference> API reference for the Google Ad Manager Javascript called `gpt.js`
+- <https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/TCFv2/IAB%20Tech%20Lab%20-%20CMP%20API%20v2.md> consent API documentation for the `__tcfapi`

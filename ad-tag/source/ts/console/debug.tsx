@@ -35,17 +35,63 @@ if (moliConfig) {
   // attach shadow DOM to container
   const shadowRoot = container.attachShadow({ mode: 'open' });
 
-  // create react element
-  const globalConfigComponent = (
-    <GlobalConfig
-      config={moliConfig}
-      runtimeConfig={window.moli.getRuntimeConfig()}
-      modules={window.moli.getConfig()?.modules || {}}
-      labelConfigService={labelConfigService}
-      windowResizeService={new WindowResizeService()}
-      themingService={themingService}
-    />
-  );
+  // function component to manage showOverlays state
+  const DebugConsole = () => {
+    const [showOverlays, setShowOverlays] = React.useState(false);
+    const slotRoots = React.useRef(new Map<string, ReturnType<typeof createRoot>>());
+
+    React.useEffect(() => {
+      setTimeout(() => {
+        const globalConfigComponentRoot = shadowRoot.getElementById('moli-console-global-config');
+        themingService.setRootElement(globalConfigComponentRoot!);
+        themingService.applyTheme();
+        themingService.enableSystemThemeListener();
+      }, 200);
+    }, []);
+
+    React.useEffect(() => {
+      if (showOverlays) {
+        moliConfig.slots.forEach(slot => {
+          const slotDomElement = document.getElementById(slot.domId);
+          if (slotDomElement && labelConfigService.filterSlot(slot)) {
+            let slotConfigRoot = slotRoots.current.get(slot.domId);
+            if (!slotConfigRoot) {
+              slotConfigRoot = createRoot(slotDomElement);
+              slotRoots.current.set(slot.domId, slotConfigRoot);
+            }
+            slotConfigRoot.render(
+              <AdSlotConfig
+                labelConfigService={labelConfigService}
+                slot={slot}
+                parentElement={slotDomElement}
+              />
+            );
+          }
+        });
+      } else {
+        // Unmount overlays when showOverlays is false
+        slotRoots.current.forEach(root => {
+          root.unmount();
+        });
+        slotRoots.current.clear();
+      }
+    }, [showOverlays]);
+
+    return (
+      <>
+        <GlobalConfig
+          config={moliConfig}
+          runtimeConfig={window.moli.getRuntimeConfig()}
+          modules={window.moli.getConfig()?.modules || {}}
+          labelConfigService={labelConfigService}
+          windowResizeService={new WindowResizeService()}
+          themingService={themingService}
+          showOverlays={showOverlays}
+          onShowOverlaysChange={setShowOverlays}
+        />
+      </>
+    );
+  };
 
   // insert root container element in HTML DOM after the existing element
   window.document.body.append(container);
@@ -54,31 +100,7 @@ if (moliConfig) {
   const root = createRoot(shadowRoot);
 
   // render react element inside shadow DOM
-  root.render(globalConfigComponent);
-
-  // wait until the react element is rendered and then apply theme
-  // FIXME it's better to instantiate the theming service in the global config component itself. However this would require
-  //       some more refactoring. This is not critical for now, so we can do it later.
-  setTimeout(() => {
-    const globalConfigComponentRoot = shadowRoot.getElementById('moli-console-global-config');
-    themingService.setRootElement(globalConfigComponentRoot!);
-    themingService.applyTheme();
-    themingService.enableSystemThemeListener();
-  }, 200);
-
-  moliConfig.slots.forEach(slot => {
-    const slotDomElement = document.getElementById(slot.domId);
-    if (slotDomElement && labelConfigService.filterSlot(slot)) {
-      const slotConfigRoot = createRoot(slotDomElement);
-      slotConfigRoot.render(
-        <AdSlotConfig
-          labelConfigService={labelConfigService}
-          slot={slot}
-          parentElement={slotDomElement}
-        />
-      );
-    }
-  });
+  root.render(<DebugConsole />);
 } else {
   window.alert('No moli config found. The console cannot be displayed');
 }

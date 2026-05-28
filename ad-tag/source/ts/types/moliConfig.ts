@@ -4,6 +4,7 @@ import { apstag } from './apstag';
 import { MoliRuntime } from './moliRuntime';
 import { EmetriqAdditionalIdentifier, EmetriqParams, EmetriqCustomParam } from './emetriq';
 import { googletag } from './googletag';
+import { LabelCondition } from 'ad-tag/ads/labelConfigService';
 
 /**
  * Type for a device where Moli could possibly be run on.
@@ -86,7 +87,7 @@ export interface AdSlot {
    * Supplementary gpt configuration.
    * Gpt is always configured, regardless of the existence of this configuration.
    */
-  readonly gpt?: gpt.GptAdSlotConfig;
+  readonly gpt?: googletag.GptSlotSettingsConfig & gpt.GptAdSlotConfig;
 
   /** an optional prebid configuration if this ad slot can also be used by prebid SSPs */
   readonly prebid?: headerbidding.PrebidAdSlotConfigProvider;
@@ -94,6 +95,22 @@ export interface AdSlot {
   /** optional a9 configuration if this ad slot can also be used by a9 */
   readonly a9?: headerbidding.A9AdSlotConfig;
 }
+
+export type MoliConfigVersion = {
+  /**
+   * The version number
+   */
+  readonly versionNumber: number;
+
+  /** Optional AB-test variant.
+   * Is defined when the moliConfig version belongs to an A/B test variant. Otherwise it's the main variant */
+  readonly versionVariant?: string;
+
+  /**
+   * The version identifier including the variant if present. e.g. "1" or "1_a"
+   */
+  readonly identifier: string;
+};
 
 /*
  * Parameters to configure the resolve function
@@ -120,6 +137,72 @@ export type ResolveAdUnitPathOptions = {
 
 export namespace spa {
   /**
+   * Default cleanup behaviour for single page applications.
+   * All slots are being destroyed on navigation.
+   */
+  export interface SinglePageAppCleanupConfigAll {
+    readonly slots: 'all';
+  }
+
+  /**
+   * This cleanup configuration destroys only the ad slots that are requested after navigation.
+   * Replacement for the old `destroyAllAdSlots` setting.
+   *
+   * It allows publishers to keep all ad slots alive on navigation and only destroy the ones
+   * that are requested.
+   *
+   * Use with caution and test properly.
+   *
+   * ## Use cases
+   *
+   * This setting can be used for publishers that have more "static" ad slots, like
+   * mobile sticky, footer ad or skyscraper that should not be destroyed on every page navigation
+   * and that have users that navigation a lot on the page, e.g. swiping through images or profiles.
+   * With this setting the more persistent ad slots are refreshed through ad reload or timed by the
+   * publisher, while other content positions are refreshed on navigation.
+   */
+  export interface SinglePageAppCleanupConfigRequested {
+    readonly slots: 'requested';
+  }
+
+  /**
+   * This cleanup configuration allows publishers to select which ad slots should not be destroyed
+   * on navigation. Currently only the `excluded` option is supported, which means that all ad slots
+   * are destroyed on navigation, except the ones listed in `slotIds`.
+   *
+   * ## Use cases
+   *
+   * There are a couple of use cases for this setting.
+   *
+   * ### Static out-of-content ad slots
+   *
+   * Sidebars or sticky footers that are always present are handled by the regular ad reload.
+   * Especially if the user navigates a lot on the page, e.g. swiping through images or profiles,
+   * this leads to a better user experience and advertiser performance as ad refreshing is less frequent.
+   *
+   * ### Render on navigation slots like interstitials
+   *
+   * Certain slots are rendered on navigation, e.g. interstitials that are shown on navigation.
+   * Those slots should not be destroyed on navigation, to be able to render them properly.
+   */
+  export interface SinglePageAppCleanupConfigSelected {
+    /**
+     * excluded: a list of ad slots that should not be destroyed on navigation.
+     *
+     * Note: This might be extended the future to support including only certain slots.
+     */
+    readonly slots: 'excluded';
+    /**
+     * A list of ad slot IDs that should not be destroyed on navigation.
+     */
+    readonly slotIds: string[];
+  }
+
+  export type SinglePageAppCleanupConfig =
+    | SinglePageAppCleanupConfigAll
+    | SinglePageAppCleanupConfigRequested
+    | SinglePageAppCleanupConfigSelected;
+  /**
    * Additional configuration for single page application publishers.
    */
   export interface SinglePageAppConfig {
@@ -127,6 +210,11 @@ export namespace spa {
      * Set to true if this publisher has a single page application.
      */
     readonly enabled: boolean;
+
+    /**
+     * Defines the cleanup behaviour on navigation.
+     */
+    readonly cleanup?: SinglePageAppCleanupConfig;
 
     /**
      * If set to `false`, `requestAds` will not destroy all existing ad slots,
@@ -143,6 +231,7 @@ export namespace spa {
      * publisher, while other content positions are refreshed on navigation.
      *
      * @default true
+     * @deprecated use the cleanup configuration instead.
      */
     readonly destroyAllAdSlots?: boolean;
 
@@ -312,6 +401,19 @@ export namespace googleAdManager {
     [key: string]: string | string[] | undefined;
   }
 
+  export interface GeoConfig {
+    /**
+     * ISO 2-letter country code (e.g. `"DE"`, `"US"`).
+     * If omitted, the country is detected from the browser timezone.
+     */
+    readonly country?: string;
+    /**
+     * Continent label (e.g. `"europe"`, `"america"`).
+     * If omitted, the continent is detected from the browser timezone.
+     */
+    readonly continent?: string;
+  }
+
   export interface Targeting {
     /** static or supplied key-values */
     readonly keyValues: KeyValueMap;
@@ -328,6 +430,12 @@ export namespace googleAdManager {
 
     /** ad unit path variables */
     readonly adUnitPathVariables?: AdUnitPathVariables;
+
+    /**
+     * Optional geo configuration. Country and continent are added as labels for targeting.
+     * If not set, both values are detected automatically from the browser timezone.
+     */
+    readonly geo?: GeoConfig;
   }
 }
 
@@ -370,12 +478,28 @@ export namespace auction {
   }
 
   /**
+   * Limit the number of ad requests for a specific ad slot that can be made per requestAds cycle.
+   * This is useful for high impact ad slots that should not be requested too often, e.g. interstitials, wallpapers
+   * or video ads.
+   *
+   * Note that this frequency cap does not care if an impression was delivered or not.
+   */
+  export interface PositionFrequencyConfigAdRequestLimit {
+    /**
+     * Setting this to `1`means that only one ad request is allowed per requestAds cycle, which
+     * translates to one ad request per page view.
+     */
+    readonly maxAdRequests: number;
+  }
+
+  /**
    * A set of possible conditions that all need to be met before the ad slot can request ads.
    */
   export interface PositionFrequencyConfigConditions {
     readonly delay?: PositionFrequencyConfigDelay;
     readonly pacingInterval?: PositionFrequencyConfigPacingInterval;
     readonly pacingRequestAds?: PositionFrequencyConfigPacingRequestAds;
+    readonly adRequestLimit?: PositionFrequencyConfigAdRequestLimit;
   }
 
   export interface PositionFrequencyConfig {
@@ -404,7 +528,16 @@ export namespace auction {
 
     /** milliseconds until a bidder becomes active again  */
     readonly reactivationPeriod: number;
+
+    /**
+     * Optional list of dom ids for positions that should never be disabled.
+     */
+    readonly excludedPositions?: string[];
   }
+
+  /**
+   * @deprecated in favor of BidderFrequencyCappingConfig
+   */
   export interface BidderFrequencyConfig {
     /** bidder that should receive the frequency capping  */
     readonly bidder: string;
@@ -429,11 +562,81 @@ export namespace auction {
     readonly events?: Array<'bidWon' | 'bidRequested'>;
   }
 
+  /**
+   * How many requestAds calls are needed before the configured ad slot can be requested
+   */
+  export interface BidderDelayConfig {
+    readonly minRequestAds: number;
+  }
+
+  export interface BidderFrequencyConfigPacingInterval {
+    /**
+     * maximum number of impressions that are allowed in the defined interval for the configured bidder
+     */
+    readonly maxImpressions: number;
+
+    /**
+     * The interval in milliseconds in which the maximum impressions are allowed.
+     * This is used to pace the bid requests for a specific bidder.
+     */
+    readonly intervalInMs: number;
+
+    /**
+     * Optional list of events that should trigger the frequency capping.
+     * The main use case is to reduce requests for high impact formats like wallpaper or interstitials.
+     *
+     * The default is `['bidWon']` which means that the frequency capping is only triggered when a bid is won.
+     * For an interstitial format (e.g. from visx) that should be optimized against the google web interstitial,
+     * the `bidRequested` event should be added, so the user doesn't see two interstitial directly after each other.
+     * This can happen if the first page view is a google web interstitial, because the visx interstitial was requested,
+     * but no bid came back and the second page view display the google interstitial, while a visx interstitial is
+     * requested directly after the google interstitial is closed.
+     *
+     * @default ['bidWon']
+     */
+    readonly events?: Array<'bidWon' | 'bidRequested'>;
+  }
+
+  export interface BidderFrequencyConfigConditions {
+    /**
+     * How many requestAds calls are needed before the configured ad slot can be requested
+     */
+    readonly delay?: BidderDelayConfig;
+
+    /**
+     * how many impressions are allowed in the defined interval for the configured ad slot.
+     */
+    readonly pacingInterval?: BidderFrequencyConfigPacingInterval;
+  }
+
+  export interface BidderFrequencyCappingConfig {
+    /**
+     * bidders that should be frequency capped.
+     *
+     * If not set or empty, all bidders that are configured for this ad slot will be frequency capped.
+     */
+    readonly bidders?: string[];
+
+    /** domId of the slot that should receive the capping  */
+    readonly domId: string;
+
+    /**
+     * The conditions that need to be met before the bidder can request ads again.
+     */
+    readonly conditions: BidderFrequencyConfigConditions;
+  }
+
   export interface FrequencyCappingConfig {
     /** enable or disable this feature */
     readonly enabled: boolean;
+    /**
+     * capping configuration for bidders and positions.
+     * @deprecated in favor of `bidders` and `positions`
+     */
+    readonly configs?: BidderFrequencyConfig[];
+
     /** capping configuration for bidders and positions */
-    readonly configs: BidderFrequencyConfig[];
+    readonly bidders?: BidderFrequencyCappingConfig[];
 
     /**
      * capping configuration for positions only.
@@ -459,6 +662,75 @@ export namespace auction {
     readonly enabled: boolean;
   }
 
+  /**
+   * ## Interstitial channels
+   *
+   * A channel is the type of integration, which the ad will be rendered through.
+   *
+   * - `gam`: The interstitial ad is rendered through the Google Ad Manager Web Interstitials.
+   * - `c`: The interstitial ad is rendered through custom a custom ad tag configuration, which
+   *        could be a header bidding interstitial or a custom implementation.
+   *
+   */
+  export type InterstitialChannel = 'gam' | 'c';
+
+  /**
+   * ## Interstitial Config
+   *
+   * The global auction context can add additional behaviour to the interstitial ad format through
+   * this extension.
+   *
+   * Note that this does not replace, but extend the frequency capping feature. While the frequency
+   * capping is used to limit the overall number of interstitials displayed to a user, this
+   * configuration is used to control the order and types of channels and interstitial may be requested.
+   */
+  export interface InterstitialConfig {
+    readonly enabled: boolean;
+
+    /**
+     * The ad unit path for the interstitial ad slot.
+     * This is used to identify the interstitial ad slot in the ad server.
+     */
+    readonly adUnitPath: string;
+
+    /**
+     * The DOM ID of the interstitial ad slot.
+     *
+     * The Google Web Interstitials use a dynamic DOM ID that is generated at runtime, but all
+     * other integrations require a DOM ID to properly perform an auction.
+     */
+    readonly domId: string;
+
+    /**
+     * The channels that are allowed to be used for the interstitial ad format and in which order
+     * they should be requested.
+     *
+     * Duplicate channels are not allowed. After the first appearance of a channel, all subsequent
+     * appearances are ignored.
+     *
+     * If the priority is empty, the interstitial ad format will not be requested at all.
+     */
+    readonly priority: InterstitialChannel[];
+
+    /**
+     * Time-to-live in milliseconds for the interstitial state stored in local storage.
+     *
+     * This value can influence the priority of the interstitial ad format as a channel might get
+     * more share of ad requests if the interstitial state is not cleared frequently or cleared too
+     * frequently.
+     *
+     * @default is 30 minutes
+     */
+    readonly ttlStorage?: number;
+  }
+
+  /**
+   * Track the latest winning bidder per ad unit based on the prebid `bidWon` event.
+   */
+  export interface TrackWinningBidderConfig {
+    readonly enabled: boolean;
+  }
+
   export interface GlobalAuctionContextConfig {
     /**
      * Disable bidders that lack auction participation
@@ -481,6 +753,19 @@ export namespace auction {
      * Save previous prebid bid cpms on this position
      */
     readonly previousBidCpms?: PreviousBidCpmsConfig;
+
+    /**
+     * Additional configuration options for the interstitial ad format.
+     *
+     * - Set priorities which channel ( gam web interstitial or custom interstitial )
+     * - Configure waterfall scenarios for the interstitial ad format "gam > custom" or "custom > gam"
+     */
+    readonly interstitial?: InterstitialConfig;
+
+    /**
+     * Enable tracking the latest winning bidder per ad unit from the prebid `bidWon` event.
+     */
+    readonly trackWinningBidder?: TrackWinningBidderConfig;
   }
 }
 
@@ -652,6 +937,7 @@ export namespace gpt {
 
   /**
    * ## Gpt ad slot configuration
+   * @deprecated in favor of googletag.GptSlotSettingsConfig.
    */
   export interface GptAdSlotConfig {
     /**
@@ -659,6 +945,7 @@ export namespace gpt {
      * Defaults to true.
      *
      * Correlates directly to googletag.IAdSlot.setCollapseEmptyDiv().
+     * @deprecated please use googletag.GptSlotSettingsConfig.collapseDiv instead.
      */
     collapseEmptyDiv?: boolean;
   }
@@ -692,6 +979,36 @@ export namespace headerbidding {
     readonly appendNode: boolean;
   };
 
+  /**
+   * Configuration object for `pbjs.setBidderConfig` calls.
+   *
+   * ## Prebid setBidderConfig docs
+   *
+   * This function is similar to setConfig, but is designed to support certain bidder-specific
+   * scenarios.
+   *
+   * Configuration provided through the setConfig function is globally available to all bidder
+   * adapters. This makes sense because most of these settings are global in nature. However,
+   * there are use cases where different bidders require different data, or where certain parameters
+   * apply only to a given bidder. Use setBidderConfig when you need to support these cases.
+   *
+   * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setBidderConfig.html
+   */
+  export interface SetBidderConfig {
+    /**
+     * The configuration object that will be passed to `pbjs.setBidderConfig`.
+     */
+    readonly options: prebidjs.IBidderConfig;
+
+    /**
+     * Note if you would like to add to existing config you can pass true for the optional second
+     * mergeFlag argument like setBidderConfig(options, true).
+     *
+     * If not passed, this argument defaults to false and setBidderConfig replaces all values for specified bidders.
+     */
+    readonly merge?: boolean;
+  }
+
   export interface PrebidConfig {
     /** https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig  */
     readonly config: prebidjs.IPrebidJsConfig;
@@ -701,6 +1018,29 @@ export namespace headerbidding {
 
     /** optional bidder settings */
     readonly bidderSettings?: prebidjs.IBidderSettings;
+
+    /**
+     * An optional list of configs that will be applied through `pbjs.setBidderConfig`.
+     *
+     * This is useful for configuring bidder specific settings that are not part of the
+     * `pbjs.setConfig` API or custom extensions that are not part of the prebid.js core, such as
+     *
+     * - schain configuration
+     * - bidder specific openrtb extensions
+     *
+     * **Prebid setBidderConfig docs**
+     *
+     * This function is similar to setConfig, but is designed to support certain bidder-specific
+     * scenarios.
+     *
+     * Configuration provided through the setConfig function is globally available to all bidder
+     * adapters. This makes sense because most of these settings are global in nature. However,
+     * there are use cases where different bidders require different data, or where certain parameters
+     * apply only to a given bidder. Use setBidderConfig when you need to support these cases.
+     *
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setBidderConfig.html
+     */
+    readonly bidderConfigs?: SetBidderConfig[];
 
     /**
      * optional list of analytic adapters that will be enabled through the `enableAnalytics` API.
@@ -751,6 +1091,17 @@ export namespace headerbidding {
       readonly url: string;
     };
 
+    /**
+     * If set to true, the prebid auction will be clear on every `requestAds` call.
+     * This can be useful in single page applications where the ad slots are reused.
+     *
+     * By default, this is false and the prebid auction will not be cleared.
+     * Make sure if you enable this, to monitor the impact.
+     *
+     * @default false
+     */
+    readonly clearAllAuctions?: boolean;
+
     /** optional listener for prebid events */
     // FIXME must be moved somewhere else. This is a runtime config thing for modules
     //  listener?: PrebidListenerProvider;
@@ -769,8 +1120,6 @@ export namespace headerbidding {
   }
 
   /**
-   * ## Amazon Publisher Audience
-   *
    * Allow Amazon to target on hashed user email addresses when consent is given.
    */
   export interface A9PublisherAudienceConfig {
@@ -791,6 +1140,22 @@ export namespace headerbidding {
   export type A9SlotNamePathDepth = 3 | 4 | 5;
 
   export interface A9Config {
+    /**
+     * Disable Amazon TAM / A9 integration
+     * @default true
+     */
+    readonly enabled?: boolean;
+
+    /**
+     * Add conditions to disable a9 for certain pages.
+     * Note that this is a global setting and will disable a9 for all ad slots.
+     *
+     * NOTE: single page applications are not supported yet. The aps script is loaded initially.
+     *       If the first page view does not load the aps script, it will never be loaded for the
+     *       entire session.
+     */
+    readonly labelAll?: string[];
+
     /**
      * publisher ID
      */
@@ -849,8 +1214,6 @@ export namespace headerbidding {
   }
 
   /**
-   * ## A9 ad slot configuration
-   *
    * Most of the a9 configuration is derived from the [[IAdSlot]] definition that provides
    * the configuration.
    *
@@ -963,11 +1326,27 @@ export namespace modules {
      * If set to true the module will be enabled.
      */
     readonly enabled: boolean;
+
+    /**
+     * Optional configuration to activate the module only if the specific label conditions are met.
+     */
+    readonly labelCondition?: LabelCondition;
   }
 
   export namespace adreload {
+    export type RefreshIntervalOverrideEntry = {
+      /**
+       * Default refresh interval override for this ad slot.
+       */
+      default?: number;
+      /**
+       * Optional bidder specific refresh interval overrides for this ad slot.
+       */
+      bidders?: Partial<Record<prebidjs.BidderCode, number>>;
+    };
+
     export type RefreshIntervalOverrides = {
-      [slotDomId: string]: number;
+      [slotDomId: string]: number | RefreshIntervalOverrideEntry;
     };
 
     export type ViewabilityOverrideEntryBase = {
@@ -1109,6 +1488,9 @@ export namespace modules {
       /**
        * Configures an override for the default refresh interval configured in
        * `refreshIntervalMs` per ad slot.
+       *
+       * Supports either a plain number (`slot -> interval`) or an object with
+       * a slot default and optional bidder specific overrides.
        */
       refreshIntervalMsOverrides?: RefreshIntervalOverrides;
 
@@ -1221,7 +1603,99 @@ export namespace modules {
     }
   }
 
+  export namespace moliAnalytics {
+    export interface MoliAnalyticsConfig extends IModuleConfig {
+      /**
+       *  Publisher identifier
+       */
+      readonly publisher: string;
+
+      /**
+       *  Data collection URL
+       */
+      readonly url: string;
+
+      /**
+       * Number of events to collect into a single call to handler or url. Defaults to 1
+       */
+      readonly batchSize?: number;
+
+      /**
+       * Time (in milliseconds) to wait before calling url with an incomplete batch (when
+       *  fewer than batchSize events have been collected).
+       * Defaults to 100
+       */
+      batchDelay?: number;
+    }
+  }
+
+  /**
+   * @see https://geoedge.com/
+   */
+  export namespace geoedge {
+    export interface GeoEdgeModuleConfig extends IModuleConfig {
+      /**
+       * Your GeoEdge publisher key
+       */
+      readonly key: string;
+
+      /**
+       * Optional configuration for GeoEdge.
+       */
+      readonly cfg?: GeoEdgeConfig;
+
+      /**
+       * GeoEdge has no defined purposes (state 2025-09-24) and some CMPs (Sourcepoint, Consentmanager) exclude it from TC String.
+       * This makes it impossible to check if consent is given or not.
+       *
+       * If GeoEdge decides to add a purpose, we can use this flag to immediately turn on the check again.
+       * As a safeguard purpose-1 is mandatory to load geoedge.
+       *
+       * @default false
+       */
+      readonly checkGVLID?: boolean;
+    }
+
+    /**
+     * In case you don't want to limit the demand sources monitored, you can leave those objects empty.
+     *
+     * @see https://helpcenter.geoedge.com/hc/en-us/articles/360029065811-Choosing-what-to-Monitor-Include-Exclude-specific-Advertisers#overview-0-0
+     */
+    export type GeoEdgeFilter = {
+      /**
+       * the key is either an advertiserId, AdSense id or `exclude`.
+       */
+      readonly [id: string | 'exclude']: boolean;
+    };
+
+    export interface GeoEdgeConfig {
+      /**
+       * To support any of the Prebid-compatible Header Bidding Libraries, you can set the name of
+       * the module here.
+       */
+      readonly pbGlobal?: string;
+
+      /**
+       * Filter GAM advertiser ids. Use `exclude` as a key and set it to `true` if you want to
+       * exclude advertisers instead of including them.
+       *
+       * In case you don't want to limit the demand sources monitored, you can leave those objects empty.
+       */
+      readonly advs?: GeoEdgeFilter;
+
+      /**
+       * Should be used in case you would like to monitor only AdX/AdSense connected to your Google Ad Manager account.
+       * These id's need to be set under 'pubIds' (with the entire `ca-pub-xx…` string):
+       *
+       * In case you don't want to limit the demand sources monitored, you can leave those objects empty.
+       */
+      readonly pubIds?: GeoEdgeFilter;
+    }
+  }
+
   export namespace adex {
+    export type AdexPartner = 'utiq';
+
     export interface AdexAppConfig {
       /**
        * key within the moli config keyValues in which the client type is defined
@@ -1305,6 +1779,11 @@ export namespace modules {
        * Provided by your ADEX account manager.
        */
       readonly adexTagId: string;
+
+      /**
+       * Name of the app (publisher code).
+       */
+      readonly appName: string;
       /**
        * For single page apps, enable spaMode. Tracking is then executed once per configuration cycle.
        * In regular mode, tracking is only executed once.
@@ -1318,6 +1797,12 @@ export namespace modules {
        * If there's an app version of the site, add the appConfig in order to make sure mobile data is sent to the Adex
        */
       readonly appConfig?: AdexAppConfig;
+
+      /**
+       * A list of partners where cookie matching calls should be performed.
+       * @see https://api.theadex.com/collector/v1/docs/index.html#/Web%20Collection/get_d__customer___tag__i_2_gif
+       */
+      readonly enabledPartners?: AdexPartner[];
     }
   }
 
@@ -1338,8 +1823,66 @@ export namespace modules {
       readonly matchType: 'regex' | 'contains' | 'exact';
     };
 
+    /**
+     * A label blocklist entry that can be used to set a label dynamically during an ad pipeline run.
+     *
+     * ## Use cases
+     *
+     * Labels control various aspects of the ad pipeline, such as:
+     * - ad slots that can be requested
+     * - size configs that can be applied
+     * - bidders that are active
+     *
+     * Adding labels dynamically based on url patterns allows us to control those aspects dynamically
+     * through the ad tag configuration.
+     */
+    export type BlocklistLabelEntry = {
+      /**
+       * The label that is set if the url matches the label blocklist entry
+       */
+      readonly label: string;
+
+      /**
+       * The regex pattern for the complete href of the page
+       */
+      readonly pattern: string;
+
+      /**
+       * If set to true, the pattern is matched in reverse, meaning that if the url does not match the pattern,
+       * the label will be set.
+       *
+       * This is useful for adding labels to all urls with certain exceptions, like the homepage or
+       * a login page.
+       */
+      readonly reverseMatch?: boolean;
+
+      /**
+       * Defines how the pattern should be matched against the url
+       *
+       * - `regex` - transform the pattern into a regex and runs `regex.test(url)`
+       * - `contains` - checks if the url contains the given pattern string
+       * - `exact` - checks if the url exactly matches the given pattern string
+       */
+      readonly matchType: 'regex' | 'contains' | 'exact';
+    };
+
     export type Blocklist = {
+      /**
+       * A list of blocklisted urls.
+       *
+       * The urls are matched against the ad request url and if a match is found, the ad pipeline
+       * run is
+       *
+       * - either aborted (if the mode is `block`)
+       * - or a key value is set (if the mode is `key-value`)
+       */
       readonly urls: BlocklistEntry[];
+
+      /**
+       * Configuration to set labels dynamically during the ad pipeline run.
+       * See [[BlocklistLabelEntry]] for more information.
+       */
+      readonly labels?: BlocklistLabelEntry[];
     };
 
     /**
@@ -1447,16 +1990,6 @@ export namespace modules {
        * format filters will be used.
        */
       readonly configs: SkinConfig[];
-
-      /**
-       * Function to track when the skin cpm is lower than the combined cpm of the ad slots that
-       * would be removed in its favour.
-       */
-      readonly trackSkinCpmLow?: (
-        cpms: { skin: number; combinedNonSkinSlots: number },
-        skinConfig: SkinConfig,
-        skinBid: prebidjs.IBidResponse
-      ) => void;
     }
 
     /**
@@ -1582,9 +2115,25 @@ export namespace modules {
       readonly destroySkinSlot?: boolean;
 
       /**
-       * If set, the skin of the configured bidder reloads after the given interval (in ms).
+       * If set, the ad tag will add a page level targeting key value pair that can be used to
+       * react if a skin configuration was applied or not
+       *
+       * The key value pair will only be added if a skin was detected and requested. You should
+       * always
        */
-      readonly adReload?: { intervalMs: number; allowed: prebidjs.BidderCode[] };
+      readonly targeting?: {
+        /**
+         * Will be set at the page level and can be used to check if a skin was applied.
+         */
+        readonly key: string;
+
+        /**
+         * The value that is set if a skin was detected and requested.
+         *
+         * @default is '1'
+         */
+        readonly value?: string;
+      };
     };
   }
 
@@ -1751,7 +2300,7 @@ export namespace modules {
        */
       readonly customizationOptions?: {
         /**
-         * ## Configuration option for language
+         * **Configuration option for language**
          *
          * You can use the below configuration option if you need to dynamically change the default language of the text
          * generated by the dynamic `<div>`, e.g. if users have a language drop-down option.
@@ -1786,7 +2335,7 @@ export namespace modules {
         readonly contentTextColor: ColorHexCode;
 
         /**
-         * ## Optimize auto-scroll margin to domain list paragraph
+         * **Optimize auto-scroll margin to domain list paragraph**
          *
          * Users may land on Manage Utiq page from either the Integrated Model or Separate pop-up Model, with a relevant
          * hyperlink, and they will be automatically scrolled to the domains list paragraph.
@@ -1817,25 +2366,66 @@ export namespace modules {
       readonly consentManagerDataLayer?: boolean;
     }
 
+    export interface UtiqUserIdConfig {
+      /**
+       * Configuration for integrating UTIQ with Emetriq.
+       */
+      readonly emetriq?: {
+        /**
+         * SID (Site ID) for Emetriq integration.
+         */
+        readonly sid: string;
+      };
+    }
+
     /**
      * ## Utiq Configuration
      *
      * The configuration for the utiq module. Contains all utiq configuration properties as well as moli ad tag modules, too.
      */
-    export type UtiqConfig = {
-      readonly enabled: boolean;
-
+    export interface UtiqConfig extends IModuleConfig {
       /**
        * Utiq loads a single javascript. It will only load if consent for **all** purposes is given.
        */
-      readonly assetUrl: string;
+      readonly assetUrl?: string;
 
       /**
        * The Utiq loader script can be configured using the Utiq.config object. The configuration object is a JavaScript
        * @see https://docs.utiq.com/docs/configuration-options
        */
       readonly options?: UtiqConfigOptions;
-    };
+
+      /**
+       * **Utiq Loading Delay Configuration**
+       *
+       * If you wish to delay the loading of the Utiq script, you can use the `delay` configuration option.
+       * There are different ways to delay the loading of the Utiq script, but only one is currently supported:
+       *
+       * - `minAdRequests` (supported): This option allows you to specify the minimum number of ad requests that must be made before the Utiq script is loaded.
+       * - `consent` (planned): 'existed'. If set to `existed`, the Utiq script will only be loaded if the user has already given consent for all purposes.
+       *               This would mitigate the risk of overwhelming users with the Utiq pop-up if they have just seen the CMP pop-up.
+       *
+       */
+      readonly delay?: {
+        /**
+         * Delaying the utiq script, must be explicitly enabled.
+         */
+        readonly enabled: boolean;
+        /**
+         * After which number of ad requests should the Utiq script be loaded.
+         *
+         * You can use this to slowly roll out Utiq to your users and to not overwhelm them with the Utiq pop-up.
+         *
+         * @default 0
+         */
+        readonly minAdRequests?: number;
+      };
+
+      /**
+       * Configuration for integrating UTIQ with other user ID solutions.
+       */
+      readonly userIdConfig?: UtiqUserIdConfig;
+    }
   }
 
   export namespace prebid_first_party_data {
@@ -2023,7 +2613,7 @@ export namespace modules {
        *
        * @see https://docs.xdn.emetriq.de/#hashing
        */
-      readonly guid: string;
+      readonly guid?: string;
     }
 
     export type EmetriqMappingDefinition = {
@@ -2059,7 +2649,7 @@ export namespace modules {
       readonly launchPadId: string;
 
       /**
-       * md5, sha1, and sha256 hashes of the user's email address.
+       * sha1, sha256, and md5 hashes of the user's email address.
        *
        * From the docs
        *
@@ -2324,6 +2914,100 @@ export namespace modules {
     }
   }
 
+  export namespace interstitial {
+    export type InterstitialModuleConfig = {
+      readonly enabled: boolean;
+      readonly interstitialDomId: string;
+
+      /**
+       * Disable rendering the custom interstitial ad format for certain advertisers by specifying them here.
+       * Most of the time you would use this for partners who ship their own special format or behaviour.
+       */
+      readonly disallowedAdvertiserIds: number[];
+
+      /**
+       * Interstitial is automatically closed after a certain time.
+       */
+      readonly closeAutomaticallyAfterMs?: number;
+    };
+  }
+
+  export namespace custom {
+    export interface CustomScriptConfig {
+      /**
+       * Loading conditions based on labels.
+       */
+      readonly labelAll?: string[];
+      /**
+       * Loading conditions based on labels.
+       */
+      readonly labelAny?: string[];
+
+      /**
+       * URL of an external script to be loaded.
+       */
+      readonly src: string;
+
+      /**
+       * Additional attributes for the script tag.
+       */
+      readonly attributes?: {
+        /**
+         * Additional attributes to be added to the script tag.
+         *
+         * @example
+         * ```ts
+         * {
+         *   'data-custom-attribute': 'value',
+         *   'type': 'text/javascript'
+         * }
+         * ```
+         */
+        readonly [attributeName: string]: string;
+      };
+
+      /**
+       * Consent requirements for loading the script.
+       */
+      readonly consent?: {
+        /**
+         * validate GVL (general vendor id) via tcf2api interface
+         */
+        cmpApi: 'tcf';
+
+        /**
+         * A valid GVL vendor id.
+         * @see https://vendorlist.consensu.org/v3/vendor-list.json
+         * @see https://iabeurope.eu/vendor-list-tcf/
+         */
+        vendorId: string;
+      };
+    }
+
+    /**
+     * ## Custom Module Configuration
+     *
+     * This module configuration allows the execute arbitrary javascript code.
+     * Late this may be extended to add arbitrary styles.
+     */
+    export interface CustomModuleConfig extends IModuleConfig {
+      /**
+       * Inline JavaScript code that will be executed once per requestAds.
+       */
+      readonly inlineJs?: {
+        /**
+         * The JavaScript code to be executed.
+         */
+        readonly code: string;
+      };
+
+      /**
+       * List of external scripts to be loaded.
+       */
+      readonly scripts?: CustomScriptConfig[];
+    }
+  }
+
   export interface ModulesConfig {
     readonly adex?: adex.AdexConfig;
     readonly adReload?: adreload.AdReloadModuleConfig;
@@ -2331,8 +3015,10 @@ export namespace modules {
       | blocklist.BlocklistUrlsBlockingConfig
       | blocklist.BlocklistUrlsKeyValueConfig;
     readonly cleanup?: cleanup.CleanupModuleConfig;
+    readonly custom?: custom.CustomModuleConfig;
     readonly confiant?: confiant.ConfiantConfig;
     readonly emetriq?: emetriq.EmetriqModuleConfig;
+    readonly geoedge?: geoedge.GeoEdgeModuleConfig;
     readonly identitylink?: identitylink.IdentityLinkModuleConfig;
     readonly pubstack?: pubstack.PubstackConfig;
     readonly skin?: skin.SkinModuleConfig;
@@ -2344,6 +3030,8 @@ export namespace modules {
     readonly stickyFooterAdV2?: stickyFooterAdV2.StickyFooterAdConfig;
     readonly lazyload?: lazyload.LazyLoadModuleConfig;
     readonly zeotap?: zeotap.ZeotapModuleConfig;
+    readonly interstitial?: interstitial.InterstitialModuleConfig;
+    readonly moliAnalytics?: moliAnalytics.MoliAnalyticsConfig;
   }
 }
 
@@ -2358,6 +3046,8 @@ export interface MoliConfig {
    * that is served to the client. This is useful for debugging purposes.
    */
   readonly version?: string;
+
+  readonly configVersion?: MoliConfigVersion;
 
   /**
    * default is `gam`
@@ -2387,21 +3077,21 @@ export interface MoliConfig {
    * extract the top private domain, but with a very limited implementation. This also fails if the ad tag is called
    * on other domains such as google.transl or in iframe integrations.
    *
-   * ## Ad Unit Path Variables
+   * #### Ad Unit Path Variables
    *
    * The `domain` will be used in the `adUnitPathVariables`. A domain set via `setAdUnitPathVariables` takes precedences over
    * the ad tag config. If neither `domain` is set in the config, nor provided via `setAdUnitPathVariables`, we make a best
    * effort guess via `window.location.hostname`.
    *
-   * ## Label
+   * #### Label
    *
    * If set, the `domain` will also be added as a label.
    *
-   * ## Why ?
+   * #### Why ?
    *
    * The `domain` is part of the ad unit path and used for targeting certain bidders that work on a per-domain basis.
    *
-   * ## Examples
+   * #### Examples
    *
    * - `example.com` - the most common domain
    * - `example.co.uk` - some country TLDs span the last two segments
@@ -2451,7 +3141,7 @@ export interface MoliConfig {
   readonly globalAuctionContext?: auction.GlobalAuctionContextConfig;
 
   /**
-   * ## Module configuration
+   * #### Module configuration
    *
    * Optional module configuration. Every module must be enabled individually and has its own configuration.
    * A module may the access its configuration via the `moli` configuration. This is very similar to how prebid handles
@@ -2475,7 +3165,7 @@ export interface MoliConfig {
   };
 
   /**
-   * ## Bridge Configuration
+   * #### Bridge Configuration
    *
    * The ad tag supports a postMessage protocol to communicate with other javascript inside an iframe.
    *

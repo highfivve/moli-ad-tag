@@ -12,7 +12,7 @@ import {
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
 import { EmetriqWindow } from 'ad-tag/types/emetriq';
-import { Emetriq } from 'ad-tag/ads/modules/emetriq/index';
+import { Emetriq, createEmetriq } from 'ad-tag/ads/modules/emetriq/index';
 import { modules } from 'ad-tag/types/moliConfig';
 import { prebidjs } from 'ad-tag/types/prebidjs';
 import { trackInApp } from 'ad-tag/ads/modules/emetriq/trackInApp';
@@ -34,7 +34,6 @@ describe('Emetriq Module', () => {
 
   const sid = 1337;
   const tcDataWithConsent = fullConsent({ 213: true });
-  const createEmetriq = (): Emetriq => new Emetriq();
 
   const webConfig: modules.emetriq.EmetriqWebConfig = {
     enabled: true,

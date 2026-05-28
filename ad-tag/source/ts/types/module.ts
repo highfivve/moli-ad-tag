@@ -1,7 +1,6 @@
 import { ConfigureStep, InitStep, PrepareRequestAdsStep, RequestBidsStep } from '../ads/adPipeline';
 import { modules } from './moliConfig';
 import { MoliRuntime } from './moliRuntime';
-
 export type ModuleType =
   | 'cmp'
   | 'reporting'
@@ -13,7 +12,8 @@ export type ModuleType =
   | 'dmp'
   | 'yield'
   | 'creatives'
-  | 'lazy-load';
+  | 'lazy-load'
+  | string;
 
 export interface IModule {
   readonly name: string;

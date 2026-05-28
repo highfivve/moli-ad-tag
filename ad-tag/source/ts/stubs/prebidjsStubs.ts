@@ -47,6 +47,9 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
         defaultRates: { USD: { EUR: 1 } }
       }
     }),
+    mergeConfig(config: Partial<prebidjs.IPrebidJsConfig>) {
+      return;
+    },
     setConfig: (_config: prebidjs.IPrebidJsConfig): void => {
       return;
     },
@@ -61,6 +64,9 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     },
     getUserIds(): prebidjs.userSync.UserIds {
       return {};
+    },
+    getUserIdsAsync(): Promise<prebidjs.userSync.UserIds> {
+      return Promise.resolve({});
     },
     enableAnalytics(_: prebidjs.analytics.AnalyticsAdapter[]): void {
       return;
@@ -86,6 +92,12 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     },
     getAllWinningBids(): prebidjs.BidResponse[] {
       return [];
+    },
+    getBidResponsesForAdUnitCode(adUnitCode: string): prebidjs.IBidsResponse {
+      return { bids: [] };
+    },
+    clearAllAuctions(): void {
+      return;
     },
     aliasBidder(
       bidderCode: string,

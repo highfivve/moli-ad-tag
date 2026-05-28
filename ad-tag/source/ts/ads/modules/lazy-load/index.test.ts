@@ -1,15 +1,21 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
-import { LazyLoad } from 'ad-tag/ads/modules/lazy-load/index';
+import { createLazyLoad } from 'ad-tag/ads/modules/lazy-load/index';
 import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 import { AdSlot, MoliConfig } from 'ad-tag/types/moliConfig';
 import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 import { createMoliTag } from 'ad-tag/ads/moli';
-import { emptyRuntimeConfig, newGlobalAuctionContext, newNoopLogger } from 'ad-tag/stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  newNoopLogger
+} from 'ad-tag/stubs/moliStubs';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
 import { pbjsTestConfig } from 'ad-tag/stubs/prebidjsStubs';
 import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
-import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
+import { AdPipelineContext, IAdPipelineRunOptions } from 'ad-tag/ads/adPipeline';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
 const createAdSlots = (
@@ -89,6 +95,7 @@ const MockIntersectionObserver = class MockIntersectionObserver implements Inter
 };
 
 use(sinonChai);
+use(chaiAsPromised);
 
 describe('Lazy-load Module', () => {
   let sandbox = Sinon.createSandbox();
@@ -136,10 +143,12 @@ describe('Lazy-load Module', () => {
     }, {});
     intersectionObserverConstructorStub = sandbox.stub(jsDomWindow, 'IntersectionObserver');
     intersectionObserverConstructorStub.returns(observer);
+    sandbox.useFakeTimers();
   });
 
   afterEach(() => {
     intersectionObserverConstructorStub.reset();
+    sandbox.clock.restore();
     sandbox.restore();
   });
 
@@ -159,7 +168,10 @@ describe('Lazy-load Module', () => {
   const domId2 = 'lazy-2';
   const infiniteSelector1 = '.ad-infinite';
 
-  const adPipelineContext = (config: MoliConfig): AdPipelineContext => {
+  const adPipelineContext = (
+    config: MoliConfig,
+    options?: IAdPipelineRunOptions
+  ): AdPipelineContext => {
     return {
       auctionId__: 'xxxx-xxxx-xxxx-xxxx',
       requestId__: 0,
@@ -174,13 +186,14 @@ describe('Lazy-load Module', () => {
       tcData__: fullConsent(),
       adUnitPathVariables__: {},
       auction__: newGlobalAuctionContext(jsDomWindow),
-      assetLoaderService__: createAssetLoaderService(jsDomWindow)
+      assetLoaderService__: createAssetLoaderService(jsDomWindow),
+      options__: options
     };
   };
 
   describe('Lazy-slots', () => {
     it('Add configure pipeline step', () => {
-      const module = new LazyLoad();
+      const module = createLazyLoad();
       const modulesConfig = {
         lazyload: {
           enabled: true,
@@ -200,7 +213,7 @@ describe('Lazy-load Module', () => {
       const observeSpy = sandbox.spy(observer, 'observe');
       const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
 
-      const module = new LazyLoad();
+      const module = createLazyLoad();
       const lazyConfig = {
         enabled: true,
         slots: [{ domIds: [domId1], options: {} }],
@@ -231,7 +244,7 @@ describe('Lazy-load Module', () => {
 
       const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
 
-      const module = new LazyLoad();
+      const module = createLazyLoad();
       const lazyConfig = {
         enabled: true,
         slots: [{ domIds: [domId1, domId2], options: {} }],
@@ -263,7 +276,7 @@ describe('Lazy-load Module', () => {
     it('Observe only slots that have a manual behaviour', () => {
       const observeSpy = sandbox.spy(observer, 'observe');
 
-      const module = new LazyLoad();
+      const module = createLazyLoad();
       const lazyConfig = {
         enabled: true,
         slots: [{ domIds: [domId1, domId2], options: {} }],
@@ -292,7 +305,7 @@ describe('Lazy-load Module', () => {
     it('Every slot should consider its own observer options', () => {
       const slots = createAdSlots(jsDomWindow, ['lazy-1', 'lazy-2']);
 
-      const module = new LazyLoad();
+      const module = createLazyLoad();
       const lazyConfig = {
         enabled: true,
         slots: [
@@ -333,7 +346,7 @@ describe('Lazy-load Module', () => {
       const oberserveSpy = sandbox.spy(observer, 'observe');
       const slots = createAdSlots(jsDomWindow, [domId1, domId2], 'manual', 'lazy_bucket');
 
-      const module = new LazyLoad();
+      const module = createLazyLoad();
       const lazyConfig = {
         enabled: true,
         slots: [],
@@ -367,7 +380,7 @@ describe('Lazy-load Module', () => {
         ...createAdSlots(jsDomWindow, [domId4], 'manual', 'another_lazy_bucket')
       ];
 
-      const module = new LazyLoad();
+      const module = createLazyLoad();
       const lazyConfig = {
         enabled: true,
         slots: [],
@@ -417,7 +430,7 @@ describe('Lazy-load Module', () => {
       createInfiniteAdSlotInDOM(jsDomWindow, infiniteSelector1, 1);
       createInfiniteAdSlotInDOM(jsDomWindow, infiniteSelector1, 2);
 
-      const module = new LazyLoad();
+      const module = createLazyLoad();
       const lazyConfig = {
         enabled: true,
         slots: [{ domIds: [], options: {} }],
@@ -449,6 +462,98 @@ describe('Lazy-load Module', () => {
       expect(observerSpy).to.have.been.calledTwice;
       expect(argsCall1).to.equal(infiniteSlotsInDom[0]);
       expect(argsCall2).to.equal(infiniteSlotsInDom[1]);
+    });
+  });
+
+  describe('Delayed Loading', () => {
+    const createModule = () => {
+      const module = createLazyLoad();
+      const modulesConfig = {
+        lazyload: { enabled: true, slots: [], buckets: [] }
+      };
+      module.configure__(modulesConfig);
+      const prepareRequestAdsSteps = module.prepareRequestAdsSteps__();
+
+      expect(prepareRequestAdsSteps).length(1);
+      return prepareRequestAdsSteps[0];
+    };
+
+    describe('should always add a prepare step to the ad pipeline', () => {
+      [
+        { name: 'enabled, no slots or buckets', config: { enabled: true, slots: [], buckets: [] } },
+        {
+          name: 'disabled, no slots or buckets',
+          config: { enabled: false, slots: [], buckets: [] }
+        },
+        {
+          name: 'enabled, with one slot',
+          config: undefined
+        }
+      ].forEach(({ name, config }) => {
+        it(name, () => {
+          const prepareRequestAdsStep = createModule();
+          expect(prepareRequestAdsStep?.name).to.be.eq('lazy-module-delay');
+        });
+      });
+    });
+
+    it('should delay the ad pipeline if called with delay config', async () => {
+      const prepareRequestAdsStep = createModule();
+      const stepResult = prepareRequestAdsStep(
+        adPipelineContext(emptyConfig, { options: { delay: {} } }),
+        []
+      );
+      expect(stepResult).to.be.not.fulfilled;
+      sandbox.clock.tick(1000);
+      expect(stepResult).to.be.not.fulfilled;
+    });
+
+    it('should delay the ad pipeline, but reject after failsafe timeout default of 30000', async () => {
+      const setTimeoutSpy = sandbox.spy(jsDomWindow, 'setTimeout');
+      const prepareRequestAdsStep = createModule();
+      const stepResult = prepareRequestAdsStep(
+        adPipelineContext(emptyConfig, { options: { delay: {} } }),
+        []
+      );
+      expect(setTimeoutSpy).to.have.been.calledOnce;
+      expect(setTimeoutSpy).to.have.been.calledWith(Sinon.match.func, 30000);
+      expect(stepResult).to.be.not.fulfilled;
+      sandbox.clock.tick(30000);
+      expect(stepResult).to.be.eventually.rejectedWith('Delay timeout exceeded');
+    });
+
+    it('should delay the ad pipeline, but reject after failsafe timeout given in the options', async () => {
+      const setTimeoutSpy = sandbox.spy(jsDomWindow, 'setTimeout');
+      const prepareRequestAdsStep = createModule();
+      const stepResult = prepareRequestAdsStep(
+        adPipelineContext(emptyConfig, { options: { delay: { timeoutMs: 1234 } } }),
+        []
+      );
+      expect(setTimeoutSpy).to.have.been.calledOnce;
+      expect(setTimeoutSpy).to.have.been.calledWith(Sinon.match.func, 1234);
+      expect(stepResult).to.be.not.fulfilled;
+      sandbox.clock.tick(1234);
+      expect(stepResult).to.be.eventually.rejectedWith('Delay timeout exceeded');
+    });
+
+    it('should resume the ad pipeline after the h5v.trigger-delay event has been sent', async () => {
+      const prepareRequestAdsStep = createModule();
+      const stepResult = prepareRequestAdsStep(
+        adPipelineContext(emptyConfig, { options: { delay: {} } }),
+        []
+      );
+      expect(stepResult).to.be.not.fulfilled;
+
+      // Simulate the event that resumes the ad pipeline
+      jsDomWindow.dispatchEvent(new dom.window.CustomEvent('h5v.trigger-delay'));
+      expect(stepResult).to.eventually.be.fulfilled;
+    });
+
+    it('should not delay the ad pipeline if called without delay config', async () => {
+      const addEventListenerSpy = sandbox.spy(jsDomWindow, 'addEventListener');
+      const prepareRequestAdsStep = createModule();
+      await prepareRequestAdsStep(adPipelineContext(emptyConfig, { options: {} }), []);
+      expect(addEventListenerSpy).to.have.not.been.called;
     });
   });
 });

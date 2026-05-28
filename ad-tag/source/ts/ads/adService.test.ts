@@ -236,8 +236,26 @@ describe('AdService', () => {
         expect(stepNames).to.contain('a9-init');
       });
 
+      it('should add the a9-init step if a9 is available and enabled is true', async () => {
+        const pipeline = await initialize({
+          ...emptyConfigWithA9,
+          a9: { ...emptyConfigWithA9.a9!, enabled: true }
+        });
+        const stepNames = pipeline.init.map(step => step.name);
+        expect(stepNames).to.contain('a9-init');
+      });
+
       it('should not add the a9-init step if a9 is not available', async () => {
         const pipeline = await initialize();
+        const stepNames = pipeline.init.map(step => step.name);
+        expect(stepNames).not.to.contain('a9-init');
+      });
+
+      it('should not add the a9-init step if a9 is disabled', async () => {
+        const pipeline = await initialize({
+          ...emptyConfigWithA9,
+          a9: { ...emptyConfigWithA9.a9!, enabled: false }
+        });
         const stepNames = pipeline.init.map(step => step.name);
         expect(stepNames).not.to.contain('a9-init');
       });
@@ -490,6 +508,22 @@ describe('AdService', () => {
 
     describe('slot buckets', () => {
       describe('runtimeConfig refreshBuckets queue', () => {
+        it('should run the ad pipeline even if there are no slots available', async () => {
+          const adService = makeAdService();
+          const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+          await adService.requestAds(
+            { ...emptyConfig, buckets: { enabled: true }, slots: [eagerAdSlot()] },
+            emptyRuntimeConfig
+          );
+          expect(runSpy).to.have.been.calledOnce;
+          expect(runSpy.firstCall).to.have.been.calledWith(
+            Sinon.match.array.deepEquals([]),
+            Sinon.match.any,
+            Sinon.match.any,
+            Sinon.match.number
+          );
+        });
+
         it('should run the ad pipeline with the refreshBuckets', async () => {
           const adService = makeAdService();
           const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
@@ -860,7 +894,8 @@ describe('AdService', () => {
         [],
         emptyConfig,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: undefined }
       );
     });
 
@@ -878,7 +913,8 @@ describe('AdService', () => {
         [],
         configWithManualSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: undefined }
       );
     });
 
@@ -896,7 +932,8 @@ describe('AdService', () => {
         [],
         configWithEagerSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: undefined }
       );
     });
 
@@ -913,7 +950,8 @@ describe('AdService', () => {
         [],
         configWithEagerSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: undefined }
       );
     });
 
@@ -933,7 +971,8 @@ describe('AdService', () => {
         [slot],
         configWithManualSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: undefined }
       );
     });
 
@@ -955,7 +994,8 @@ describe('AdService', () => {
         [infiniteSlot],
         configWithManualSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: undefined }
       );
     });
 
@@ -980,7 +1020,8 @@ describe('AdService', () => {
         [backfillSlot],
         configWithManualSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: { loaded: 'backfill' } }
       );
     });
 
@@ -1005,7 +1046,52 @@ describe('AdService', () => {
         [backfillSlot, infiniteSlot],
         configWithManualSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: { loaded: 'backfill' } }
+      );
+    });
+
+    it('should call adPipeline.run with the slot if slot is manual and in the DOM', async () => {
+      const adService = makeAdService();
+      const slot = manualAdSlot();
+      const configWithManualSlot: MoliConfig = {
+        ...emptyConfig,
+        slots: [slot]
+      };
+      addToDom([slot]);
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([slot.domId], configWithManualSlot, emptyRuntimeConfig, {
+        loaded: 'manual'
+      });
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        [slot],
+        configWithManualSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number,
+        { options: { loaded: 'manual' } }
+      );
+    });
+
+    it('should call adPipeline.run with the slot if slot is manual and in the DOM and the override option is manual', async () => {
+      const adService = makeAdService();
+      const slot: AdSlot = manualAdSlot();
+      const configWithManualSlot: MoliConfig = {
+        ...emptyConfig,
+        slots: [slot]
+      };
+      addToDom([slot]);
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([slot.domId], configWithManualSlot, emptyRuntimeConfig, {
+        loaded: 'eager'
+      });
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        [slot],
+        configWithManualSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number,
+        { options: { loaded: 'eager' } }
       );
     });
 
@@ -1033,7 +1119,8 @@ describe('AdService', () => {
         Sinon.match.array.deepEquals([{ ...slot, sizes: [[300, 250]] }]),
         configWithManualSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: { sizesOverride: [[300, 250]] } }
       );
     });
 
@@ -1058,7 +1145,8 @@ describe('AdService', () => {
         Sinon.match.array.deepEquals([{ ...slot, sizes: [[300, 600]] }]),
         configWithManualSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: { sizesOverride: [[300, 600]] } }
       );
     });
   });
@@ -1113,7 +1201,7 @@ describe('AdService', () => {
         Sinon.match.same(moliConfig),
         Sinon.match.same(emptyTestRuntimeConfig),
         Sinon.match.number,
-        Sinon.match.same('bucket1')
+        { bucketName: 'bucket1', options: undefined }
       );
     });
 
@@ -1132,7 +1220,7 @@ describe('AdService', () => {
         Sinon.match.same(moliConfig),
         Sinon.match.same(emptyTestRuntimeConfig),
         Sinon.match.number,
-        Sinon.match.same('bucket1')
+        { bucketName: 'bucket1', options: { loaded: 'eager' } }
       );
     });
 
@@ -1150,7 +1238,7 @@ describe('AdService', () => {
         Sinon.match.same(moliConfig),
         Sinon.match.same(emptyTestRuntimeConfig),
         Sinon.match.number,
-        Sinon.match.same('bucket1')
+        { bucketName: 'bucket1', options: { sizesOverride: [[300, 250]] } }
       );
     });
   });

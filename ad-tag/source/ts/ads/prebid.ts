@@ -5,6 +5,7 @@ import {
   InitStep,
   LOW_PRIORITY,
   mkConfigureStep,
+  mkConfigureStepOncePerRequestAdsCycle,
   mkInitStep,
   mkPrepareRequestAdsStep,
   mkRequestBidsStep,
@@ -22,10 +23,12 @@ import { SupplyChainObject } from '../types/supplyChainObject';
 import { resolveStoredRequestIdInOrtb2Object } from '../util/resolveStoredRequestIdInOrtb2Object';
 import { createTestSlots } from '../util/test-slots';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
-import IPrebidJs = prebidjs.IPrebidJs;
 import { AdServer, AdSlot, headerbidding, schain } from '../types/moliConfig';
 import { packageJson } from 'ad-tag/gen/packageJson';
 import { prebidOutstreamRenderer } from 'ad-tag/ads/prebid-outstream';
+import { isGamInterstitial } from 'ad-tag/ads/auctions/interstitialContext';
+import { criteoEnrichWithFpd } from 'ad-tag/ads/criteo';
+import { enrichId5WithFpd } from 'ad-tag/ads/id5';
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
@@ -102,7 +105,7 @@ const createdAdUnits = (
       const floors: Pick<prebidjs.IAdUnit, 'floors'> | null = priceRule
         ? {
             floors: {
-              currency: prebidConfig.config.currency.adServerCurrency,
+              currency: prebidConfig.config.currency?.adServerCurrency ?? 'EUR',
               schema: {
                 delimiter: '|',
                 fields: ['mediaType']
@@ -244,7 +247,7 @@ const createdAdUnits = (
 
 export const prebidInit = (assetService: IAssetLoaderService): InitStep =>
   mkInitStep('prebid-init', context => {
-    context.window__.pbjs = context.window__.pbjs || ({ que: [] } as unknown as IPrebidJs);
+    context.window__.pbjs = context.window__.pbjs || ({ que: [] } as unknown as prebidjs.IPrebidJs);
 
     // enable configured analytic adapters in prebid. Note that longstanding analytics vendors usually have no
     // prebid analytics adapter, but rather are loaded through an external script. Like pubstack and assertive yield do this
@@ -283,7 +286,8 @@ export const prebidRemoveAdUnits = (prebidConfig: headerbidding.PrebidConfig): C
         // only try to remove ad units if the configuration is set to not use ephemeral ad units and prebid is defined
         // at all
         if (prebidConfig.ephemeralAdUnits !== true) {
-          context.window__.pbjs = context.window__.pbjs || ({ que: [] } as unknown as IPrebidJs);
+          context.window__.pbjs =
+            context.window__.pbjs || ({ que: [] } as unknown as prebidjs.IPrebidJs);
           const adUnits = context.window__.pbjs.adUnits;
           if (adUnits) {
             context.window__.pbjs.que.push(() => {
@@ -295,6 +299,22 @@ export const prebidRemoveAdUnits = (prebidConfig: headerbidding.PrebidConfig): C
         resolve();
       })
   );
+
+export const prebidClearAuction = (): ConfigureStep => {
+  return mkConfigureStepOncePerRequestAdsCycle(
+    'prebid-clear-auction',
+    (context: AdPipelineContext) =>
+      new Promise<void>(resolve => {
+        context.window__.pbjs =
+          context.window__.pbjs || ({ que: [] } as unknown as prebidjs.IPrebidJs);
+        context.window__.pbjs.que.push(() => {
+          context.logger__.debug('Prebid', 'Clearing prebid auctions');
+          context.window__.pbjs.clearAllAuctions();
+        });
+        resolve();
+      })
+  );
+};
 
 export const prebidConfigure = (
   prebidConfig: headerbidding.PrebidConfig,
@@ -339,12 +359,31 @@ export const prebidConfigure = (
             });
           }
 
+          const enrichedUserIds = enrichId5WithFpd(
+            context.runtimeConfig__,
+            prebidConfig.config.userSync?.userIds
+          );
           context.window__.pbjs.setConfig({
             ...prebidConfig.config,
             // global schain configuration
             ...{ schain: mkSupplyChainConfig([schainConfig.supplyChainStartNode]) },
             // for module priceFloors
-            ...{ floors: prebidConfig.config.floors || {} }
+            ...{ floors: prebidConfig.config.floors || {} },
+            // if there
+            ...{
+              userSync: prebidConfig.config.userSync
+                ? { ...prebidConfig.config.userSync, userIds: enrichedUserIds }
+                : prebidConfig.config.userSync
+            }
+          });
+
+          const bidderConfigs = criteoEnrichWithFpd(
+            context.runtimeConfig__,
+            prebidConfig.config.userSync,
+            context.window__.location.host
+          )(prebidConfig.bidderConfigs || []);
+          bidderConfigs.forEach(({ options, merge }) => {
+            context.window__.pbjs.setBidderConfig(options, merge);
           });
 
           prebidConfig.schain.nodes.forEach(({ bidder, node, appendNode }) => {
@@ -360,8 +399,9 @@ export const prebidConfigure = (
 
           // configure ESP for googletag. This has to be called after setConfig and after the googletag has loaded.
           // don't add this to the init step.
-          context.window__.pbjs.registerSignalSources &&
+          if (context.window__.pbjs.registerSignalSources) {
             context.window__.pbjs.registerSignalSources();
+          }
         });
 
         // the resolve is intentionally not inside the pbjs.que.push. At this point we do not need to block the pipeline
@@ -431,7 +471,11 @@ export const prebidRequestBids = (
       const auction = new Promise<void>(resolve => {
         const slotsToRefresh = slots.filter(
           slot =>
-            !context.auction__.isSlotThrottled(slot.moliSlot.domId, slot.adSlot.getAdUnitPath())
+            // keep slots that are not throttled
+            !context.auction__.isSlotThrottled(slot.adSlot) &&
+            // keep slots that are not and interstitial or interstitials that are not from GAM web interstitials
+            (!isGamInterstitial(slot.adSlot, context.window__) ||
+              context.auction__.interstitialChannel() !== 'gam')
         );
 
         const requestObject: prebidjs.IRequestObj = prebidConfig.ephemeralAdUnits

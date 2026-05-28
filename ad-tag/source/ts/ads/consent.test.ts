@@ -106,12 +106,8 @@ describe('consent', () => {
       tcDataWithMissingConsent.purpose.consents[TCPurpose.STORE_INFORMATION_ON_DEVICE] = false;
       tcDataWithMissingConsent.purpose.legitimateInterests[TCPurpose.STORE_INFORMATION_ON_DEVICE] =
         false;
-      it('should return always false for purpose 1 (STORE_INFORMATION_ON_DEVICE)', () => {
-        expect(missingPurposeConsent(tcDataWithMissingConsent)).to.be.false;
-      });
-
-      it('should reject consentReady if consent is missing for purpose 1 (STORE_INFORMATION_ON_DEVICE)', () => {
-        expect(missingPurposeConsent(tcDataWithMissingConsent)).to.be.false;
+      it('should return always true for purpose 1 (STORE_INFORMATION_ON_DEVICE)', () => {
+        expect(missingPurposeConsent(tcDataWithMissingConsent)).to.be.true;
       });
     });
 
@@ -139,6 +135,29 @@ describe('consent', () => {
           expect(cmd).to.be.equals('addEventListener');
           expect(version).to.be.equals(2);
           callback(tcDataWithMissingConsent, true);
+        });
+
+        await expect(
+          consentReady(consentConfig, jsDomWindow, noopLogger, 'production')
+        ).to.be.rejectedWith('user consent is missing for some purposes');
+      });
+
+      it(`should return true consent and legitimate interest is missing for purpose ${purpose} (${TCPurpose[purpose]})`, () => {
+        const tcDataWithMissingConsentAndLI: tcfapi.responses.TCData = fullConsent();
+        tcDataWithMissingConsentAndLI.purpose.consents[purpose] = false;
+        tcDataWithMissingConsentAndLI.purpose.legitimateInterests[purpose] = false;
+
+        expect(missingPurposeConsent(tcDataWithMissingConsentAndLI)).to.be.true;
+      });
+
+      it(`should reject consentReady if consent and legitimate interest is missing for purpose ${purpose} (${TCPurpose[purpose]}), but available as legitimate interest`, async () => {
+        tcfapiFn.onFirstCall().callsFake((cmd, version, callback) => {
+          expect(cmd).to.be.equals('addEventListener');
+          expect(version).to.be.equals(2);
+          const tcDataWithMissingConsentAndLI: tcfapi.responses.TCData = fullConsent();
+          tcDataWithMissingConsentAndLI.purpose.consents[purpose] = false;
+          tcDataWithMissingConsentAndLI.purpose.legitimateInterests[purpose] = false;
+          callback(tcDataWithMissingConsentAndLI, true);
         });
 
         await expect(

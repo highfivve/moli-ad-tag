@@ -1,3 +1,0 @@
----
-title: Conditional Ad Slots
----

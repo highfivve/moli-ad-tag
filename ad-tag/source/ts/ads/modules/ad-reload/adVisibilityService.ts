@@ -3,6 +3,8 @@ import type { googletag } from 'ad-tag/types/googletag';
 import type { modules } from 'ad-tag/types/moliConfig';
 import type { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import type { IntersectionObserverWindow } from 'ad-tag/types/dom';
+import type { prebidjs } from 'ad-tag/types/prebidjs';
+import { isAdvertiserIncluded } from 'ad-tag/ads/isAdvertiserIncluded';
 
 /**
  * Tracks the visibility of ad slots.
@@ -96,11 +98,15 @@ export class AdVisibilityService {
    * @param slot              a refreshable ad slot with "visibility" trigger
    * @param refreshCallback   callback fired when the configured duration is up
    * @param advertiserId      optional advertiser id to check against disallowed advertisers
+   * @param companyIds       optional list of company ids to check against disallowed advertisers
+   * @param lastWinningBidderCode       optional code of the bidder that won the last auction on the slot
    */
   trackSlot(
     slot: googletag.IAdSlot,
     refreshCallback: (slot: googletag.IAdSlot) => void,
-    advertiserId?: number
+    advertiserId?: number,
+    companyIds?: number[],
+    lastWinningBidderCode?: prebidjs.BidderCode
   ): void {
     const slotDomId = slot.getSlotElementId();
     const domElement = this.observedDomElementForSlot(slot);
@@ -122,14 +128,17 @@ export class AdVisibilityService {
             (override.disableAllAdVisibilityChecks ||
               !(
                 override.disabledAdVisibilityCheckAdvertiserIds &&
-                override.disabledAdVisibilityCheckAdvertiserIds.length > 0 &&
-                advertiserId
+                override.disabledAdVisibilityCheckAdvertiserIds.length > 0
               ) ||
-              override.disabledAdVisibilityCheckAdvertiserIds.includes(advertiserId)))
+              isAdvertiserIncluded(
+                { advertiserId, companyIds } as any,
+                override.disabledAdVisibilityCheckAdvertiserIds
+              )))
             ? this.window.performance.now()
             : undefined,
         durationVisibleSum: 0,
-        refreshCallback: refreshCallback
+        refreshCallback: refreshCallback,
+        lastWinningBidderCode
       });
 
       // use intersection observer if required due to viewability overrides or because it is globally
@@ -194,8 +203,7 @@ export class AdVisibilityService {
 
     Array.from(this.visibilityRecords.values())
       .filter(record => {
-        const interval: number =
-          this.refreshIntervalOverrides[record.slot.getSlotElementId()] || this.refreshInterval;
+        const interval = this.resolveRefreshInterval(record);
         return record.durationVisibleSum > interval;
       })
       .forEach(record => {
@@ -211,6 +219,20 @@ export class AdVisibilityService {
         record.durationVisibleSum = -AdVisibilityService.consecutiveDurationToRefresh;
         record.refreshCallback(record.slot);
       });
+  }
+
+  private resolveRefreshInterval(record: VisibilityRecord): number {
+    const override = this.refreshIntervalOverrides[record.slot.getSlotElementId()];
+    if (typeof override === 'number') {
+      return override;
+    }
+
+    const bidderOverride =
+      record.lastWinningBidderCode && override?.bidders
+        ? override.bidders[record.lastWinningBidderCode]
+        : undefined;
+
+    return bidderOverride ?? override?.default ?? this.refreshInterval;
   }
 
   private handleGoogletagAdVisibilityChanged = (
@@ -343,4 +365,8 @@ type VisibilityRecord = {
    * Callback called when durationVisibleSum reaches durationToRefresh.
    */
   refreshCallback: (slot: googletag.IAdSlot) => void;
+  /**
+   * The bidder that won the last auction.
+   */
+  lastWinningBidderCode?: prebidjs.BidderCode;
 };

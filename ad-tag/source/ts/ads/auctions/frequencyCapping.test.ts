@@ -12,6 +12,8 @@ import BidResponse = prebidjs.BidResponse;
 import { auction } from 'ad-tag/types/moliConfig';
 import { newNoopLogger, noopLogger } from 'ad-tag/stubs/moliStubs';
 import { googletag } from 'ad-tag/types/googletag';
+import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
+import { formatKey } from 'ad-tag/ads/keyValues';
 use(sinonChai);
 
 describe('FrequencyCapping', () => {
@@ -24,18 +26,24 @@ describe('FrequencyCapping', () => {
 
   const wpDomId = 'wp-slot';
   const wpAdUnitPath = '/123,456/example/wp-slot';
-  const dspxWpConfig: auction.BidderFrequencyConfig = {
-    bidder: prebidjs.DSPX,
+  const wpSlot = googleAdSlotStub(wpAdUnitPath, wpDomId);
+  const dspxWpConfig: auction.BidderFrequencyCappingConfig = {
+    bidders: [prebidjs.DSPX],
     domId: wpDomId,
-    blockedForMs: 10000
+    conditions: {
+      pacingInterval: { intervalInMs: 10000, maxImpressions: 1 }
+    }
   };
 
   const interstitialDomId = 'interstitial';
-  const visxInterstitialConfig: auction.BidderFrequencyConfig = {
-    bidder: prebidjs.Visx,
+  const interstitialAdUnitPath = '/123,456/example/interstitial';
+  const interstitalSlot = googleAdSlotStub(interstitialAdUnitPath, interstitialDomId);
+  const visxInterstitialConfig: auction.BidderFrequencyCappingConfig = {
+    bidders: [prebidjs.Visx],
     domId: interstitialDomId,
-    blockedForMs: 10000,
-    events: ['bidWon', 'bidRequested']
+    conditions: {
+      pacingInterval: { intervalInMs: 10000, maxImpressions: 1, events: ['bidWon', 'bidRequested'] }
+    }
   };
 
   const dspxBidResponse: BidResponse = {
@@ -54,6 +62,17 @@ describe('FrequencyCapping', () => {
   ): prebidjs.event.AuctionObject =>
     ({ bidderRequests: [{ bids: bidderRequestsBids }] }) as prebidjs.event.AuctionObject;
 
+  const slotRenderEndedEvent = (
+    isEmpty: boolean,
+    slot: googletag.IAdSlot
+  ): googletag.events.ISlotRenderEndedEvent =>
+    ({ isEmpty, slot }) as googletag.events.ISlotRenderEndedEvent;
+
+  const impressionViewableEvent = (
+    slot: googletag.IAdSlot
+  ): googletag.events.IImpressionViewableEvent =>
+    ({ slot }) as googletag.events.IImpressionViewableEvent;
+
   after(() => {
     // bring everything back to normal after tests
     sandbox.restore();
@@ -62,11 +81,14 @@ describe('FrequencyCapping', () => {
   beforeEach(() => {
     sandbox.useFakeTimers();
     jsDomWindow.sessionStorage.clear();
+    jsDomWindow.googletag = createGoogletagStub();
   });
 
   afterEach(() => {
     sandbox.reset();
     sandbox.clock.restore();
+    wpSlot.clearTargeting();
+    interstitalSlot.clearTargeting();
   });
 
   it('should not add a frequency cap if configs are empty', () => {
@@ -76,93 +98,140 @@ describe('FrequencyCapping', () => {
       nowInstantStub,
       noopLogger
     );
-    expect(frequencyCapping.isFrequencyCapped('wp-slot', prebidjs.DSPX)).to.be.false;
+    expect(frequencyCapping.isBidderCapped('wp-slot', prebidjs.DSPX)).to.be.false;
     expect(jsDomWindow.sessionStorage.getItem('h5v-fc')).to.be.null;
   });
 
   it('should not add a frequency cap if no events have been fired', () => {
     const frequencyCapping = createFrequencyCapping(
-      { enabled: true, configs: [dspxWpConfig] },
+      { enabled: true, bidders: [dspxWpConfig] },
       jsDomWindow,
       nowInstantStub,
       noopLogger
     );
-    expect(frequencyCapping.isFrequencyCapped(dspxWpConfig.domId, prebidjs.DSPX)).to.be.false;
+    expect(frequencyCapping.isBidderCapped(dspxWpConfig.domId, prebidjs.DSPX)).to.be.false;
     expect(jsDomWindow.sessionStorage.getItem('h5v-fc'));
   });
 
-  describe('onBidWon', () => {
-    let frequencyCapping: FrequencyCapping;
-    beforeEach(() => {
-      frequencyCapping = createFrequencyCapping(
-        { enabled: true, configs: [dspxWpConfig] },
-        jsDomWindow,
-        nowInstantStub,
-        noopLogger
-      );
+  describe('bidder frequency capping', () => {
+    describe('onBidWon', () => {
+      let frequencyCapping: FrequencyCapping;
+      beforeEach(() => {
+        frequencyCapping = createFrequencyCapping(
+          { enabled: true, bidders: [dspxWpConfig] },
+          jsDomWindow,
+          nowInstantStub,
+          noopLogger
+        );
+      });
+
+      it('should not add a frequency cap if the slot id does not match', () => {
+        frequencyCapping.onBidWon(dspxBidResponse);
+
+        expect(frequencyCapping.isBidderCapped('unrelated-slot', prebidjs.DSPX)).to.be.false;
+      });
+
+      it('should not add a frequency cap if the slot id does not match and a delay is configured for all bidders', () => {
+        const frequencyCappingWithDelay = createFrequencyCapping(
+          {
+            enabled: true,
+            bidders: [{ domId: wpDomId, conditions: { delay: { minRequestAds: 1 } } }]
+          },
+          jsDomWindow,
+          nowInstantStub,
+          noopLogger
+        );
+        frequencyCappingWithDelay.onBidWon(dspxBidResponse);
+
+        expect(frequencyCappingWithDelay.isBidderCapped('unrelated-slot', prebidjs.DSPX)).to.be
+          .false;
+      });
+
+      it('should not add a frequency cap if the slot id does not match and a delay is configured', () => {
+        const frequencyCappingWithDelay = createFrequencyCapping(
+          {
+            enabled: true,
+            bidders: [
+              {
+                bidders: [prebidjs.DSPX],
+                domId: wpDomId,
+                conditions: { delay: { minRequestAds: 1 } }
+              }
+            ]
+          },
+          jsDomWindow,
+          nowInstantStub,
+          noopLogger
+        );
+        frequencyCappingWithDelay.onBidWon(dspxBidResponse);
+
+        expect(frequencyCappingWithDelay.isBidderCapped('unrelated-slot', prebidjs.DSPX)).to.be
+          .false;
+      });
+
+      it('should not add a frequency cap if the configured bidder did not win the auction on the slot', () => {
+        const bid: BidResponse = { bidder: prebidjs.GumGum, adUnitCode: wpDomId } as BidResponse;
+
+        frequencyCapping.onBidWon(bid);
+
+        expect(frequencyCapping.isBidderCapped(wpDomId, prebidjs.DSPX)).to.be.false;
+      });
+
+      it('should add a frequency cap when a bid is won on the configured slot', () => {
+        frequencyCapping.onBidWon(dspxBidResponse);
+        expect(frequencyCapping.isBidderCapped(wpDomId, prebidjs.DSPX)).to.be.true;
+      });
+
+      it('should remove the frequency cap after the specified timeout', () => {
+        nowInstantStub.returns(100000);
+        frequencyCapping.onBidWon(dspxBidResponse);
+        expect(frequencyCapping.isBidderCapped(wpDomId, prebidjs.DSPX)).to.be.true;
+
+        sandbox.clock.tick(11000);
+        expect(setTimeoutSpy).to.have.been.calledOnceWithExactly(Sinon.match.func, 10000);
+        expect(frequencyCapping.isBidderCapped(wpDomId, prebidjs.DSPX)).to.be.false;
+      });
     });
 
-    it('should not add a frequency cap if the configured bidder did not win the auction on the slot', () => {
-      const bid: BidResponse = { bidder: prebidjs.GumGum, adUnitCode: wpDomId } as BidResponse;
+    describe('onAuctionEnd', () => {
+      let frequencyCapping: FrequencyCapping;
+      beforeEach(() => {
+        frequencyCapping = createFrequencyCapping(
+          { enabled: true, bidders: [dspxWpConfig, visxInterstitialConfig] },
+          jsDomWindow,
+          nowInstantStub,
+          noopLogger
+        );
+      });
 
-      frequencyCapping.onBidWon(bid);
+      it('should not add a frequency cap if no events have been fired', () => {
+        expect(frequencyCapping.isBidderCapped(interstitialDomId, prebidjs.Visx)).to.be.false;
+      });
 
-      expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.false;
-    });
+      it('should not add a frequency cap if the configured bidder did not request a bid on the slot', () => {
+        frequencyCapping.onAuctionEnd(auction([]));
 
-    it('should add a frequency cap when a bid is won on the configured slot', () => {
-      frequencyCapping.onBidWon(dspxBidResponse);
-      expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.true;
-    });
+        expect(frequencyCapping.isBidderCapped(interstitialDomId, prebidjs.Visx)).to.be.false;
+      });
 
-    it('should remove the frequency cap after the specified timeout', () => {
-      frequencyCapping.onBidWon(dspxBidResponse);
-      expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.true;
+      it('should add a frequency cap when a bid is requested on the configured slot', () => {
+        frequencyCapping.onAuctionEnd(
+          auction([{ bidder: prebidjs.Visx, adUnitCode: interstitialDomId }])
+        );
 
-      sandbox.clock.tick(11000);
-      expect(setTimeoutSpy).to.have.been.calledOnceWithExactly(Sinon.match.func, 10000);
-      expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.false;
-    });
-  });
+        expect(frequencyCapping.isBidderCapped(interstitialDomId, prebidjs.Visx)).to.be.true;
+      });
 
-  describe('onAuctionEnd', () => {
-    let frequencyCapping: FrequencyCapping;
-    beforeEach(() => {
-      frequencyCapping = createFrequencyCapping(
-        { enabled: true, configs: [dspxWpConfig, visxInterstitialConfig] },
-        jsDomWindow,
-        nowInstantStub,
-        noopLogger
-      );
-    });
+      it('should remove the frequency cap after the specified timeout', () => {
+        frequencyCapping.onAuctionEnd(
+          auction([{ bidder: prebidjs.Visx, adUnitCode: interstitialDomId }])
+        );
+        expect(frequencyCapping.isBidderCapped(interstitialDomId, prebidjs.Visx)).to.be.true;
 
-    it('should not add a frequency cap if no events have been fired', () => {
-      expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.false;
-    });
-
-    it('should not add a frequency cap if the configured bidder did not request a bid on the slot', () => {
-      frequencyCapping.onAuctionEnd(auction([]));
-
-      expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.false;
-    });
-
-    it('should add a frequency cap when a bid is requested on the configured slot', () => {
-      frequencyCapping.onAuctionEnd(
-        auction([{ bidder: prebidjs.Visx, adUnitCode: interstitialDomId }])
-      );
-
-      expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.true;
-    });
-
-    it('should remove the frequency cap after the specified timeout', () => {
-      frequencyCapping.onAuctionEnd(
-        auction([{ bidder: prebidjs.Visx, adUnitCode: interstitialDomId }])
-      );
-      expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.true;
-
-      sandbox.clock.tick(11000);
-      expect(setTimeoutSpy).to.have.been.calledOnceWithExactly(Sinon.match.func, 10000);
-      expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.false;
+        sandbox.clock.tick(11000);
+        expect(setTimeoutSpy).to.have.been.calledOnceWithExactly(Sinon.match.func, 10000);
+        expect(frequencyCapping.isBidderCapped(interstitialDomId, prebidjs.Visx)).to.be.false;
+      });
     });
   });
 
@@ -182,34 +251,100 @@ describe('FrequencyCapping', () => {
         ]);
 
         frequencyCapping.afterRequestAds();
-        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.true;
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.true;
       });
 
       it('should not frequency cap if the slot has a delay configured but the minimum request ads have been reached', () => {
         const frequencyCapping = makeFrequencyCapping([
           { adUnitPath: wpAdUnitPath, conditions: { delay: { minRequestAds: 2 } } }
         ]);
-        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.true;
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.true;
 
         frequencyCapping.afterRequestAds();
-        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.true;
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.true;
 
         frequencyCapping.afterRequestAds();
-        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.false;
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.false;
+      });
+
+      describe('google web interstitial format', () => {
+        it('should reduce minRequestAds delay by one  if the format is interstitial', () => {
+          const frequencyCapping = makeFrequencyCapping([
+            { adUnitPath: interstitialAdUnitPath, conditions: { delay: { minRequestAds: 1 } } }
+          ]);
+          const format = googletag.enums.OutOfPageFormat.INTERSTITIAL.toString();
+          interstitalSlot.setTargeting(formatKey, format);
+
+          expect(frequencyCapping.isAdUnitCapped(interstitalSlot)).to.be.false;
+        });
+
+        it('should not reduce minRequestAds delay if the format is not interstitial', () => {
+          const frequencyCapping = makeFrequencyCapping([
+            { adUnitPath: wpAdUnitPath, conditions: { delay: { minRequestAds: 1 } } }
+          ]);
+          const format = googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR.toString();
+          wpSlot.setTargeting(formatKey, format);
+
+          expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.true;
+        });
       });
     });
 
     describe('pacing by requestAds', () => {
-      it('should frequency cap if the slot has a pacing request ads configured and the number of ad requests is a multiple of the request ads', () => {
+      it('should frequency cap if the slot has a pacing request ads configured and not enough ad requests have been made since the last impressions', () => {
         const frequencyCapping = makeFrequencyCapping([
           { adUnitPath: wpAdUnitPath, conditions: { pacingRequestAds: { requestAds: 2 } } }
         ]);
 
-        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.false;
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.false;
+        frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, wpSlot));
         frequencyCapping.afterRequestAds();
-        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.true;
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.true;
         frequencyCapping.afterRequestAds();
-        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.false;
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.false;
+      });
+
+      it('should use slotRenderEnded events for pacing by request ads if the format is not interstitial', () => {
+        const frequencyCapping = makeFrequencyCapping([
+          { adUnitPath: wpAdUnitPath, conditions: { pacingRequestAds: { requestAds: 2 } } }
+        ]);
+        const format = googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR.toString();
+        wpSlot.setTargeting(formatKey, format);
+
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.false;
+        frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, wpSlot));
+        frequencyCapping.afterRequestAds();
+
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.true;
+
+        frequencyCapping.afterRequestAds();
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.false;
+      });
+
+      it('should use impressionViewable events for pacing by request ads if the format is interstitial', () => {
+        const frequencyCapping = makeFrequencyCapping([
+          {
+            adUnitPath: interstitialAdUnitPath,
+            conditions: { pacingRequestAds: { requestAds: 2 } }
+          }
+        ]);
+        const format = googletag.enums.OutOfPageFormat.INTERSTITIAL.toString();
+        interstitalSlot.setTargeting(formatKey, format);
+
+        expect(frequencyCapping.isAdUnitCapped(interstitalSlot)).to.be.false;
+
+        // this has no effect
+        frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, interstitalSlot));
+        frequencyCapping.afterRequestAds();
+        expect(frequencyCapping.isAdUnitCapped(interstitalSlot)).to.be.false;
+
+        // this should cap the ad unit
+        frequencyCapping.onImpressionViewable(impressionViewableEvent(interstitalSlot));
+        expect(frequencyCapping.isAdUnitCapped(interstitalSlot)).to.be.true;
+
+        frequencyCapping.afterRequestAds();
+        frequencyCapping.afterRequestAds();
+        expect(frequencyCapping.isAdUnitCapped(interstitalSlot)).to.be.false;
       });
     });
 
@@ -223,26 +358,22 @@ describe('FrequencyCapping', () => {
           }
         ]);
 
-        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.false;
-        frequencyCapping.onSlotRenderEnded({
-          isEmpty: false,
-          slot: { getAdUnitPath: () => wpAdUnitPath }
-        } as googletag.events.ISlotRenderEndedEvent);
-        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.false;
-        frequencyCapping.onSlotRenderEnded({
-          isEmpty: false,
-          slot: { getAdUnitPath: () => wpAdUnitPath }
-        } as googletag.events.ISlotRenderEndedEvent);
-        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.true;
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.false;
+        frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, wpSlot));
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.false;
+        frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, wpSlot));
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.true;
 
         sandbox.clock.tick(30100);
-        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.false;
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.false;
       });
 
       it('should update the configs when the ad unit path variables are updated', () => {
         nowInstantStub.returns(100000);
         const adUnitPathWithVars = '/123,456/example/{device}';
+        const woSlotWithUnresolvedPath = googleAdSlotStub(adUnitPathWithVars, wpDomId);
         const adUnitPathWithVarsResolved = '/123,456/example/mobile';
+        const wpSlotWithResolvedPath = googleAdSlotStub(adUnitPathWithVarsResolved, wpDomId);
         const frequencyCapping = makeFrequencyCapping([
           {
             adUnitPath: adUnitPathWithVars,
@@ -251,20 +382,71 @@ describe('FrequencyCapping', () => {
         ]);
 
         frequencyCapping.updateAdUnitPaths({ device: 'mobile' });
-        expect(frequencyCapping.isAdUnitCapped(adUnitPathWithVarsResolved)).to.be.false;
-        frequencyCapping.onSlotRenderEnded({
-          isEmpty: false,
-          slot: { getAdUnitPath: () => adUnitPathWithVarsResolved }
-        } as googletag.events.ISlotRenderEndedEvent);
-        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.false;
-        frequencyCapping.onSlotRenderEnded({
-          isEmpty: false,
-          slot: { getAdUnitPath: () => adUnitPathWithVarsResolved }
-        } as googletag.events.ISlotRenderEndedEvent);
-        expect(frequencyCapping.isAdUnitCapped(adUnitPathWithVarsResolved)).to.be.true;
+        expect(frequencyCapping.isAdUnitCapped(wpSlotWithResolvedPath)).to.be.false;
+        frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, wpSlotWithResolvedPath));
+
+        expect(frequencyCapping.isAdUnitCapped(woSlotWithUnresolvedPath)).to.be.false;
+        frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, wpSlotWithResolvedPath));
+        expect(frequencyCapping.isAdUnitCapped(wpSlotWithResolvedPath)).to.be.true;
 
         sandbox.clock.tick(30100);
-        expect(frequencyCapping.isAdUnitCapped(adUnitPathWithVarsResolved)).to.be.false;
+        expect(frequencyCapping.isAdUnitCapped(wpSlotWithResolvedPath)).to.be.false;
+      });
+
+      it('should use impressionViewable events for pacing by interval if the format is interstitial', () => {
+        nowInstantStub.returns(100000);
+        const frequencyCapping = makeFrequencyCapping([
+          {
+            adUnitPath: interstitialAdUnitPath,
+            conditions: { pacingInterval: { intervalInMs: 30000, maxImpressions: 1 } }
+          }
+        ]);
+        const format = googletag.enums.OutOfPageFormat.INTERSTITIAL.toString();
+        interstitalSlot.setTargeting(formatKey, format);
+
+        expect(frequencyCapping.isAdUnitCapped(interstitalSlot)).to.be.false;
+
+        // this has no effect
+        frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, interstitalSlot));
+        expect(frequencyCapping.isAdUnitCapped(interstitalSlot)).to.be.false;
+
+        // this should cap the ad unit
+        frequencyCapping.onImpressionViewable(impressionViewableEvent(interstitalSlot));
+        expect(frequencyCapping.isAdUnitCapped(interstitalSlot)).to.be.true;
+
+        sandbox.clock.tick(30100);
+        expect(frequencyCapping.isAdUnitCapped(interstitalSlot)).to.be.false;
+      });
+    });
+
+    describe('limit ad requests by requestAds cycle', () => {
+      const slotRequestedEvent: googletag.events.ISlotRequestedEvent = {
+        slot: googleAdSlotStub(wpAdUnitPath, wpDomId)
+      } as googletag.events.ISlotRequestedEvent;
+      it('should not cap if no request ads have been made', () => {
+        const frequencyCapping = makeFrequencyCapping([
+          { adUnitPath: wpAdUnitPath, conditions: { adRequestLimit: { maxAdRequests: 1 } } }
+        ]);
+
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.false;
+      });
+
+      it('should cap if the number of ad requests exceeds the configured limit', () => {
+        const frequencyCapping = makeFrequencyCapping([
+          { adUnitPath: wpAdUnitPath, conditions: { adRequestLimit: { maxAdRequests: 1 } } }
+        ]);
+        frequencyCapping.onSlotRequested(slotRequestedEvent);
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.true;
+      });
+
+      it('should reset the cap for the next request ads cycle', () => {
+        const frequencyCapping = makeFrequencyCapping([
+          { adUnitPath: wpAdUnitPath, conditions: { adRequestLimit: { maxAdRequests: 1 } } }
+        ]);
+        frequencyCapping.onSlotRequested(slotRequestedEvent);
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.true;
+        frequencyCapping.beforeRequestAds();
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.false;
       });
     });
 
@@ -274,13 +456,13 @@ describe('FrequencyCapping', () => {
           { adUnitPath: wpDomId, conditions: { delay: { minRequestAds: 1 } } }
         ]);
 
-        expect(frequencyCapping.isFrequencyCapped('another-slot', prebidjs.DSPX)).to.be.false;
+        expect(frequencyCapping.isBidderCapped('another-slot', prebidjs.DSPX)).to.be.false;
       });
 
       it('should not cap if no conditions are set', () => {
         const frequencyCapping = makeFrequencyCapping([{ adUnitPath: wpDomId, conditions: {} }]);
 
-        expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.false;
+        expect(frequencyCapping.isBidderCapped(wpDomId, prebidjs.DSPX)).to.be.false;
       });
 
       it('should not cap if all conditions are met', () => {
@@ -295,10 +477,10 @@ describe('FrequencyCapping', () => {
           }
         ]);
 
-        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.true;
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.true;
         frequencyCapping.afterRequestAds();
         frequencyCapping.afterRequestAds();
-        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.false;
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.false;
       });
     });
   });
@@ -311,7 +493,7 @@ describe('FrequencyCapping', () => {
         nowInstantStub,
         noopLogger
       );
-      expect(frequencyCapping.isFrequencyCapped('wp-slot', prebidjs.DSPX)).to.be.false;
+      expect(frequencyCapping.isBidderCapped('wp-slot', prebidjs.DSPX)).to.be.false;
     });
 
     it('should not add a frequency cap if the stored data is invalid', () => {
@@ -324,7 +506,7 @@ describe('FrequencyCapping', () => {
         nowInstantStub,
         logger
       );
-      expect(frequencyCapping.isFrequencyCapped('wp-slot', prebidjs.DSPX)).to.be.false;
+      expect(frequencyCapping.isBidderCapped('wp-slot', prebidjs.DSPX)).to.be.false;
       expect(errorSpy).to.have.been.called;
     });
 
@@ -334,24 +516,21 @@ describe('FrequencyCapping', () => {
       const waitTime = 3000;
       nowInstantStub.onFirstCall().returns(startTimestamp + timePassed);
       const storedData: PersistedFrequencyCappingState = {
-        caps: [
-          {
-            ts: startTimestamp,
-            wait: waitTime,
-            bid: { bidder: prebidjs.DSPX, adUnitCode: wpDomId }
-          }
-        ],
+        bCaps: {
+          [`${wpDomId}:${prebidjs.DSPX}`]: [{ ts: startTimestamp, wait: waitTime }]
+        },
         pCaps: {},
+        pLastImpAdRequests: {},
         requestAds: 0
       };
       jsDomWindow.sessionStorage.setItem('h5v-fc', JSON.stringify(storedData));
       const frequencyCapping = createFrequencyCapping(
-        { enabled: true, persistent: true, configs: [dspxWpConfig] },
+        { enabled: true, persistent: true, bidders: [dspxWpConfig] },
         jsDomWindow,
         nowInstantStub,
         noopLogger
       );
-      expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.true;
+      expect(frequencyCapping.isBidderCapped(wpDomId, prebidjs.DSPX)).to.be.true;
       expect(setTimeoutSpy).to.have.been.calledOnceWithExactly(
         Sinon.match.func,
         waitTime - timePassed
@@ -364,10 +543,11 @@ describe('FrequencyCapping', () => {
       const waitTime = 3000;
       nowInstantStub.onFirstCall().returns(startTimestamp + timePassed);
       const storedData: PersistedFrequencyCappingState = {
-        caps: [],
+        bCaps: {},
         pCaps: {
           [wpAdUnitPath]: [{ ts: startTimestamp, wait: waitTime }]
         },
+        pLastImpAdRequests: {},
         requestAds: 1
       };
       jsDomWindow.sessionStorage.setItem('h5v-fc', JSON.stringify(storedData));
@@ -387,7 +567,7 @@ describe('FrequencyCapping', () => {
         nowInstantStub,
         noopLogger
       );
-      expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.true;
+      expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.true;
       expect(setTimeoutSpy).to.have.been.calledOnceWithExactly(
         Sinon.match.func,
         waitTime - timePassed
@@ -397,7 +577,7 @@ describe('FrequencyCapping', () => {
     it('should persist onAuctionEnd events', () => {
       nowInstantStub.returns(100000);
       const frequencyCapping = createFrequencyCapping(
-        { enabled: true, persistent: true, configs: [visxInterstitialConfig] },
+        { enabled: true, persistent: true, bidders: [visxInterstitialConfig] },
         jsDomWindow,
         nowInstantStub,
         noopLogger
@@ -408,21 +588,21 @@ describe('FrequencyCapping', () => {
       const storedData = jsDomWindow.sessionStorage.getItem('h5v-fc');
       expect(storedData).to.be.ok;
       const persistedState = JSON.parse(storedData!);
-      expect(persistedState).to.be.an('object').and.have.property('caps');
-      expect(persistedState.caps).to.be.an('array').and.have.lengthOf(1);
-      expect(persistedState.caps[0]).to.deep.equal({
+      expect(persistedState).to.be.an('object').and.have.property('bCaps');
+      expect(persistedState.bCaps).to.be.an('object').and.have.property('interstitial:visx');
+      expect(persistedState.bCaps['interstitial:visx']).to.be.an('array');
+      expect(persistedState.bCaps['interstitial:visx'][0]).to.deep.equal({
         ts: 100000,
-        wait: visxInterstitialConfig.blockedForMs,
-        bid: { bidder: prebidjs.Visx, adUnitCode: interstitialDomId }
+        wait: visxInterstitialConfig.conditions.pacingInterval?.intervalInMs
       });
 
-      expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.true;
+      expect(frequencyCapping.isBidderCapped(interstitialDomId, prebidjs.Visx)).to.be.true;
     });
 
     it('should persist onBidWon events', () => {
       nowInstantStub.returns(100000);
       const frequencyCapping = createFrequencyCapping(
-        { enabled: true, persistent: true, configs: [dspxWpConfig] },
+        { enabled: true, persistent: true, bidders: [dspxWpConfig] },
         jsDomWindow,
         nowInstantStub,
         noopLogger
@@ -431,18 +611,15 @@ describe('FrequencyCapping', () => {
       const storedData = jsDomWindow.sessionStorage.getItem('h5v-fc');
       expect(storedData).to.be.ok;
       const persistedState = JSON.parse(storedData!);
-      expect(persistedState).to.be.an('object').and.have.property('caps');
-      expect(persistedState.caps).to.be.an('array').and.have.lengthOf(1);
-      expect(persistedState.caps[0]).to.deep.equal({
+      expect(persistedState).to.be.an('object').and.have.property('bCaps');
+      expect(persistedState.bCaps).to.be.an('object').and.have.property('wp-slot:dspx');
+      expect(persistedState.bCaps['wp-slot:dspx']).to.be.an('array');
+      expect(persistedState.bCaps['wp-slot:dspx'][0]).to.deep.equal({
         ts: 100000,
-        wait: dspxWpConfig.blockedForMs,
-        bid: {
-          bidder: dspxBidResponse.bidder,
-          adUnitCode: dspxBidResponse.adUnitCode
-        }
+        wait: dspxWpConfig.conditions.pacingInterval?.intervalInMs
       });
 
-      expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.true;
+      expect(frequencyCapping.isBidderCapped(wpDomId, prebidjs.DSPX)).to.be.true;
     });
 
     it('should persist on afterRequestAds events', () => {
@@ -461,13 +638,74 @@ describe('FrequencyCapping', () => {
       expect(persistedState.requestAds).to.be.equal(1);
     });
 
+    it('should persist position frequency capping', () => {
+      nowInstantStub.returns(100000);
+      const frequencyCapping = createFrequencyCapping(
+        {
+          enabled: true,
+          persistent: true,
+          positions: [
+            {
+              adUnitPath: wpAdUnitPath,
+              conditions: { pacingInterval: { intervalInMs: 10000, maxImpressions: 1 } }
+            }
+          ]
+        },
+        jsDomWindow,
+        nowInstantStub,
+        noopLogger
+      );
+      frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, wpSlot));
+      const storedData = jsDomWindow.sessionStorage.getItem('h5v-fc');
+      expect(storedData).to.be.ok;
+      const persistedState = JSON.parse(storedData!);
+      expect(persistedState).to.be.an('object').and.have.property('pCaps');
+      expect(persistedState.pCaps).to.be.an('object').and.have.property(wpAdUnitPath);
+      expect(persistedState.pCaps[wpAdUnitPath][0]).to.deep.equal({
+        ts: 100000,
+        wait: 10000
+      });
+
+      expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.true;
+    });
+
+    it('should persist number of ad requests for ad unit path if slot was rendered', () => {
+      nowInstantStub.returns(100000);
+      const frequencyCapping = createFrequencyCapping(
+        {
+          enabled: true,
+          persistent: true,
+          positions: [
+            {
+              adUnitPath: wpAdUnitPath,
+              conditions: { pacingRequestAds: { requestAds: 1 } }
+            }
+          ]
+        },
+        jsDomWindow,
+        nowInstantStub,
+        noopLogger
+      );
+      frequencyCapping.afterRequestAds();
+      frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, wpSlot));
+      const storedData = jsDomWindow.sessionStorage.getItem('h5v-fc');
+      expect(storedData).to.be.ok;
+      const persistedState = JSON.parse(storedData!);
+      expect(persistedState).to.be.an('object').and.have.property('pLastImpAdRequests');
+      expect(persistedState.pLastImpAdRequests).to.be.an('object').and.have.property(wpAdUnitPath);
+      expect(persistedState.pLastImpAdRequests[wpAdUnitPath]).to.equal(1);
+    });
+
     it('should persist multiple configs if applicable', () => {
       nowInstantStub.returns(100000);
       const frequencyCapping = createFrequencyCapping(
         {
           enabled: true,
           persistent: true,
-          configs: [visxInterstitialConfig, { ...visxInterstitialConfig, bidder: prebidjs.GumGum }]
+          bidders: [
+            visxInterstitialConfig,
+            { ...visxInterstitialConfig, bidders: [prebidjs.GumGum] }
+          ]
         },
         jsDomWindow,
         nowInstantStub,
@@ -482,21 +720,20 @@ describe('FrequencyCapping', () => {
       const storedData = jsDomWindow.sessionStorage.getItem('h5v-fc');
       expect(storedData).to.be.ok;
       const persistedState = JSON.parse(storedData!);
-      expect(persistedState).to.be.an('object').and.have.property('caps');
-      expect(persistedState.caps).to.be.an('array').and.have.lengthOf(2);
-      expect(persistedState.caps[0]).to.deep.equal({
+      expect(persistedState).to.be.an('object').and.have.property('bCaps');
+      expect(persistedState.bCaps).to.be.an('object').and.have.property('interstitial:visx');
+      expect(persistedState.bCaps).to.be.an('object').and.have.property('interstitial:gumgum');
+      expect(persistedState.bCaps['interstitial:visx'][0]).to.deep.equal({
         ts: 100000,
-        wait: visxInterstitialConfig.blockedForMs,
-        bid: { bidder: prebidjs.Visx, adUnitCode: interstitialDomId }
+        wait: visxInterstitialConfig.conditions.pacingInterval?.intervalInMs
       });
-      expect(persistedState.caps[1]).to.deep.equal({
+      expect(persistedState.bCaps['interstitial:gumgum'][0]).to.deep.equal({
         ts: 100000,
-        wait: visxInterstitialConfig.blockedForMs,
-        bid: { bidder: prebidjs.GumGum, adUnitCode: interstitialDomId }
+        wait: visxInterstitialConfig.conditions.pacingInterval?.intervalInMs
       });
 
-      expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.true;
-      expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.GumGum)).to.be.true;
+      expect(frequencyCapping.isBidderCapped(interstitialDomId, prebidjs.Visx)).to.be.true;
+      expect(frequencyCapping.isBidderCapped(interstitialDomId, prebidjs.GumGum)).to.be.true;
     });
   });
 });

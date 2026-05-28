@@ -92,64 +92,137 @@
  *
  * @module
  */
-import { IModule, ModuleType } from 'ad-tag/types/module';
+import { IModule } from 'ad-tag/types/module';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
-import { ConfigureStep, InitStep, mkInitStep, PrepareRequestAdsStep } from '../../adPipeline';
+import {
+  ConfigureStep,
+  InitStep,
+  mkConfigureStep,
+  mkInitStep,
+  PrepareRequestAdsStep
+} from '../../adPipeline';
 import { googletag } from 'ad-tag/types/googletag';
 import { modules } from 'ad-tag/types/moliConfig';
 
+const matches =
+  (href: string, log: MoliRuntime.MoliLogger) =>
+  (entry: { pattern: string; matchType: 'exact' | 'contains' | 'regex' }): boolean => {
+    switch (entry.matchType) {
+      case 'exact':
+        return href === entry.pattern;
+      case 'contains':
+        return href.indexOf(entry.pattern) > -1;
+      case 'regex':
+        try {
+          return RegExp(entry.pattern).test(href);
+        } catch (e) {
+          log.error(`Invalid regex pattern: ${entry.pattern}`, e);
+          return false;
+        }
+      default:
+        return false;
+    }
+  };
+
+export const isBlocklisted = (
+  blocklist: modules.blocklist.Blocklist,
+  href: string,
+  log: MoliRuntime.MoliLogger
+): boolean => blocklist.urls.some(matches(href, log));
 /**
  * ## Blocklisted URLs Module
  */
-export class BlocklistedUrls implements IModule {
-  public readonly name: string = 'Blocklist URLs';
-  public readonly description: string =
-    'Blocks ad requests entirely or adds key-values for blocklistd urls';
-  public readonly moduleType: ModuleType = 'policy';
-  private blocklistConfig:
+export const createBlocklistedUrls = (): IModule => {
+  let blocklistConfig:
     | modules.blocklist.BlocklistUrlsBlockingConfig
     | modules.blocklist.BlocklistUrlsKeyValueConfig
     | null = null;
+  let blocklistCache: Promise<modules.blocklist.Blocklist> | null = null;
 
-  config__(): Object | null {
-    return this.blocklistConfig;
-  }
+  const config__ = (): Object | null => blocklistConfig;
 
-  configure__(moduleConfig?: modules.ModulesConfig) {
+  const configure__ = (moduleConfig?: modules.ModulesConfig) => {
     if (moduleConfig?.blocklist && moduleConfig.blocklist.enabled) {
-      this.blocklistConfig = moduleConfig.blocklist;
+      blocklistConfig = moduleConfig.blocklist;
     }
-  }
+  };
 
-  initSteps__(): InitStep[] {
-    const config = this.blocklistConfig;
-    return config
+  const getBlocklist = (
+    blocklist: modules.blocklist.BlocklistProvider,
+    assetLoaderService: IAssetLoaderService,
+    log: MoliRuntime.MoliLogger
+  ): (() => Promise<modules.blocklist.Blocklist>) => {
+    switch (blocklist.provider) {
+      case 'static':
+        return () => Promise.resolve(blocklist.blocklist);
+      case 'dynamic':
+        // not sure if this promise caching is acutally needed, because the loadConfigWithRetry
+        // method already caches the result
+        let cachedResult: Promise<modules.blocklist.Blocklist>;
+        return () => {
+          if (!cachedResult) {
+            cachedResult = loadConfigWithRetry(assetLoaderService, blocklist.endpoint, 3).catch(
+              e => {
+                log.error('Blocklist URLs', 'Fetching blocklisted urls failed', e);
+                return { urls: [] };
+              }
+            );
+          }
+          return cachedResult;
+        };
+    }
+  };
+
+  const loadConfigWithRetry = (
+    assetLoaderService: IAssetLoaderService,
+    endpoint: string,
+    retriesLeft: number,
+    lastError: any | null = null
+  ): Promise<modules.blocklist.Blocklist> => {
+    if (retriesLeft <= 0) {
+      return Promise.reject(lastError);
+    }
+    if (!blocklistCache) {
+      blocklistCache = assetLoaderService
+        .loadJson<modules.blocklist.Blocklist>('blocklist-urls.json', endpoint)
+        .catch(error => {
+          const exponentialBackoff = new Promise(resolve => setTimeout(resolve, 100 / retriesLeft));
+          return exponentialBackoff.then(() =>
+            loadConfigWithRetry(assetLoaderService, endpoint, retriesLeft - 1, error)
+          );
+        });
+    }
+    return blocklistCache;
+  };
+
+  const initSteps__ = (): InitStep[] => {
+    return blocklistConfig
       ? [
           mkInitStep('blocklist-urls-init', ctx => {
-            switch (this.blocklistConfig?.mode) {
+            switch (blocklistConfig?.mode) {
               case 'key-value':
-                const key = this.blocklistConfig.key;
-                const value = this.blocklistConfig.isBlocklistedValue || 'true';
-                return this.getBlocklist(
-                  this.blocklistConfig.blocklist,
+                const key = blocklistConfig.key;
+                const value = blocklistConfig.isBlocklistedValue || 'true';
+                return getBlocklist(
+                  blocklistConfig.blocklist,
                   ctx.assetLoaderService__,
                   ctx.logger__
                 )().then(blocklist => {
-                  if (this.isBlocklisted(blocklist, ctx.window__.location.href, ctx.logger__)) {
+                  if (isBlocklisted(blocklist, ctx.window__.location.href, ctx.logger__)) {
                     (ctx.window__ as Window & googletag.IGoogleTagWindow).googletag
                       .pubads()
                       .setTargeting(key, value);
                   }
                 });
               case 'block':
-                return this.getBlocklist(
-                  this.blocklistConfig.blocklist,
+                return getBlocklist(
+                  blocklistConfig.blocklist,
                   ctx.assetLoaderService__,
                   ctx.logger__
                 )().then(blocklist => {
-                  ctx.logger__.debug(this.name, 'using blocklist', blocklist);
-                  if (this.isBlocklisted(blocklist, ctx.window__.location.href, ctx.logger__)) {
+                  ctx.logger__.debug('Blocklist URLs', 'using blocklist', blocklist);
+                  if (isBlocklisted(blocklist, ctx.window__.location.href, ctx.logger__)) {
                     return Promise.reject('blocklisted url found. Abort ad pipeline run');
                   }
                 });
@@ -159,92 +232,39 @@ export class BlocklistedUrls implements IModule {
           })
         ]
       : [];
-  }
-
-  isBlocklisted = (
-    blocklist: modules.blocklist.Blocklist,
-    href: string,
-    log: MoliRuntime.MoliLogger
-  ): boolean => {
-    return blocklist.urls.some(({ pattern, matchType }) => {
-      switch (matchType) {
-        case 'exact':
-          return href === pattern;
-        case 'contains':
-          return href.indexOf(pattern) > -1;
-        case 'regex':
-          try {
-            const matched = RegExp(pattern).test(href);
-            if (matched) {
-              log.debug(this.name, `Url '${href}' matched pattern '${pattern}'`);
-            }
-            return matched;
-          } catch (e) {
-            log.error(this.name, `Invalid pattern ${pattern}`, e);
-            return false;
-          }
-      }
-    });
   };
 
-  private getBlocklist(
-    blocklist: modules.blocklist.BlocklistProvider,
-    assetLoaderService: IAssetLoaderService,
-    log: MoliRuntime.MoliLogger
-  ): () => Promise<modules.blocklist.Blocklist> {
-    switch (blocklist.provider) {
-      case 'static':
-        return () => Promise.resolve(blocklist.blocklist);
-      case 'dynamic':
-        let cachedResult: Promise<modules.blocklist.Blocklist>;
-        return () => {
-          if (!cachedResult) {
-            cachedResult = this.loadConfigWithRetry(
-              assetLoaderService,
-              blocklist.endpoint,
-              3
-            ).catch(e => {
-              log.error(this.name, 'Fetching blocklisted urls failed', e);
-              // fallback to no urls
-              return { urls: [] };
+  const configureSteps__ = (): ConfigureStep[] => {
+    const config = blocklistConfig;
+    return config
+      ? [
+          mkConfigureStep('blocklist-labels', async ctx => {
+            const loadedBlocklist = await getBlocklist(
+              config.blocklist,
+              ctx.assetLoaderService__,
+              ctx.logger__
+            )();
+            const matcher = matches(ctx.window__.location.href, ctx.logger__);
+            loadedBlocklist.labels?.forEach(entry => {
+              const result = entry.reverseMatch === true ? !matcher(entry) : matcher(entry);
+              if (result) {
+                ctx.labelConfigService__.addLabel(entry.label);
+              }
             });
-          }
-          return cachedResult;
-        };
-    }
-  }
-  private blocklistCache: Promise<modules.blocklist.Blocklist> | null = null;
+          })
+        ]
+      : [];
+  };
+  const prepareRequestAdsSteps__ = (): PrepareRequestAdsStep[] => [];
 
-  private loadConfigWithRetry(
-    assetLoaderService: IAssetLoaderService,
-    endpoint: string,
-    retriesLeft: number,
-    lastError: any | null = null
-  ): Promise<modules.blocklist.Blocklist> {
-    if (retriesLeft <= 0) {
-      return Promise.reject(lastError);
-    }
-
-    // for three retries the backoff time will be 100ms, 200ms, 300ms
-    if (!this.blocklistCache) {
-      this.blocklistCache = assetLoaderService
-        .loadJson<modules.blocklist.Blocklist>('blocklist-urls.json', endpoint)
-        .catch(error => {
-          const exponentialBackoff = new Promise(resolve => setTimeout(resolve, 100 / retriesLeft));
-          return exponentialBackoff.then(() =>
-            this.loadConfigWithRetry(assetLoaderService, endpoint, retriesLeft - 1, error)
-          );
-        });
-    }
-
-    return this.blocklistCache;
-  }
-
-  configureSteps__(): ConfigureStep[] {
-    return [];
-  }
-
-  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
-    return [];
-  }
-}
+  return {
+    name: 'Blocklist URLs',
+    description: '', // remove descriptions everywhere in the future as they are not used
+    moduleType: 'policy',
+    config__,
+    configure__,
+    initSteps__,
+    configureSteps__,
+    prepareRequestAdsSteps__
+  };
+};
