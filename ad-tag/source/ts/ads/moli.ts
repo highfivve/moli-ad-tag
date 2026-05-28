@@ -13,6 +13,7 @@ import {
 import { packageJson } from '../gen/packageJson';
 import * as adUnitPath from './adUnitPath';
 import { extractTopPrivateDomainFromHostname } from '../util/extractTopPrivateDomainFromHostname';
+import { detectGeoFromBrowser } from '../util/detectGeoFromTimezone';
 import { createLabelConfigService } from './labelConfigService';
 import { allowRefreshAdSlot, allowRequestAds } from './spa';
 import {
@@ -327,6 +328,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       case 'configured': {
         setABtestTargeting();
         addDomainLabel(state.config.domain);
+        addGeoLabels(state.config.targeting?.geo);
 
         const modules = state.modules;
         getLogger(state.runtimeConfig, window).debug(
@@ -540,6 +542,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         // create new ABTest values
         setABtestTargeting();
         addDomainLabel(state.config.domain);
+        addGeoLabels(state.config.targeting?.geo);
 
         const { modules } = state;
         const afterRequestAds = state.nextRuntimeConfig.hooks.afterRequestAds;
@@ -877,6 +880,16 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       domainFromConfig || extractTopPrivateDomainFromHostname(window.location.hostname);
     if (domain) {
       addLabel(domain);
+    }
+  }
+
+  function addGeoLabels(geoFromConfig?: googleAdManager.GeoConfig): void {
+    const { country, continent } = geoFromConfig ?? detectGeoFromBrowser();
+    if (country) {
+      addLabel(country);
+    }
+    if (continent) {
+      addLabel(continent);
     }
   }
 

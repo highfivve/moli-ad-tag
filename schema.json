@@ -1159,6 +1159,20 @@
       },
       "type": "object"
     },
+    "googleAdManager.GeoConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "continent": {
+          "description": "Continent label (e.g. `\"europe\"`, `\"america\"`). If omitted, the continent is detected from the browser timezone.",
+          "type": "string"
+        },
+        "country": {
+          "description": "ISO 2-letter country code (e.g. `\"DE\"`, `\"US\"`). If omitted, the country is detected from the browser timezone.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "googleAdManager.KeyValueMap": {
       "additionalProperties": {
         "anyOf": [
@@ -1208,6 +1222,10 @@
         "adUnitPathVariables": {
           "$ref": "#/definitions/AdUnitPathVariables",
           "description": "ad unit path variables"
+        },
+        "geo": {
+          "$ref": "#/definitions/googleAdManager.GeoConfig",
+          "description": "Optional geo configuration. Country and continent are added as labels for targeting. If not set, both values are detected automatically from the browser timezone."
         },
         "keyValues": {
           "$ref": "#/definitions/googleAdManager.KeyValueMap",
