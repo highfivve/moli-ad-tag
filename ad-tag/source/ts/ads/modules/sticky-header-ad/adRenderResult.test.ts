@@ -35,7 +35,7 @@ describe('renderResult', () => {
     ({
       env__: 'production',
       window__: jsDomWindow
-    } as AdPipelineContext);
+    }) as AdPipelineContext;
 
   afterEach(() => {
     dom = createDom();
