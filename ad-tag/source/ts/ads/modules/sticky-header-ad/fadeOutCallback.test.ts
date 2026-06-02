@@ -29,7 +29,6 @@ describe('intersection observer fadeOut callback', () => {
    * @see https://stackoverflow.com/questions/44741102/how-to-make-jest-wait-for-all-asynchronous-code-to-finish-execution-before-expec
    */
   const waitForPromises = () => new Promise(process.nextTick);
-  const waitMs = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   const createDiv = (id: string): HTMLDivElement => {
     const div = jsDomWindow.document.createElement('div');
@@ -71,9 +70,7 @@ describe('intersection observer fadeOut callback', () => {
       adRenderResultEmpty,
       null,
       null,
-      fadeOutClassName,
-      0,
-      jsDomWindow
+      fadeOutClassName
     )([], null as any);
 
     expect(container.classList.contains(fadeOutClassName)).to.be.false;
@@ -86,9 +83,7 @@ describe('intersection observer fadeOut callback', () => {
       adRenderResultEmpty,
       null,
       null,
-      fadeOutClassName,
-      0,
-      jsDomWindow
+      fadeOutClassName
     )([containerIntersectionEntry(container, true, 10)], null as any);
 
     expect(container.classList.contains(fadeOutClassName)).to.be.false;
@@ -101,9 +96,7 @@ describe('intersection observer fadeOut callback', () => {
       adRenderResultEmpty,
       null,
       null,
-      fadeOutClassName,
-      0,
-      jsDomWindow
+      fadeOutClassName
     )([containerIntersectionEntry(container, true, 10)], null as any);
     await waitForPromises();
 
@@ -140,9 +133,7 @@ describe('intersection observer fadeOut callback', () => {
           adRenderResult,
           null,
           null,
-          fadeOutClassName,
-          0,
-          jsDomWindow
+          fadeOutClassName
         )([entryWith(target)], null as any);
         await waitForPromises();
 
@@ -158,9 +149,7 @@ describe('intersection observer fadeOut callback', () => {
         adRenderResultStandard,
         null,
         null,
-        fadeOutClassName,
-        0,
-        jsDomWindow
+        fadeOutClassName
       )([containerIntersectionEntry(target, false, 10)], null as any);
       await waitForPromises();
 
@@ -189,9 +178,7 @@ describe('intersection observer fadeOut callback', () => {
           adRenderResultStandard,
           navbar,
           navbarHiddenClass,
-          fadeOutClassName,
-          0,
-          jsDomWindow
+          fadeOutClassName
         )([entryWith(navbar)], null as any);
 
         expect(container.classList.contains(navbarHiddenClass)).to.be.true;
@@ -206,75 +193,10 @@ describe('intersection observer fadeOut callback', () => {
         adRenderResultStandard,
         navbar,
         navbarHiddenClass,
-        fadeOutClassName,
-        0,
-        jsDomWindow
+        fadeOutClassName
       )([containerIntersectionEntry(navbar, true, 20)], null as any);
 
       expect(container.classList.contains(navbarHiddenClass)).to.be.false;
-    });
-  });
-
-  describe('minVisibleDurationMs', () => {
-    it('should suppress initial hide if trigger is in viewport on page load', async () => {
-      const minVisibleDurationMs = 50;
-      const callback = intersectionObserverFadeOutCallback(
-        container,
-        target,
-        adRenderResultStandard,
-        null,
-        null,
-        fadeOutClassName,
-        minVisibleDurationMs,
-        jsDomWindow
-      );
-
-      // initial intersection event fired by browser immediately on observe()
-      callback([containerIntersectionEntry(target, true, 20)], null as any);
-      await waitForPromises();
-
-      // should NOT be hidden yet — minVisibleDurationMs has not elapsed
-      expect(container.classList.contains(fadeOutClassName)).to.be.false;
-
-      // after the min visible period, a subsequent intersection should hide it
-      await waitMs(minVisibleDurationMs + 10);
-      callback([containerIntersectionEntry(target, true, 20)], null as any);
-      await waitForPromises();
-
-      expect(container.classList.contains(fadeOutClassName)).to.be.true;
-    });
-
-    it('should hide immediately if minVisibleDurationMs is 0', async () => {
-      intersectionObserverFadeOutCallback(
-        container,
-        target,
-        adRenderResultStandard,
-        null,
-        null,
-        fadeOutClassName,
-        0,
-        jsDomWindow
-      )([containerIntersectionEntry(target, true, 20)], null as any);
-      await waitForPromises();
-
-      expect(container.classList.contains(fadeOutClassName)).to.be.true;
-    });
-
-    it('should hide immediately for empty/disallowed even during minVisibleDurationMs', async () => {
-      const minVisibleDurationMs = 50;
-      intersectionObserverFadeOutCallback(
-        container,
-        target,
-        adRenderResultEmpty,
-        null,
-        null,
-        fadeOutClassName,
-        minVisibleDurationMs,
-        jsDomWindow
-      )([containerIntersectionEntry(target, true, 20)], null as any);
-      await waitForPromises();
-
-      expect(container.classList.contains(fadeOutClassName)).to.be.true;
     });
   });
 });

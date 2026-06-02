@@ -13,7 +13,8 @@ export type RenderEventResult = 'empty' | 'disallowed' | 'standard';
 export const adRenderResult = (
   ctx: AdPipelineContext,
   headerSlot: AdSlot,
-  disallowedAdvertiserIds: number[]
+  disallowedAdvertiserIds: number[],
+  minVisibleDuration: number
 ) =>
   new Promise<RenderEventResult>(resolve => {
     // in test mode there's no event fired so we need to resolve immediately and say it's not empty
@@ -33,7 +34,9 @@ export const adRenderResult = (
       } else if (event.isEmpty) {
         resolve('empty');
       } else {
-        resolve('standard');
+        minVisibleDuration > 0
+          ? ctx.window__.setTimeout(() => resolve('standard'), minVisibleDuration)
+          : resolve('standard');
       }
       ctx.window__.googletag.pubads().removeEventListener('slotRenderEnded', listener);
     };

@@ -169,7 +169,8 @@ export const createStickyHeaderAd = (): IModule => {
                 const adRenderResultPromise = adRenderResult(
                   ctx,
                   headerSlot.moliSlot,
-                  config.disallowedAdvertiserIds
+                  config.disallowedAdvertiserIds,
+                  minVisibleDuration
                 );
 
                 // setup intersection observer
@@ -180,9 +181,7 @@ export const createStickyHeaderAd = (): IModule => {
                     adRenderResultPromise,
                     navbar,
                     navbarHiddenClass,
-                    config.fadeOutClassName,
-                    minVisibleDuration,
-                    ctx.window__
+                    config.fadeOutClassName
                   ),
                   options
                 );
