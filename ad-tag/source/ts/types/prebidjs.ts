@@ -1218,7 +1218,10 @@ export namespace prebidjs {
       readonly maxDelayTime?: number;
     }
 
-    export interface ITaboolaIdProvider extends IUserIdProvider<'taboolaId'> {}
+    /**
+     * @see https://docs.prebid.org/dev-docs/modules/userid-submodules/taboola.html
+     */
+    export interface ITaboolaIdProvider extends IUserIdProvider<'taboolaIdSystem'> {}
 
     /**
      * Prebid 9+ utiq id provider type. The Prebid 8 module was not typed to avoid confusion and
@@ -1324,6 +1327,7 @@ export namespace prebidjs {
       | 'verizonmedia.com'
       | 'mediawallahscript.com'
       | 'tapad.com'
+      | 'taboola.com'
       | 'novatiq.com'
       | 'uidapi.com'
       | 'admixer.net'
