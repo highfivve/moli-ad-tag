@@ -1019,7 +1019,7 @@ export namespace prebidjs {
        *  user ID. This can be either cookie or HTML5 storage. This is not needed when value is specified or the
        *  ID system is managing its own storage
        */
-      readonly type: 'cookie' | 'html5';
+      readonly type: 'cookie' | 'html5' | 'cookie&html5';
 
       /**
        * The name of the cookie or html5 local storage where the user ID will be stored.
@@ -6667,7 +6667,9 @@ export namespace prebidjs {
      * Storage type - either 'html5' or 'cookie'.
      * Relevant for: accessDevice
      */
-    type ACTIVITY_PARAM_STORAGE_TYPE = { readonly storageType: 'html5' | 'cookie' };
+    type ACTIVITY_PARAM_STORAGE_TYPE = {
+      readonly storageType: 'html5' | 'cookie' | 'cookie&html5';
+    };
 
     /**
      * s2sConfig[].configName, used to identify a particular s2s instance
