@@ -75,7 +75,7 @@ describe('criteoEnrichWithFpd', () => {
   });
   it('should not enrich bidderConfigs when Criteo user sync is not enabled', () => {
     const userSyncConfig: prebidjs.userSync.IUserSyncConfig = {
-      userIds: [{ name: 'taboolaIdSystem' }]
+      userIds: [{ name: 'taboolaId' }]
     };
 
     const enrichedConfigs = criteoEnrichWithFpd(
