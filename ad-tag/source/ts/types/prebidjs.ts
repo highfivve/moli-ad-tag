@@ -1221,7 +1221,23 @@ export namespace prebidjs {
     /**
      * @see https://docs.prebid.org/dev-docs/modules/userid-submodules/taboola.html
      */
-    export interface ITaboolaIdProvider extends IUserIdProvider<'taboolaIdSystem'> {}
+    export interface ITaboolaIdProviderParams {
+      /**
+       * Not documented, not in code, but in the PDF sent by Taboola.
+       */
+      readonly publisherId: string;
+
+      /**
+       * Not documented, only in code
+       */
+      readonly shouldSkipSync?: boolean;
+    }
+
+    /**
+     * @see https://docs.prebid.org/dev-docs/modules/userid-submodules/taboola.html
+     */
+    export interface ITaboolaIdProvider
+      extends IParameterizedUserIdProvider<ITaboolaIdProviderParams, 'taboolaId'> {}
 
     /**
      * Prebid 9+ utiq id provider type. The Prebid 8 module was not typed to avoid confusion and
