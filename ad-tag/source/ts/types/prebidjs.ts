@@ -540,9 +540,10 @@ export namespace prebidjs {
        * Supported values:
        * - "storage" (Purpose 1)
        * - "basicAds" (Purpose 2)
+       * - "personalizedAds" (Purpose 4)
        * - "measurement" (Purpose 7)
        */
-      readonly purpose: 'storage' | 'basicAds' | 'measurement';
+      readonly purpose: 'storage' | 'basicAds' | 'measurement' | 'personalizedAds';
 
       /**
        * Determines whether to enforce the purpose consent or not. The default in Prebid.js 3.x is not to enforce
@@ -582,6 +583,13 @@ export namespace prebidjs {
        * ```
        */
       readonly softVendorExceptions?: string[];
+
+      /**
+       * If true, allows s2s bidders to bypass vendor consent check and delegate it to server.
+       * Applies only to basicAds rule.
+       * @default false
+       */
+      readonly deferS2Sbidders?: boolean;
     }
   }
 
