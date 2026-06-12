@@ -4,6 +4,7 @@ import { classList } from '../util/stringUtils';
 
 import { SizeConfigDebug } from './sizeConfigDebug';
 import { Tag } from './tag';
+import { SubHeadline, Tabs } from './ui';
 
 import { extractPrebidAdSlotConfigs } from '../util/prebid';
 import { AdSlot, bucket, googleAdManager, headerbidding } from '../../types/moliConfig';
@@ -15,25 +16,16 @@ type IAdSlotConfigProps = {
   parentElement?: HTMLElement;
   slot: AdSlot;
   labelConfigService: LabelConfigService;
-  /** open the general info panel right away, e.g. when linked from the overview tab */
+  /** open the slot card right away, e.g. when linked from the overview tab */
   initiallyExpanded?: boolean;
 };
+
+type SlotTab = 'overview' | 'sizeConfig' | 'bidders';
+
 type IAdSlotConfigState = {
   dimensions?: { width: number; height: number };
-  showA9: boolean;
-  showPrebid: boolean;
-  showGeneral: boolean;
-  showSizeConfig: boolean;
-};
-
-const defaultPanelState: Pick<
-  IAdSlotConfigState,
-  'showA9' | 'showPrebid' | 'showGeneral' | 'showSizeConfig'
-> = {
-  showA9: false,
-  showPrebid: false,
-  showGeneral: false,
-  showSizeConfig: false
+  expanded: boolean;
+  activeTab: SlotTab;
 };
 
 type ValidatedSlotSize = { valid: boolean; size: googleAdManager.SlotSize };
@@ -42,9 +34,9 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
   constructor(props: IAdSlotConfigProps) {
     super(props);
 
-    const initialPanelState = {
-      ...defaultPanelState,
-      showGeneral: !!props.initiallyExpanded
+    const initialState = {
+      expanded: !!props.initiallyExpanded,
+      activeTab: 'overview' as const
     };
 
     if (props.parentElement) {
@@ -53,40 +45,22 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
       const { width, height } = props.parentElement.getBoundingClientRect();
       this.state = {
         dimensions: { width, height },
-        ...initialPanelState
+        ...initialState
       };
     } else {
-      this.state = initialPanelState;
+      this.state = initialState;
     }
   }
 
   render(): React.ReactNode {
     const { labelConfigService, slot, parentElement } = this.props;
-    const { dimensions, showGeneral, showA9, showPrebid, showSizeConfig } = this.state;
+    const { dimensions, expanded, activeTab } = this.state;
     const slotValid =
       slot.behaviour.loaded === 'infinite' ? true : labelConfigService.filterSlot(slot);
     const slotElementExists = !!document.getElementById(slot.domId);
 
     const slotVisible = slotValid && slotElementExists;
     const isConfiguredInfiniteSlot = slot.behaviour.loaded === 'infinite' && !slotVisible;
-
-    const prebidValid = this.isVisiblePrebid();
-    const a9Valid = slotVisible && this.isVisibleA9();
-
-    function setSlotVisibilityIcon(slotVisible: boolean, loadingBehaviour: string): string {
-      if (slotVisible) {
-        return '✔';
-      } else if (isConfiguredInfiniteSlot) {
-        return '?';
-      } else {
-        return 'x';
-      }
-    }
-
-    const btnBase = 'd-btn d-btn-xs d-btn-square font-normal';
-    const btnRendered = 'd-btn-secondary';
-    const btnNotRendered = 'd-btn-error text-white';
-    const btnInfinite = 'd-btn-warning';
 
     const getBucketName = (bucket?: bucket.AdSlotBucket): string => {
       if (!bucket) {
@@ -98,157 +72,146 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
       return bucket[labelConfigService.getDeviceLabel()] ?? 'default';
     };
 
+    const tabItems: ReadonlyArray<{ id: SlotTab; label: React.ReactNode }> = [
+      { id: 'overview', label: 'Overview' },
+      ...(slot.sizeConfig ? [{ id: 'sizeConfig' as const, label: 'Size Configs' }] : []),
+      ...(slot.prebid || slot.a9 ? [{ id: 'bidders' as const, label: 'Bidder Params' }] : [])
+    ];
+
     return (
       <div
-        className={classList(
-          'mb-4 box-border flex min-h-[34px] flex-col bg-white/80 text-left text-sm',
-          [
-            !!parentElement,
-            'absolute left-0 top-0 z-[99999998] h-full min-h-[100px] w-full min-w-[300px] overflow-y-auto rounded border border-black'
-          ],
-          [!parentElement && slotVisible, 'border-l-4 border-l-success'],
-          [!parentElement && !slotVisible, 'border-l-4 border-l-error'],
-          [isConfiguredInfiniteSlot, 'border-l-4 border-l-warning']
-        )}
+        className={classList('d-collapse d-collapse-arrow mb-2 rounded-md bg-base-200', [
+          !!parentElement,
+          'absolute left-0 top-0 z-[99999998] h-full min-h-[100px] w-full min-w-[300px] overflow-y-auto border border-solid border-base-300 bg-base-100/90'
+        ])}
         style={dimensions}
       >
-        <div className="flex min-h-[34px] items-center gap-1 py-1">
-          {!parentElement && (
-            <button
-              title={
-                slot.behaviour.loaded === 'infinite'
-                  ? `Configuration only used to copy on slots with infinite selector`
-                  : `Slot ${slotVisible ? '' : 'not '}rendered`
-              }
-              className={classList(
-                btnBase,
-                [slotVisible, btnRendered],
-                [!slotVisible, btnNotRendered],
-                [isConfiguredInfiniteSlot, btnInfinite]
-              )}
-              onClick={this.toggleGeneral}
-            >
-              {setSlotVisibilityIcon(slotVisible, slot.behaviour.loaded)}
-            </button>
+        <input
+          type="checkbox"
+          checked={expanded}
+          onChange={() => this.setState({ expanded: !expanded })}
+          aria-label={`toggle slot ${slot.domId}`}
+        />
+        <div className="d-collapse-title flex min-h-0 flex-wrap items-center gap-1 py-2 text-sm font-semibold">
+          <span className="break-all">{slot.domId}</span>
+          <Tag variant="transparent">{slot.behaviour.loaded}</Tag>
+          {slotVisible && (
+            <Tag variant="secondary" title="Slot rendered">
+              ✔ requested
+            </Tag>
           )}
-          <button
-            title="Show general slot info"
-            className={classList(btnBase, [showGeneral, 'd-btn-active'])}
-            onClick={this.toggleGeneral}
-          >
-            &#9432;
-          </button>
-          {slot.a9 && (
-            <button
-              title="Show A9 config"
-              className={classList(
-                btnBase,
-                [showA9, 'd-btn-active'],
-                [a9Valid, btnRendered],
-                [!a9Valid, btnNotRendered]
-              )}
-              onClick={this.toggleA9}
-            >
-              A9
-            </button>
-          )}
-          {slot.prebid && (
-            <button
-              title="Show Prebid config"
-              className={classList(
-                btnBase,
-                [showPrebid, 'd-btn-active'],
-                [prebidValid, btnRendered],
-                [!prebidValid, btnNotRendered]
-              )}
-              onClick={this.togglePrebid}
-            >
-              pb
-            </button>
-          )}
-          {slot.sizeConfig && (
-            <button
-              title="Show sizeConfig"
-              className={classList(
-                btnBase,
-                [slotValid, btnRendered],
-                [!slotValid, btnNotRendered],
-                [showSizeConfig, 'd-btn-active']
-              )}
-              onClick={this.toggleSizeConfig}
-            >
-              📐
-            </button>
+          {!slotVisible && !isConfiguredInfiniteSlot && (
+            <Tag variant="red" title="Slot not rendered">
+              ✖ not requested
+            </Tag>
           )}
           {isConfiguredInfiniteSlot && (
-            <p>Looking up infinite slots is currently not implemented</p>
+            <Tag
+              variant="yellow"
+              title="Configuration only used to copy on slots with infinite selector"
+            >
+              ? infinite
+            </Tag>
+          )}
+          {slot.sizeConfig && (
+            <Tag
+              variant={slotValid ? 'secondary' : 'red'}
+              title={`Slot sizeConfig ${slotValid ? 'matches' : 'does not match'}`}
+            >
+              📐
+            </Tag>
           )}
         </div>
-        {showGeneral && (
-          <div className="mb-4 mt-1 max-w-md rounded-md bg-[#edf6fc] p-2 text-sm text-black shadow-md">
-            <div className="mt-2 flex flex-wrap items-center gap-y-1">
-              <Tag variant="green">{slot.position}</Tag>
-              <Tag variant="yellow">{slot.behaviour.loaded}</Tag>
-              {slot.behaviour.bucket && (
-                <Tag variant="blue">{getBucketName(slot.behaviour.bucket)}</Tag>
-              )}
-            </div>
-            <div className="mt-2 flex flex-wrap items-center gap-y-1">
-              <span
-                className={classList(
-                  'inline-block min-w-36 max-w-96 pr-1 font-medium',
-                  [slotElementExists, 'text-success'],
-                  [!slotElementExists, 'text-error']
-                )}
-              >
-                DOM ID
-              </span>
-              <Tag
-                variant={slotElementExists ? 'green' : 'red'}
-                title={`Slot ${slotElementExists ? '' : 'not '}found in DOM`}
-              >
-                {slot.domId}
-              </Tag>
-            </div>
-            <div className="mt-2 flex flex-wrap items-center gap-y-1">
-              <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">AdUnit path</span>
-              <Tag>{slot.adUnitPath}</Tag>
-            </div>
-            {slot.sizes.length > 0 && (
+        <div className="d-collapse-content text-sm">
+          <Tabs<SlotTab>
+            tabs={tabItems}
+            active={activeTab}
+            onSelect={tab => this.setState({ activeTab: tab })}
+          />
+          {activeTab === 'overview' && (
+            <div>
               <div className="mt-2 flex flex-wrap items-center gap-y-1">
-                <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Sizes</span>
-                {this.validateSlotSizes(slot.sizes).map(validatedSlotSize =>
-                  this.tagFromValidatedSlotSize(validatedSlotSize, !!slot.sizeConfig)
+                <Tag variant="green">{slot.position}</Tag>
+                <Tag variant="yellow">{slot.behaviour.loaded}</Tag>
+                {slot.behaviour.bucket && (
+                  <Tag variant="blue">{getBucketName(slot.behaviour.bucket)}</Tag>
                 )}
               </div>
-            )}
-            <div className="mt-2 flex flex-wrap items-center gap-y-1">{this.labelConfig(slot)}</div>
-          </div>
-        )}
-        {showA9 && slot.a9 && (
-          <div className="mb-4 mt-1 max-w-md rounded-md bg-[#edf6fc] p-2 text-sm text-black shadow-md">
-            {this.a9Config(slot.a9)}
-          </div>
-        )}
-        {showPrebid && slot.prebid && (
-          <div className="mb-4 mt-1 max-w-md rounded-md bg-[#edf6fc] p-2 text-sm text-black shadow-md">
-            {this.prebidConfig(slot.prebid)}
-          </div>
-        )}
-        {showSizeConfig && slot.sizeConfig && (
-          <div className="mb-4 mt-1 max-w-md rounded-md bg-[#edf6fc] p-2 text-sm text-black shadow-md">
+              {isConfiguredInfiniteSlot && (
+                <p className="mt-2">Looking up infinite slots is currently not implemented</p>
+              )}
+              <div className="mt-2 flex flex-wrap items-center gap-y-1">
+                <span
+                  className={classList(
+                    'inline-block min-w-36 max-w-96 pr-1 font-medium',
+                    [slotElementExists, 'text-success'],
+                    [!slotElementExists, 'text-error']
+                  )}
+                >
+                  DOM ID
+                </span>
+                <Tag
+                  variant={slotElementExists ? 'green' : 'red'}
+                  title={`Slot ${slotElementExists ? '' : 'not '}found in DOM`}
+                >
+                  {slot.domId}
+                </Tag>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-y-1">
+                <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">AdUnit path</span>
+                <Tag>{slot.adUnitPath}</Tag>
+              </div>
+              {slot.sizes.length > 0 && (
+                <div className="mt-2 flex flex-wrap items-center gap-y-1">
+                  <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Sizes</span>
+                  {this.validateSlotSizes(slot.sizes).map(validatedSlotSize =>
+                    this.tagFromValidatedSlotSize(validatedSlotSize, !!slot.sizeConfig)
+                  )}
+                </div>
+              )}
+              <div className="mt-2 flex flex-wrap items-center gap-y-1">
+                {this.labelConfig(slot)}
+              </div>
+            </div>
+          )}
+          {activeTab === 'sizeConfig' && slot.sizeConfig && (
             <SizeConfigDebug
               sizeConfig={slot.sizeConfig}
               supportedLabels={labelConfigService.getSupportedLabels()}
             />
-          </div>
-        )}
+          )}
+          {activeTab === 'bidders' && (
+            <div>
+              {slot.prebid && (
+                <>
+                  <SubHeadline>
+                    Prebid{' '}
+                    <Tag variant={this.isVisiblePrebid() ? 'green' : 'red'}>
+                      {this.isVisiblePrebid() ? 'valid' : 'invalid'}
+                    </Tag>
+                  </SubHeadline>
+                  {this.prebidConfig(slot.prebid)}
+                </>
+              )}
+              {slot.a9 && (
+                <>
+                  <SubHeadline>
+                    A9{' '}
+                    <Tag variant={slotVisible && this.isVisibleA9() ? 'green' : 'red'}>
+                      {slotVisible && this.isVisibleA9() ? 'valid' : 'invalid'}
+                    </Tag>
+                  </SubHeadline>
+                  {this.a9Config(slot.a9)}
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
   private prebidConfig = (prebid: headerbidding.PrebidAdSlotConfigProvider): React.ReactElement => {
-    const labels = this.props.labelConfigService.getSupportedLabels();
     const prebidAdUnits: prebidjs.IAdUnit[] = extractPrebidAdSlotConfigs(prebid).map(
       config => config.adUnit
     );
@@ -346,20 +309,10 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
     );
   };
 
-  private toggleGeneral = (): void => this.setState({ showGeneral: !this.state.showGeneral });
-
-  private toggleA9 = (): void => this.setState({ showA9: !this.state.showA9 });
-
-  private togglePrebid = (): void => this.setState({ showPrebid: !this.state.showPrebid });
-
-  private toggleSizeConfig = (): void =>
-    this.setState({ showSizeConfig: !this.state.showSizeConfig });
-
   private isVisiblePrebid = (): boolean => {
     const prebid = this.props.slot.prebid;
 
     if (prebid) {
-      const labels = this.props.labelConfigService.getSupportedLabels();
       return extractPrebidAdSlotConfigs(prebid)
         .map(config => config.adUnit)
         .some(prebidAdUnit => {

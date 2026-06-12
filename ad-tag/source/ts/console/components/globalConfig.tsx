@@ -434,8 +434,6 @@ export class GlobalConfig
                   }
                 }}
               >
-                <strong>{slot.behaviour.loaded}</strong> slot with DOM ID{' '}
-                <strong>{slot.domId}</strong>
                 <AdSlotConfig
                   labelConfigService={labelConfigService}
                   slot={slot}
