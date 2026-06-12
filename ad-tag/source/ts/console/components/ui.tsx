@@ -51,17 +51,19 @@ type TabsProps<T extends string> = {
   readonly tabs: ReadonlyArray<{ readonly id: T; readonly label: React.ReactNode }>;
   readonly active: T;
   readonly onSelect: (id: T) => void;
+  readonly className?: string;
 };
 
 /**
- * Top level navigation between the console pages.
+ * Tab navigation, e.g. between the console pages or within a slot card.
  */
 export const Tabs = <T extends string>({
   tabs,
   active,
-  onSelect
+  onSelect,
+  className
 }: TabsProps<T>): React.ReactElement => (
-  <div role="tablist" className="d-tabs d-tabs-bordered d-tabs-lg mx-3 mb-3">
+  <div role="tablist" className={classList('d-tabs d-tabs-bordered', className ?? '')}>
     {tabs.map(tab => (
       <button
         key={tab.id}

@@ -6,7 +6,7 @@ import { Tag, TagLabel } from './tag';
 import { Block, Btn, Panel, SubHeadline, Tabs, TagContainer, TextInput, Toggle } from './ui';
 import { classList } from '../util/stringUtils';
 import { IWindowEventObserver, WindowResizeService } from '../util/windowResizeService';
-import { Theme, ThemingService } from '../util/themingService';
+import { ThemeConfig, ThemingService } from '../util/themingService';
 
 import { ConsentConfig } from './consentConfig';
 import { LabelConfigDebug } from './labelConfigDebug';
@@ -77,7 +77,7 @@ type IGlobalConfigState = {
   messages: Message[];
   browserResized: boolean;
   showOnlyRenderedSlots: boolean;
-  theme: Theme;
+  themeConfig: ThemeConfig;
   adstxtEntry: string[];
   adstxtDomain: string;
   adstxtError: string;
@@ -104,7 +104,7 @@ export class GlobalConfig
       messages: [],
       browserResized: false,
       showOnlyRenderedSlots: false,
-      theme: props.themingService.currentTheme(),
+      themeConfig: props.themingService.currentThemeConfig(),
       adstxtEntry: [],
       adstxtDomain: '',
       adstxtError: '',
@@ -229,34 +229,43 @@ export class GlobalConfig
     const { sidebarHidden, activeTab } = this.state;
 
     const classes = classList(
-      'fixed right-0 top-0 z-[99999999] box-border block max-h-screen w-full max-w-full overflow-y-auto bg-base-100 pb-4 pt-10 text-left text-sm text-base-content shadow-[-3px_0_5px_0_rgba(0,0,0,0.2)] md:w-[700px]',
+      'fixed right-0 top-0 z-[99999999] box-border block max-h-screen w-full max-w-full overflow-y-auto bg-base-100 pb-4 text-left text-sm text-base-content shadow-[-3px_0_5px_0_rgba(0,0,0,0.2)] md:w-[700px]',
       [sidebarHidden, 'hidden']
     );
-    const showHideMessage = `${sidebarHidden ? 'Show' : 'Hide'} moli global config panel`;
 
     return (
       <div id="moli-console-global-config">
         <style>{styles}</style>
-        <button
-          className="d-btn d-btn-warning d-btn-sm fixed left-0 top-0 z-[100000000] w-screen justify-start rounded-none font-normal normal-case md:left-auto md:right-0 md:w-auto md:rounded-bl-md"
-          title={showHideMessage}
-          onClick={this.toggleSidebar}
-        >
-          {sidebarHidden && <span>&#11013; </span>}
-          {!sidebarHidden && <span>&times; </span>}
-          {showHideMessage}
-        </button>
+        {sidebarHidden && (
+          <button
+            className="d-btn d-btn-warning d-btn-sm fixed left-0 top-0 z-[100000000] w-screen justify-start rounded-none font-normal normal-case md:left-auto md:right-0 md:w-auto md:rounded-bl-md"
+            title="Show moli global config panel"
+            onClick={this.toggleSidebar}
+          >
+            <span>&#11013; </span>Show moli global config panel
+          </button>
+        )}
         {config && (
           <div className={classes} data-ref={debugSidebarSelector}>
-            <Tabs<ConsoleTab>
-              tabs={[
-                { id: 'overview', label: 'Overview' },
-                { id: 'adSetup', label: 'Ad Setup' },
-                { id: 'debugging', label: <>Debugging {this.validationCountTag()}</> }
-              ]}
-              active={activeTab}
-              onSelect={tab => this.setState({ activeTab: tab })}
-            />
+            <nav className="sticky top-0 z-10 mb-3 flex items-center gap-3 bg-base-100 px-3 py-1">
+              <Tabs<ConsoleTab>
+                tabs={[
+                  { id: 'overview', label: 'Overview' },
+                  { id: 'adSetup', label: 'Ad Setup' },
+                  { id: 'debugging', label: <>Debugging {this.validationCountTag()}</> }
+                ]}
+                active={activeTab}
+                onSelect={tab => this.setState({ activeTab: tab })}
+              />
+              {this.renderThemeDropdown()}
+              <button
+                className="d-btn d-btn-ghost d-btn-sm d-btn-square text-base"
+                title="Close moli console"
+                onClick={this.toggleSidebar}
+              >
+                ✕
+              </button>
+            </nav>
             {activeTab === 'overview' && this.renderOverview(config)}
             {activeTab === 'adSetup' && this.renderAdSetup(config)}
             {activeTab === 'debugging' && this.renderDebugging(config)}
@@ -266,9 +275,53 @@ export class GlobalConfig
     );
   }
 
+  private renderThemeDropdown = (): React.ReactElement => {
+    const { themeConfig } = this.state;
+    const options: ReadonlyArray<{ id: ThemeConfig; label: string }> = [
+      { id: 'system', label: '🖥️ system' },
+      { id: 'light', label: '🌞 light' },
+      { id: 'dark', label: '🌔 dark' }
+    ];
+    const activeOption = options.find(option => option.id === themeConfig) ?? options[0];
+
+    return (
+      <div className="d-dropdown d-dropdown-end ml-auto">
+        <button
+          tabIndex={0}
+          className="d-btn d-btn-ghost d-btn-sm font-normal normal-case"
+          title="Appearance"
+        >
+          {activeOption.label} ▾
+        </button>
+        <ul
+          tabIndex={0}
+          className="d-dropdown-content d-menu d-menu-sm z-20 w-32 rounded-md bg-base-200 p-1 shadow"
+        >
+          {options.map(option => (
+            <li key={option.id}>
+              <button
+                // border/background resets needed because preflight is disabled
+                className={classList('border-0 bg-transparent text-left', [
+                  option.id === themeConfig,
+                  'd-active'
+                ])}
+                onClick={e => {
+                  this.setThemeConfig(option.id);
+                  // close the focus driven daisyUI dropdown
+                  e.currentTarget.blur();
+                }}
+              >
+                {option.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+
   private renderOverview = (config: MoliConfig): React.ReactElement => {
     const { runtimeConfig, labelConfigService } = this.props;
-    const { theme } = this.state;
 
     const configLabel = window.moli.configLabel ?? 'not available';
     const currentConfigVersion = window.moli.getConfig()?.version ?? 'not available';
@@ -277,9 +330,6 @@ export class GlobalConfig
       0;
     const isEnvironmentOverridden = !!getActiveEnvironmentOverride(window);
     const isTestMode = runtimeConfig.environment === 'test';
-    const isDarkTheme = theme === 'dark';
-    const switchToDarkTheme = () => this.setTheme('dark');
-    const switchToLightTheme = () => this.setTheme('light');
 
     const requestedSlots = config.slots.filter(this.isSlotRendered);
 
@@ -325,19 +375,6 @@ export class GlobalConfig
             />
             {isTestMode && !isEnvironmentOverridden && (
               <Tag variant="yellow">test environment set in config</Tag>
-            )}
-          </TagContainer>
-          <TagContainer>
-            <TagLabel>Appearance</TagLabel>
-            {isDarkTheme && (
-              <Btn onClick={switchToLightTheme} title="Switch to light theme">
-                🌔 dark
-              </Btn>
-            )}
-            {!isDarkTheme && (
-              <Btn onClick={switchToDarkTheme} title="Switch to dark theme">
-                🌞 light
-              </Btn>
             )}
           </TagContainer>
         </Block>
@@ -870,8 +907,8 @@ export class GlobalConfig
     window.localStorage.removeItem(BrowserStorageKeys.moliVersion);
   };
 
-  private setTheme = (theme: Theme) =>
-    this.setState({ theme }, () => this.props.themingService.applyTheme(theme));
+  private setThemeConfig = (themeConfig: ThemeConfig) =>
+    this.setState({ themeConfig }, () => this.props.themingService.setThemeConfig(themeConfig));
 
   private keyValues = (keyValues: googleAdManager.KeyValueMap): React.ReactElement => {
     const properties = Object.keys(keyValues);

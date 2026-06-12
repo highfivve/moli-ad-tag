@@ -127,6 +127,7 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
             tabs={tabItems}
             active={activeTab}
             onSelect={tab => this.setState({ activeTab: tab })}
+            className="mb-2"
           />
           {activeTab === 'overview' && (
             <div>
