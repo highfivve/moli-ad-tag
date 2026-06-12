@@ -74,17 +74,51 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
 
     const tabItems: ReadonlyArray<{ id: SlotTab; label: React.ReactNode }> = [
       { id: 'overview', label: 'Overview' },
-      ...(slot.sizeConfig ? [{ id: 'sizeConfig' as const, label: 'Size Configs' }] : []),
-      ...(slot.prebid || slot.a9 ? [{ id: 'bidders' as const, label: 'Bidder Params' }] : [])
+      ...(slot.sizeConfig
+        ? [
+            {
+              id: 'sizeConfig' as const,
+              label: (
+                <>
+                  Size Configs <Tag variant="grey">{this.countMatchedSizeConfigs()}</Tag>
+                </>
+              )
+            }
+          ]
+        : []),
+      ...(slot.prebid || slot.a9
+        ? [
+            {
+              id: 'bidders' as const,
+              label: (
+                <>
+                  Bidder Params <Tag variant="grey">{this.countRequestedBidders(slotVisible)}</Tag>
+                </>
+              )
+            }
+          ]
+        : [])
     ];
 
     return (
       <div
-        className={classList('d-collapse d-collapse-arrow mb-2 rounded-md bg-base-200', [
-          !!parentElement,
-          'absolute left-0 top-0 z-[99999998] h-full min-h-[100px] w-full min-w-[300px] overflow-y-auto border border-solid border-base-300 bg-base-100/90'
-        ])}
+        className={classList(
+          'd-collapse d-collapse-arrow mb-2 rounded-md border-y-0 border-l-4 border-r-0 border-solid bg-base-200',
+          [slotVisible, 'border-l-primary'],
+          [!slotVisible, 'border-l-base-300'],
+          [
+            !!parentElement,
+            'absolute left-0 top-0 z-[99999998] h-full min-h-[100px] w-full min-w-[300px] overflow-y-auto bg-base-100/90'
+          ]
+        )}
         style={dimensions}
+        title={
+          slotVisible
+            ? 'Slot requested'
+            : isConfiguredInfiniteSlot
+              ? 'Configuration only used to copy on slots with infinite selector'
+              : 'Slot not requested'
+        }
       >
         <input
           type="checkbox"
@@ -94,33 +128,6 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
         />
         <div className="d-collapse-title flex min-h-0 flex-wrap items-center gap-1 py-2 text-sm font-semibold">
           <span className="break-all">{slot.domId}</span>
-          <Tag variant="transparent">{slot.behaviour.loaded}</Tag>
-          {slotVisible && (
-            <Tag variant="secondary" title="Slot rendered">
-              ✔ requested
-            </Tag>
-          )}
-          {!slotVisible && !isConfiguredInfiniteSlot && (
-            <Tag variant="red" title="Slot not rendered">
-              ✖ not requested
-            </Tag>
-          )}
-          {isConfiguredInfiniteSlot && (
-            <Tag
-              variant="yellow"
-              title="Configuration only used to copy on slots with infinite selector"
-            >
-              ? infinite
-            </Tag>
-          )}
-          {slot.sizeConfig && (
-            <Tag
-              variant={slotValid ? 'secondary' : 'red'}
-              title={`Slot sizeConfig ${slotValid ? 'matches' : 'does not match'}`}
-            >
-              📐
-            </Tag>
-          )}
         </div>
         <div className="d-collapse-content text-sm">
           <Tabs<SlotTab>
@@ -160,7 +167,9 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-y-1">
                 <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">AdUnit path</span>
-                <Tag>{slot.adUnitPath}</Tag>
+                <pre className="m-0 whitespace-pre-wrap break-all rounded bg-base-300 px-1.5 py-0.5 text-xs">
+                  {slot.adUnitPath}
+                </pre>
               </div>
               {slot.sizes.length > 0 && (
                 <div className="mt-2 flex flex-wrap items-center gap-y-1">
@@ -308,6 +317,46 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
         <div className="mt-2 flex flex-wrap items-center gap-y-1">{this.labelConfig(a9)}</div>
       </div>
     );
+  };
+
+  /**
+   * Size config entries whose media query and labels currently match.
+   */
+  private countMatchedSizeConfigs = (): number => {
+    const supportedLabels = this.props.labelConfigService.getSupportedLabels();
+    return (this.props.slot.sizeConfig ?? []).filter(
+      entry =>
+        window.matchMedia(entry.mediaQuery).matches &&
+        (!entry.labelAll || entry.labelAll.every(label => supportedLabels.includes(label))) &&
+        (!entry.labelNone || !entry.labelNone.some(label => supportedLabels.includes(label)))
+    ).length;
+  };
+
+  /**
+   * Prebid bids (plus A9) that pass the label checks and would be requested.
+   */
+  private countRequestedBidders = (slotVisible: boolean): number => {
+    const supportedLabels = this.props.labelConfigService.getSupportedLabels();
+    // labelAll takes precedence over labelAny, mirroring the label evaluation order
+    const matchesLabels = (bid: { labelAll?: string[]; labelAny?: string[] }): boolean => {
+      if (bid.labelAll) {
+        return bid.labelAll.every(label => supportedLabels.includes(label));
+      }
+      if (bid.labelAny) {
+        return bid.labelAny.some(label => supportedLabels.includes(label));
+      }
+      return true;
+    };
+
+    const prebidBidders = this.props.slot.prebid
+      ? extractPrebidAdSlotConfigs(this.props.slot.prebid)
+          .flatMap(config => config.adUnit.bids)
+          .filter(matchesLabels).length
+      : 0;
+
+    const a9Bidder = this.props.slot.a9 && slotVisible && this.isVisibleA9() ? 1 : 0;
+
+    return prebidBidders + a9Bidder;
   };
 
   private isVisiblePrebid = (): boolean => {
