@@ -4,6 +4,7 @@ import { classList } from '../util/stringUtils';
 
 import { SizeConfigDebug } from './sizeConfigDebug';
 import { Tag } from './tag';
+import { SubHeadline, Tabs } from './ui';
 
 import { extractPrebidAdSlotConfigs } from '../util/prebid';
 import { AdSlot, bucket, googleAdManager, headerbidding } from '../../types/moliConfig';
@@ -12,26 +13,17 @@ import { SizeConfigService } from '../../ads/sizeConfigService';
 import { prebidjs } from '../../types/prebidjs';
 
 type IAdSlotConfigProps = {
-  parentElement?: HTMLElement;
   slot: AdSlot;
   labelConfigService: LabelConfigService;
-};
-type IAdSlotConfigState = {
-  dimensions?: { width: number; height: number };
-  showA9: boolean;
-  showPrebid: boolean;
-  showGeneral: boolean;
-  showSizeConfig: boolean;
+  /** open the slot card right away, e.g. when linked from the overview tab */
+  initiallyExpanded?: boolean;
 };
 
-const defaultPanelState: Pick<
-  IAdSlotConfigState,
-  'showA9' | 'showPrebid' | 'showGeneral' | 'showSizeConfig'
-> = {
-  showA9: false,
-  showPrebid: false,
-  showGeneral: false,
-  showSizeConfig: false
+type SlotTab = 'overview' | 'sizeConfig' | 'bidders';
+
+type IAdSlotConfigState = {
+  expanded: boolean;
+  activeTab: SlotTab;
 };
 
 type ValidatedSlotSize = { valid: boolean; size: googleAdManager.SlotSize };
@@ -40,41 +32,21 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
   constructor(props: IAdSlotConfigProps) {
     super(props);
 
-    if (props.parentElement) {
-      props.parentElement.classList.add('MoliDebug-posRelative');
-
-      const { width, height } = props.parentElement.getBoundingClientRect();
-      this.state = {
-        dimensions: { width, height },
-        ...defaultPanelState
-      };
-    } else {
-      this.state = defaultPanelState;
-    }
+    this.state = {
+      expanded: !!props.initiallyExpanded,
+      activeTab: 'overview' as const
+    };
   }
 
   render(): React.ReactNode {
-    const { labelConfigService, slot, parentElement } = this.props;
-    const { dimensions, showGeneral, showA9, showPrebid, showSizeConfig } = this.state;
+    const { labelConfigService, slot } = this.props;
+    const { expanded, activeTab } = this.state;
     const slotValid =
       slot.behaviour.loaded === 'infinite' ? true : labelConfigService.filterSlot(slot);
     const slotElementExists = !!document.getElementById(slot.domId);
 
     const slotVisible = slotValid && slotElementExists;
     const isConfiguredInfiniteSlot = slot.behaviour.loaded === 'infinite' && !slotVisible;
-
-    const prebidValid = this.isVisiblePrebid();
-    const a9Valid = slotVisible && this.isVisibleA9();
-
-    function setSlotVisibilityIcon(slotVisible: boolean, loadingBehaviour: string): string {
-      if (slotVisible) {
-        return '✔';
-      } else if (isConfiguredInfiniteSlot) {
-        return '?';
-      } else {
-        return 'x';
-      }
-    }
 
     const getBucketName = (bucket?: bucket.AdSlotBucket): string => {
       if (!bucket) {
@@ -86,152 +58,151 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
       return bucket[labelConfigService.getDeviceLabel()] ?? 'default';
     };
 
+    const tabItems: ReadonlyArray<{ id: SlotTab; label: React.ReactNode }> = [
+      { id: 'overview', label: 'Overview' },
+      ...(slot.sizeConfig
+        ? [
+            {
+              id: 'sizeConfig' as const,
+              label: (
+                <>
+                  Size Configs <Tag variant="grey">{this.countMatchedSizeConfigs()}</Tag>
+                </>
+              )
+            }
+          ]
+        : []),
+      ...(slot.prebid || slot.a9
+        ? [
+            {
+              id: 'bidders' as const,
+              label: (
+                <>
+                  Bidder Params <Tag variant="grey">{this.countRequestedBidders(slotVisible)}</Tag>
+                </>
+              )
+            }
+          ]
+        : [])
+    ];
+
     return (
       <div
         className={classList(
-          'MoliDebug-adSlot',
-          [!!parentElement, 'MoliDebug-adSlot--overlay'],
-          [!parentElement && slotVisible, 'is-rendered'],
-          [!parentElement && !slotVisible, 'is-notRendered'],
-          [isConfiguredInfiniteSlot, 'is-configuredInfinite']
+          'd-collapse d-collapse-arrow mb-2 rounded-md border-y-0 border-l-4 border-r-0 border-solid bg-base-200',
+          [slotVisible, 'border-l-primary'],
+          [!slotVisible, 'border-l-base-300']
         )}
-        style={dimensions}
+        title={
+          slotVisible
+            ? 'Slot requested'
+            : isConfiguredInfiniteSlot
+              ? 'Configuration only used to copy on slots with infinite selector'
+              : 'Slot not requested'
+        }
       >
-        <div className="MoliDebug-adSlot-buttons">
-          {!parentElement && (
-            <button
-              title={
-                slot.behaviour.loaded === 'infinite'
-                  ? `Configuration only used to copy on slots with infinite selector`
-                  : `Slot ${slotVisible ? '' : 'not '}rendered`
-              }
-              className={classList(
-                'MoliDebug-adSlot-button',
-                [slotVisible, 'is-rendered'],
-                [!slotVisible, 'is-notRendered'],
-                [isConfiguredInfiniteSlot, 'is-configuredInfinite']
-              )}
-              onClick={this.toggleGeneral}
-            >
-              {setSlotVisibilityIcon(slotVisible, slot.behaviour.loaded)}
-            </button>
-          )}
-          <button
-            title="Show general slot info"
-            className={classList('MoliDebug-adSlot-button', [showGeneral, 'is-active'])}
-            onClick={this.toggleGeneral}
-          >
-            &#9432;
-          </button>
-          {slot.a9 && (
-            <button
-              title="Show A9 config"
-              className={classList(
-                'MoliDebug-adSlot-button',
-                [showA9, 'is-active'],
-                [a9Valid, 'is-rendered'],
-                [!a9Valid, 'is-notRendered']
-              )}
-              onClick={this.toggleA9}
-            >
-              A9
-            </button>
-          )}
-          {slot.prebid && (
-            <button
-              title="Show Prebid config"
-              className={classList(
-                'MoliDebug-adSlot-button',
-                [showPrebid, 'is-active'],
-                [prebidValid, 'is-rendered'],
-                [!prebidValid, 'is-notRendered']
-              )}
-              onClick={this.togglePrebid}
-            >
-              pb
-            </button>
-          )}
-          {slot.sizeConfig && (
-            <button
-              title="Show sizeConfig"
-              className={classList(
-                'MoliDebug-adSlot-button MoliDebug-adSlot-button--sizeConfig',
-                [slotValid, 'is-rendered'],
-                [!slotValid, 'is-notRendered'],
-                [showSizeConfig, 'is-active']
-              )}
-              onClick={this.toggleSizeConfig}
-            />
-          )}
-          {isConfiguredInfiniteSlot && (
-            <p>Looking up infinite slots is currently not implemented</p>
-          )}
+        <input
+          type="checkbox"
+          checked={expanded}
+          onChange={() => this.setState({ expanded: !expanded })}
+          aria-label={`toggle slot ${slot.domId}`}
+        />
+        <div className="d-collapse-title flex min-h-0 flex-wrap items-center gap-1 py-2 text-sm font-semibold">
+          <span className="break-all">{slot.domId}</span>
         </div>
-        {showGeneral && (
-          <div className="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
-            <div className="MoliDebug-tagContainer">
-              <Tag variant="green">{slot.position}</Tag>
-              <Tag variant="yellow">{slot.behaviour.loaded}</Tag>
-              {slot.behaviour.bucket && (
-                <Tag variant="blue">{getBucketName(slot.behaviour.bucket)}</Tag>
-              )}
-            </div>
-            <div className="MoliDebug-tagContainer">
-              <span
-                className={classList(
-                  'MoliDebug-tagLabel',
-                  [slotElementExists, 'MoliDebug-tag--greenText'],
-                  [!slotElementExists, 'MoliDebug-tag--redText']
-                )}
-              >
-                DOM ID
-              </span>
-              <Tag
-                variant={slotElementExists ? 'green' : 'red'}
-                title={`Slot ${slotElementExists ? '' : 'not '}found in DOM`}
-              >
-                {slot.domId}
-              </Tag>
-            </div>
-            <div className="MoliDebug-tagContainer">
-              <span className="MoliDebug-tagLabel">AdUnit path</span>
-              <Tag>{slot.adUnitPath}</Tag>
-            </div>
-            {slot.sizes.length > 0 && (
-              <div className="MoliDebug-tagContainer">
-                <span className="MoliDebug-tagLabel">Sizes</span>
-                {this.validateSlotSizes(slot.sizes).map(validatedSlotSize =>
-                  this.tagFromValidatedSlotSize(validatedSlotSize, !!slot.sizeConfig)
+        <div className="d-collapse-content text-sm">
+          <Tabs<SlotTab>
+            tabs={tabItems}
+            active={activeTab}
+            onSelect={tab => this.setState({ activeTab: tab })}
+            className="mb-2"
+          />
+          {activeTab === 'overview' && (
+            <div>
+              <div className="mt-2 flex flex-wrap items-center gap-y-1">
+                <Tag variant="green">{slot.position}</Tag>
+                <Tag variant="yellow">{slot.behaviour.loaded}</Tag>
+                {slot.behaviour.bucket && (
+                  <Tag variant="blue">{getBucketName(slot.behaviour.bucket)}</Tag>
                 )}
               </div>
-            )}
-            <div className="MoliDebug-tagContainer">{this.labelConfig(slot)}</div>
-          </div>
-        )}
-        {showA9 && slot.a9 && (
-          <div className="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
-            {this.a9Config(slot.a9)}
-          </div>
-        )}
-        {showPrebid && slot.prebid && (
-          <div className="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
-            {this.prebidConfig(slot.prebid)}
-          </div>
-        )}
-        {showSizeConfig && slot.sizeConfig && (
-          <div className="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
+              {isConfiguredInfiniteSlot && (
+                <p className="mt-2">Looking up infinite slots is currently not implemented</p>
+              )}
+              <div className="mt-2 flex flex-wrap items-center gap-y-1">
+                <span
+                  className={classList(
+                    'inline-block min-w-36 max-w-96 pr-1 font-medium',
+                    [slotElementExists, 'text-success'],
+                    [!slotElementExists, 'text-error']
+                  )}
+                >
+                  DOM ID
+                </span>
+                <Tag
+                  variant={slotElementExists ? 'green' : 'red'}
+                  title={`Slot ${slotElementExists ? '' : 'not '}found in DOM`}
+                >
+                  {slot.domId}
+                </Tag>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-y-1">
+                <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">AdUnit path</span>
+                <pre className="m-0 whitespace-pre-wrap break-all rounded bg-base-300 px-1.5 py-0.5 text-xs">
+                  {slot.adUnitPath}
+                </pre>
+              </div>
+              {slot.sizes.length > 0 && (
+                <div className="mt-2 flex flex-wrap items-center gap-y-1">
+                  <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Sizes</span>
+                  {this.validateSlotSizes(slot.sizes).map(validatedSlotSize =>
+                    this.tagFromValidatedSlotSize(validatedSlotSize, !!slot.sizeConfig)
+                  )}
+                </div>
+              )}
+              <div className="mt-2 flex flex-wrap items-center gap-y-1">
+                {this.labelConfig(slot)}
+              </div>
+            </div>
+          )}
+          {activeTab === 'sizeConfig' && slot.sizeConfig && (
             <SizeConfigDebug
               sizeConfig={slot.sizeConfig}
               supportedLabels={labelConfigService.getSupportedLabels()}
             />
-          </div>
-        )}
+          )}
+          {activeTab === 'bidders' && (
+            <div>
+              {slot.prebid && (
+                <>
+                  <SubHeadline>
+                    Prebid{' '}
+                    <Tag variant={this.isVisiblePrebid() ? 'green' : 'red'}>
+                      {this.isVisiblePrebid() ? 'valid' : 'invalid'}
+                    </Tag>
+                  </SubHeadline>
+                  {this.prebidConfig(slot.prebid)}
+                </>
+              )}
+              {slot.a9 && (
+                <>
+                  <SubHeadline>
+                    A9{' '}
+                    <Tag variant={slotVisible && this.isVisibleA9() ? 'green' : 'red'}>
+                      {slotVisible && this.isVisibleA9() ? 'valid' : 'invalid'}
+                    </Tag>
+                  </SubHeadline>
+                  {this.a9Config(slot.a9)}
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
   private prebidConfig = (prebid: headerbidding.PrebidAdSlotConfigProvider): React.ReactElement => {
-    const labels = this.props.labelConfigService.getSupportedLabels();
     const prebidAdUnits: prebidjs.IAdUnit[] = extractPrebidAdSlotConfigs(prebid).map(
       config => config.adUnit
     );
@@ -246,22 +217,22 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
       return (
         <div key={index}>
           {index > 0 && <hr />}
-          {hasMultipleBids && <h5>{index + 1}. config</h5>}
-          <div className="MoliDebug-tagContainer">
-            <span className="MoliDebug-tagLabel">Code</span>
+          {hasMultipleBids && <h5 className="mb-1 mt-3 text-sm font-bold">{index + 1}. config</h5>}
+          <div className="mt-2 flex flex-wrap items-center gap-y-1">
+            <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Code</span>
             <Tag variant="green">{prebidAdUnit.code || this.props.slot.domId}</Tag>
           </div>
           {banner && (
-            <div className="MoliDebug-tagContainer">
-              <span className="MoliDebug-tagLabel">Banner sizes</span>
+            <div className="mt-2 flex flex-wrap items-center gap-y-1">
+              <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Banner sizes</span>
               {this.validateSlotSizes(banner.sizes).map(validatedSlotSize =>
                 this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig)
               )}
             </div>
           )}
           {video && (
-            <div className="MoliDebug-tagContainer">
-              <span className="MoliDebug-tagLabel">Video</span>
+            <div className="mt-2 flex flex-wrap items-center gap-y-1">
+              <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Video</span>
               <Tag variant="green">{video.context}</Tag>
               {!!video.playerSize &&
                 this.validateSlotSizes(
@@ -272,21 +243,25 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
             </div>
           )}
           {native && (
-            <div className="MoliDebug-tagContainer">
-              <span className="MoliDebug-tagLabel">Native</span>
+            <div className="mt-2 flex flex-wrap items-center gap-y-1">
+              <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Native</span>
               <Tag variant="green">true</Tag>
             </div>
           )}
           {prebidAdUnit.bids.map((bid: prebidjs.IBid, idx: number) => (
             <Fragment key={idx}>
               <hr />
-              <div className="MoliDebug-tagContainer">
-                <span className="MoliDebug-tagLabel">Bidder #{idx + 1}</span>
+              <div className="mt-2 flex flex-wrap items-center gap-y-1">
+                <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">
+                  Bidder #{idx + 1}
+                </span>
                 <Tag variant="blue">{bid.bidder ?? bid.module}</Tag>
               </div>
-              <div className="MoliDebug-tagContainer">{this.labelConfig(bid)}</div>
-              <div className="MoliDebug-tagContainer">
-                <span className="MoliDebug-tagLabel">Params</span>
+              <div className="mt-2 flex flex-wrap items-center gap-y-1">
+                {this.labelConfig(bid)}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-y-1">
+                <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Params</span>
                 <Tag>{JSON.stringify(bid.params)}</Tag>
               </div>
             </Fragment>
@@ -300,7 +275,7 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
     } else {
       return (
         <div>
-          <h5>{elements.length} bid configurations</h5>
+          <h5 className="mb-1 mt-3 text-sm font-bold">{elements.length} bid configurations</h5>
           {elements}
         </div>
       );
@@ -312,33 +287,63 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
     return (
       <div>
         {
-          <div className="MoliDebug-tagContainer">
-            <span className="MoliDebug-tagLabel">Sizes</span>
+          <div className="mt-2 flex flex-wrap items-center gap-y-1">
+            <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Sizes</span>
             {this.validateSlotSizes(this.props.slot.sizes.filter(AdSlotConfig.isFixedSize)).map(
               validatedSlotSize =>
                 this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig)
             )}
           </div>
         }
-        <div className="MoliDebug-tagContainer">{this.labelConfig(a9)}</div>
+        <div className="mt-2 flex flex-wrap items-center gap-y-1">{this.labelConfig(a9)}</div>
       </div>
     );
   };
 
-  private toggleGeneral = (): void => this.setState({ showGeneral: !this.state.showGeneral });
+  /**
+   * Size config entries whose media query and labels currently match.
+   */
+  private countMatchedSizeConfigs = (): number => {
+    const supportedLabels = this.props.labelConfigService.getSupportedLabels();
+    return (this.props.slot.sizeConfig ?? []).filter(
+      entry =>
+        window.matchMedia(entry.mediaQuery).matches &&
+        (!entry.labelAll || entry.labelAll.every(label => supportedLabels.includes(label))) &&
+        (!entry.labelNone || !entry.labelNone.some(label => supportedLabels.includes(label)))
+    ).length;
+  };
 
-  private toggleA9 = (): void => this.setState({ showA9: !this.state.showA9 });
+  /**
+   * Prebid bids (plus A9) that pass the label checks and would be requested.
+   */
+  private countRequestedBidders = (slotVisible: boolean): number => {
+    const supportedLabels = this.props.labelConfigService.getSupportedLabels();
+    // labelAll takes precedence over labelAny, mirroring the label evaluation order
+    const matchesLabels = (bid: { labelAll?: string[]; labelAny?: string[] }): boolean => {
+      if (bid.labelAll) {
+        return bid.labelAll.every(label => supportedLabels.includes(label));
+      }
+      if (bid.labelAny) {
+        return bid.labelAny.some(label => supportedLabels.includes(label));
+      }
+      return true;
+    };
 
-  private togglePrebid = (): void => this.setState({ showPrebid: !this.state.showPrebid });
+    const prebidBidders = this.props.slot.prebid
+      ? extractPrebidAdSlotConfigs(this.props.slot.prebid)
+          .flatMap(config => config.adUnit.bids)
+          .filter(matchesLabels).length
+      : 0;
 
-  private toggleSizeConfig = (): void =>
-    this.setState({ showSizeConfig: !this.state.showSizeConfig });
+    const a9Bidder = this.props.slot.a9 && slotVisible && this.isVisibleA9() ? 1 : 0;
+
+    return prebidBidders + a9Bidder;
+  };
 
   private isVisiblePrebid = (): boolean => {
     const prebid = this.props.slot.prebid;
 
     if (prebid) {
-      const labels = this.props.labelConfigService.getSupportedLabels();
       return extractPrebidAdSlotConfigs(prebid)
         .map(config => config.adUnit)
         .some(prebidAdUnit => {
@@ -448,9 +453,9 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
           <div>
             <span
               className={classList(
-                'MoliDebug-tagLabel',
-                [labelAllMatches, 'MoliDebug-tag--greenText'],
-                [!labelAllMatches, 'MoliDebug-tag--redText']
+                'inline-block min-w-36 max-w-96 pr-1 font-medium',
+                [labelAllMatches, 'text-success'],
+                [!labelAllMatches, 'text-error']
               )}
             >
               labelAll
@@ -466,9 +471,9 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
           <div>
             <span
               className={classList(
-                'MoliDebug-tagLabel',
-                [labelAnyMatches, 'MoliDebug-tag--greenText'],
-                [!labelAnyMatches, 'MoliDebug-tag--redText']
+                'inline-block min-w-36 max-w-96 pr-1 font-medium',
+                [labelAnyMatches, 'text-success'],
+                [!labelAnyMatches, 'text-error']
               )}
             >
               labelAny

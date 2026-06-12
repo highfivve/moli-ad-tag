@@ -1,10 +1,12 @@
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 
 import { AdSlotConfig } from './adSlotConfig';
+import { ModuleConfigs } from './moduleConfigs';
 import { Tag, TagLabel } from './tag';
+import { Block, Btn, Panel, SubHeadline, Tabs, TagContainer, TextInput, Toggle } from './ui';
 import { classList } from '../util/stringUtils';
 import { IWindowEventObserver, WindowResizeService } from '../util/windowResizeService';
-import { Theme, ThemingService } from '../util/themingService';
+import { ThemeConfig, ThemingService } from '../util/themingService';
 
 import { ConsentConfig } from './consentConfig';
 import { LabelConfigDebug } from './labelConfigDebug';
@@ -23,6 +25,7 @@ import {
   MoliConfig
 } from '../../types/moliConfig';
 import { LabelConfigService } from '../../ads/labelConfigService';
+import { SizeConfigService } from '../../ads/sizeConfigService';
 import { checkBucketConfig, checkSkinConfig } from '../validations/bucketValidations';
 import {
   getActiveEnvironmentOverride,
@@ -57,32 +60,23 @@ type IGlobalConfigProps = {
   labelConfigService: LabelConfigService;
   windowResizeService: WindowResizeService;
   themingService: ThemingService;
-  showOverlays: boolean;
-  onShowOverlaysChange: (show: boolean) => void;
 };
 type AdDensityState = {
   totalAdDensity: number | undefined;
   percentagePerSlot: { adSlotId: string | undefined; percentage: string | undefined }[];
 };
+
+export type ConsoleTab = 'overview' | 'adSetup' | 'debugging';
+
 type IGlobalConfigState = {
   sidebarHidden: boolean;
-  expandSection: {
-    slots: boolean;
-    moli: boolean;
-    modules: boolean;
-    targeting: boolean;
-    prebid: boolean;
-    a9: boolean;
-    labelSizeConfig: boolean;
-    consent: boolean;
-    yieldOptimization: boolean;
-    supplyChain: boolean;
-    adDensity: boolean;
-  };
+  activeTab: ConsoleTab;
+  /** slot that was clicked in the overview; opened and scrolled to in the ad setup tab */
+  selectedSlotDomId?: string;
   messages: Message[];
   browserResized: boolean;
   showOnlyRenderedSlots: boolean;
-  theme: Theme;
+  themeConfig: ThemeConfig;
   adstxtEntry: string[];
   adstxtDomain: string;
   adstxtError: string;
@@ -105,23 +99,11 @@ export class GlobalConfig
     super(props);
     this.state = {
       sidebarHidden: false,
-      expandSection: {
-        slots: true,
-        moli: true,
-        modules: false,
-        targeting: false,
-        prebid: false,
-        a9: false,
-        labelSizeConfig: false,
-        consent: false,
-        yieldOptimization: false,
-        supplyChain: false,
-        adDensity: false
-      },
+      activeTab: 'overview',
       messages: [],
       browserResized: false,
       showOnlyRenderedSlots: false,
-      theme: props.themingService.currentTheme(),
+      themeConfig: props.themingService.currentThemeConfig(),
       adstxtEntry: [],
       adstxtDomain: '',
       adstxtError: '',
@@ -242,666 +224,650 @@ export class GlobalConfig
   }
 
   render(): React.ReactElement {
-    const { config, runtimeConfig, modules, labelConfigService } = this.props;
+    const { config } = this.props;
+    const { sidebarHidden, activeTab } = this.state;
+
+    const classes = classList(
+      'fixed right-0 top-0 z-[99999999] box-border block max-h-screen w-full max-w-full overflow-y-auto bg-base-100 pb-4 text-left text-sm text-base-content shadow-[-3px_0_5px_0_rgba(0,0,0,0.2)] md:w-[700px]',
+      [sidebarHidden, 'hidden']
+    );
+
+    return (
+      <div id="moli-console-global-config">
+        <style>{styles}</style>
+        {sidebarHidden && (
+          <button
+            className="d-btn d-btn-warning d-btn-sm fixed left-0 top-0 z-[100000000] w-screen justify-start rounded-none font-normal normal-case md:left-auto md:right-0 md:w-auto md:rounded-bl-md"
+            title="Show moli global config panel"
+            onClick={this.toggleSidebar}
+          >
+            <span>&#11013; </span>Show moli global config panel
+          </button>
+        )}
+        {config && (
+          <div className={classes} data-ref={debugSidebarSelector}>
+            <nav className="sticky top-0 z-10 mb-3 flex items-center gap-3 bg-base-100 px-3 py-1">
+              <Tabs<ConsoleTab>
+                tabs={[
+                  { id: 'overview', label: 'Overview' },
+                  { id: 'adSetup', label: 'Ad Setup' },
+                  { id: 'debugging', label: <>Debugging {this.validationCountTag()}</> }
+                ]}
+                active={activeTab}
+                onSelect={tab => this.setState({ activeTab: tab })}
+              />
+              {this.renderThemeDropdown()}
+              <button
+                className="d-btn d-btn-ghost d-btn-sm d-btn-square text-base"
+                title="Close moli console"
+                onClick={this.toggleSidebar}
+              >
+                ✕
+              </button>
+            </nav>
+            {activeTab === 'overview' && this.renderOverview(config)}
+            {activeTab === 'adSetup' && this.renderAdSetup(config)}
+            {activeTab === 'debugging' && this.renderDebugging(config)}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  private renderThemeDropdown = (): React.ReactElement => {
+    const { themeConfig } = this.state;
+    const options: ReadonlyArray<{ id: ThemeConfig; label: string }> = [
+      { id: 'system', label: '🖥️ system' },
+      { id: 'light', label: '🌞 light' },
+      { id: 'dark', label: '🌔 dark' }
+    ];
+    const activeOption = options.find(option => option.id === themeConfig) ?? options[0];
+
+    return (
+      <div className="d-dropdown d-dropdown-end ml-auto">
+        <button
+          tabIndex={0}
+          className="d-btn d-btn-ghost d-btn-sm font-normal normal-case"
+          title="Appearance"
+        >
+          {activeOption.label} ▾
+        </button>
+        <ul
+          tabIndex={0}
+          className="d-dropdown-content d-menu d-menu-sm z-20 w-32 rounded-md bg-base-200 p-1 shadow"
+        >
+          {options.map(option => (
+            <li key={option.id}>
+              <button
+                // border/background resets needed because preflight is disabled
+                className={classList('border-0 bg-transparent text-left', [
+                  option.id === themeConfig,
+                  'd-active'
+                ])}
+                onClick={e => {
+                  this.setThemeConfig(option.id);
+                  // close the focus driven daisyUI dropdown
+                  e.currentTarget.blur();
+                }}
+              >
+                {option.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+
+  private renderOverview = (config: MoliConfig): React.ReactElement => {
+    const { runtimeConfig, labelConfigService } = this.props;
 
     const configLabel = window.moli.configLabel ?? 'not available';
     const currentConfigVersion = window.moli.getConfig()?.version ?? 'not available';
     const isVersionOverridden =
       resolveOverrides(window, QueryParameters.moliVersion, BrowserStorageKeys.moliVersion).length >
       0;
+    const isEnvironmentOverridden = !!getActiveEnvironmentOverride(window);
+    const isTestMode = runtimeConfig.environment === 'test';
 
-    const {
-      sidebarHidden,
-      showOnlyRenderedSlots,
-      expandSection,
-      theme,
-      adstxtEntry,
-      adstxtDomain,
-      adDensity
-    } = this.state;
+    const requestedSlots = config.slots.filter(this.isSlotRendered);
+
+    return (
+      <>
+        <Block title="Ad Tag" color="moli">
+          <TagContainer>
+            <TagLabel>Ad tag version</TagLabel>
+            <Tag variant="secondary">{window.moli.version}</Tag>
+          </TagContainer>
+          <TagContainer>
+            <TagLabel>Config version</TagLabel>
+            <Tag variant={isVersionOverridden ? 'yellow' : 'secondary'}>{currentConfigVersion}</Tag>
+            <TextInput
+              value={this.state.configVersion}
+              placeholder={currentConfigVersion}
+              onChange={e => {
+                this.setState({ configVersion: e.currentTarget.value });
+              }}
+            />
+            <Btn
+              onClick={() => this.overrideConfigVersion(this.state.configVersion)}
+              title="Reload"
+            >
+              load
+            </Btn>
+            <Btn variant="green" onClick={this.clearConfigVersionOverride} title="Reset">
+              reset
+            </Btn>
+          </TagContainer>
+          <TagContainer>
+            <TagLabel>Config label</TagLabel>
+            <Tag variant="secondary">{configLabel}</Tag>
+          </TagContainer>
+          <TagContainer>
+            <TagLabel>Test mode</TagLabel>
+            <Toggle
+              checked={isTestMode}
+              title={isTestMode ? 'Switch back to production mode' : 'Override environment to test'}
+              onChange={checked =>
+                checked ? this.overrideEnvironmentToTest() : this.resetEnvironmentOverrides()
+              }
+            />
+            {isTestMode && !isEnvironmentOverridden && (
+              <Tag variant="yellow">test environment set in config</Tag>
+            )}
+          </TagContainer>
+        </Block>
+
+        <Block title="Targeting" color="targeting">
+          {config.targeting && (
+            <div>
+              <SubHeadline>Key/value pairs</SubHeadline>
+              {this.keyValues({
+                ...config.targeting.keyValues,
+                ...runtimeConfig.keyValues
+              })}
+              <SubHeadline>Labels from publisher</SubHeadline>
+              {this.labels([...runtimeConfig.labels, ...(config.targeting?.labels ?? [])])}
+              <SubHeadline>Labels from label size config</SubHeadline>
+              {this.labels(
+                labelConfigService
+                  .getSupportedLabels()
+                  .filter(l1 => !(config.targeting!.labels || []).find(l2 => l2 === l1))
+              )}
+            </div>
+          )}
+          {!config.targeting && <span>No targeting config present.</span>}
+        </Block>
+
+        <Block
+          title={<>Requested Ad Slots {<Tag variant="grey">{requestedSlots.length}</Tag>}</>}
+          color="slots"
+        >
+          {requestedSlots.length === 0 && <span>No ad slots have been requested.</span>}
+          {requestedSlots.length > 0 && (
+            <ul className="m-0 flex list-none flex-col rounded-md bg-base-100 p-0 shadow-md">
+              {requestedSlots.map((slot, index) => (
+                <li
+                  key={`${slot.domId}-${index}`}
+                  className={classList(
+                    'grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 p-3',
+                    [index > 0, 'border-0 border-t border-solid border-base-200']
+                  )}
+                >
+                  <div className="text-xl">✨</div>
+                  <div>
+                    <div className="break-all font-medium">{slot.domId}</div>
+                    <div className="text-xs font-semibold uppercase opacity-60">
+                      {this.requestedSizesLabel(slot)}
+                    </div>
+                  </div>
+                  <button
+                    className="d-btn d-btn-ghost d-btn-sm font-normal normal-case"
+                    title="Open in Ad Setup"
+                    onClick={() => this.openSlotInAdSetup(slot.domId)}
+                  >
+                    details
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Block>
+      </>
+    );
+  };
+
+  private renderAdSetup = (config: MoliConfig): React.ReactElement => {
+    const { modules, labelConfigService } = this.props;
+    const { showOnlyRenderedSlots, selectedSlotDomId } = this.state;
+
+    return (
+      <>
+        <Block title="Ad Slots" color="slots">
+          <Panel variant="grey">
+            Slot sizes are annotated to show the origin of their validation state:
+            <ul>
+              <li>
+                <strong>Ⓢ</strong> means that the validation originates from the{' '}
+                <strong>slot's own sizeConfig</strong>,
+              </li>
+              <li>
+                <strong>Ⓖ</strong> indicates that the validation was done using the{' '}
+                <strong>global sizeConfig</strong>.
+              </li>
+            </ul>
+          </Panel>
+
+          <Panel variant="grey">
+            <label className="flex select-none items-center gap-2">
+              <input
+                className="d-checkbox d-checkbox-primary d-checkbox-xs border border-solid border-primary"
+                type="checkbox"
+                checked={showOnlyRenderedSlots}
+                onChange={e =>
+                  this.setState({
+                    showOnlyRenderedSlots: (e.target as HTMLInputElement).checked
+                  })
+                }
+              />
+              Show only rendered slots
+            </label>
+          </Panel>
+
+          {config.slots.map((slot, index) =>
+            this.isSlotRendered(slot) || !showOnlyRenderedSlots ? (
+              <div
+                key={index}
+                ref={el => {
+                  if (el && selectedSlotDomId === slot.domId) {
+                    el.scrollIntoView({ block: 'start' });
+                    this.setState({ selectedSlotDomId: undefined });
+                  }
+                }}
+              >
+                <AdSlotConfig
+                  labelConfigService={labelConfigService}
+                  slot={slot}
+                  initiallyExpanded={selectedSlotDomId === slot.domId}
+                />
+              </div>
+            ) : null
+          )}
+        </Block>
+
+        <Block title="Label Size Config" color="sizeConfig">
+          {config.labelSizeConfig && config.labelSizeConfig.length > 0 && (
+            <LabelConfigDebug labelSizeConfig={config.labelSizeConfig} />
+          )}
+          {(!config.labelSizeConfig || config.labelSizeConfig.length === 0) && (
+            <span>No size config present.</span>
+          )}
+        </Block>
+
+        <Block title="Modules" color="modules">
+          {modules && Object.keys(modules).length > 0 ? (
+            <ModuleConfigs modules={modules} />
+          ) : (
+            <span>No modules configured.</span>
+          )}
+        </Block>
+
+        {config.prebid && (
+          <Block title="Prebid" color="prebid">
+            <TagContainer>
+              <TagLabel>Version</TagLabel>
+              {window.pbjs.version ? (
+                <Tag>{window.pbjs.version.toString()}</Tag>
+              ) : (
+                <Tag variant="red">Prebid not found</Tag>
+              )}
+            </TagContainer>
+
+            <TagContainer>
+              <TagLabel>Prebid debug</TagLabel>
+              <Tag variant={config.prebid.config.debug ? 'yellow' : undefined}>
+                {config.prebid.config.debug ? 'enabled' : 'disabled'}
+              </Tag>
+            </TagContainer>
+
+            {config.prebid.config.enableSendAllBids !== undefined && (
+              <TagContainer>
+                <TagLabel>sendAllBids enabled</TagLabel>
+                <Tag>{config.prebid.config.enableSendAllBids.toString()}</Tag>
+              </TagContainer>
+            )}
+
+            {config.prebid.config.bidderTimeout && (
+              <TagContainer>
+                <TagLabel>Bidder timeout</TagLabel>
+                <Tag>{`${config.prebid.config.bidderTimeout.toString()}ms`}</Tag>
+              </TagContainer>
+            )}
+
+            {config.prebid.config.consentManagement && (
+              <div>
+                <SubHeadline>Consent management</SubHeadline>
+                <TagContainer>
+                  <TagLabel>allowAuctionWithoutConsent</TagLabel>
+                  <Tag>
+                    {(
+                      !!config.prebid.config.consentManagement.gdpr?.allowAuctionWithoutConsent ??
+                      'true'
+                    ).toString()}
+                  </Tag>
+                </TagContainer>
+                {config.prebid.config.consentManagement.gdpr?.cmpApi && (
+                  <TagContainer>
+                    <TagLabel>CMP API</TagLabel>
+                    <Tag>{config.prebid.config.consentManagement.gdpr?.cmpApi ?? 'iab'}</Tag>
+                  </TagContainer>
+                )}
+                <TagContainer>
+                  <TagLabel>CMP timeout</TagLabel>
+                  <Tag>{`${config.prebid.config.consentManagement.gdpr?.timeout ?? 10000}ms`}</Tag>
+                </TagContainer>
+              </div>
+            )}
+
+            {config.prebid.config.userSync && (
+              <div>
+                <SubHeadline>User sync</SubHeadline>
+                <TagContainer>
+                  <TagLabel>Sync enabled</TagLabel>
+                  <Tag>
+                    {config.prebid.config.userSync.syncEnabled === undefined
+                      ? `${window.pbjs
+                          .getConfig()
+                          .userSync?.syncEnabled?.toString()} (default from prebid config - no value in moli config)`
+                      : config.prebid.config.userSync.syncEnabled.toString()}
+                  </Tag>
+                </TagContainer>
+                {config.prebid.config.userSync.syncDelay !== undefined && (
+                  <TagContainer>
+                    <TagLabel>Sync delay</TagLabel>
+                    <Tag>{`${config.prebid.config.userSync.syncDelay}ms`}</Tag>
+                  </TagContainer>
+                )}
+                {config.prebid.config.userSync.syncsPerBidder !== undefined && (
+                  <TagContainer>
+                    <TagLabel>Syncs per bidder</TagLabel>
+                    <Tag>{config.prebid.config.userSync.syncsPerBidder.toString()}</Tag>
+                  </TagContainer>
+                )}
+                <TagContainer>
+                  <TagLabel>User sync override enabled</TagLabel>
+                  <Tag>{(!!config.prebid.config.userSync.enableOverride).toString()}</Tag>
+                </TagContainer>
+                {config.prebid.config.userSync.filterSettings && (
+                  <div>
+                    <h6 className="mt-2 text-xs font-bold">Filter Settings</h6>
+                    {config.prebid.config.userSync.filterSettings.all &&
+                      this.filterSetting('All', config.prebid.config.userSync.filterSettings.all)}
+                    {config.prebid.config.userSync.filterSettings.iframe &&
+                      this.filterSetting(
+                        'iFrame',
+                        config.prebid.config.userSync.filterSettings.iframe
+                      )}
+                    {config.prebid.config.userSync.filterSettings.image &&
+                      this.filterSetting(
+                        'Image',
+                        config.prebid.config.userSync.filterSettings.image
+                      )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <SubHeadline>Currency</SubHeadline>
+            <TagContainer>
+              <TagLabel>Ad server currency</TagLabel>
+              <Tag>{config.prebid.config.currency?.adServerCurrency ?? 'EUR (default)'}</Tag>
+            </TagContainer>
+            <TagContainer>
+              <TagLabel>Granularity multiplier</TagLabel>
+              <Tag>
+                {config.prebid.config.currency?.granularityMultiplier.toString() ?? 'not set'}
+              </Tag>
+            </TagContainer>
+            <TagContainer>
+              <TagLabel>Default Rates, USD → EUR</TagLabel>
+              <Tag>
+                {config.prebid.config.currency?.defaultRates.USD.EUR?.toString() ?? 'not set'}
+              </Tag>
+            </TagContainer>
+          </Block>
+        )}
+
+        {config.a9 && (
+          <Block title="A9" color="a9">
+            <TagContainer>
+              <TagLabel>PubID</TagLabel>
+              <Tag variant={config.a9.pubID ? 'blue' : 'red'}>{config.a9.pubID}</Tag>
+            </TagContainer>
+            <TagContainer>
+              <TagLabel>Timeout</TagLabel>
+              <Tag variant={config.a9.timeout ? 'blue' : 'red'}>
+                {config.a9.timeout.toFixed(0)}ms
+              </Tag>
+            </TagContainer>
+            <TagContainer>
+              <TagLabel>CMP timeout</TagLabel>
+              <Tag variant={config.a9.cmpTimeout ? 'blue' : 'red'}>
+                {config.a9.cmpTimeout.toFixed(0)}ms
+              </Tag>
+            </TagContainer>
+          </Block>
+        )}
+      </>
+    );
+  };
+
+  private renderDebugging = (config: MoliConfig): React.ReactElement => {
+    const { runtimeConfig } = this.props;
+    const { adstxtEntry, adstxtDomain, adDensity } = this.state;
+
     const interstitialSlot = window.moli
       .getConfig()
       ?.slots.find(slot => slot.position === 'interstitial');
-    const classes = classList('MoliDebug-sidebar', [sidebarHidden, 'is-hidden']);
-    const showHideMessage = `${sidebarHidden ? 'Show' : 'Hide'} moli global config panel`;
     const isEnvironmentOverridden = !!getActiveEnvironmentOverride(window);
     const interstitialTestKey = 'test-interstitial';
     const isInterstitialTestEnabled = !!getBrowserStorageValue(interstitialTestKey, localStorage);
     const debugDelay = getDebugDelayFromLocalStorage(window);
-    const isDarkTheme = theme === 'dark';
-    const switchToDarkTheme = () => this.setTheme('dark');
-    const switchToLightTheme = () => this.setTheme('light');
 
     return (
-      <div id="moli-console-global-config">
-        <style>{styles}</style>
-        <button
-          className="MoliDebug-sidebar-closeHandle"
-          title={showHideMessage}
-          onClick={this.toggleSidebar}
-        >
-          {sidebarHidden && <span>&#11013; </span>}
-          {!sidebarHidden && <span>&times; </span>}
-          {showHideMessage}
-        </button>
-        {config && (
-          <div className={classes} data-ref={debugSidebarSelector}>
-            <div className="MoliDebug-sidebarSection  MoliDebug-sidebarSection--moli">
-              <div className="MoliDebug-tagContainer">
-                <div className="MoliDebug-tagContainer">
-                  <TagLabel>Config version</TagLabel>
-                  <Tag variant={isVersionOverridden ? 'yellow' : 'blue'}>
-                    {currentConfigVersion}
-                  </Tag>
-                  <input
-                    type="text"
-                    value={this.state.configVersion}
-                    placeholder={currentConfigVersion}
-                    onChange={e => {
-                      this.setState({ configVersion: e.currentTarget.value });
-                    }}
-                  />
-                  <button
-                    className="MoliDebug-button"
-                    onClick={() => this.overrideConfigVersion(this.state.configVersion)}
-                    title="Reload"
-                  >
-                    load
-                  </button>
-                  <button
-                    className="MoliDebug-button MoliDebug-button--green"
-                    onClick={this.clearConfigVersionOverride}
-                    title="Reset"
-                  >
-                    reset
-                  </button>
-                </div>
-                <div className="MoliDebug-tagContainer">
-                  <TagLabel>Config label</TagLabel>
-                  <Tag>{configLabel}</Tag>
-                </div>
-                <br />
-                <TagLabel>Appearance</TagLabel>
-                {isDarkTheme && (
-                  <button
-                    className="MoliDebug-button"
-                    onClick={switchToLightTheme}
-                    title="Switch to light theme"
-                  >
-                    🌔 dark
-                  </button>
-                )}
-                {!isDarkTheme && (
-                  <button
-                    className="MoliDebug-button"
-                    onClick={switchToDarkTheme}
-                    title="Switch to dark theme"
-                  >
-                    🌞 light
-                  </button>
-                )}
-              </div>
-              <h4>
-                {this.collapseToggle('moli')}
-                Moli <span>{window.moli.version}</span>
-              </h4>
-              {expandSection.moli && (
-                <div>
-                  <div className="MoliDebug-tagContainer">
-                    <TagLabel>Overall Mode</TagLabel>
-                    {runtimeConfig.environment === 'test' ? (
-                      <Tag variant="yellow">Test</Tag>
-                    ) : (
-                      <Tag variant="green">Production</Tag>
-                    )}
-                    {isEnvironmentOverridden ? (
-                      <button
-                        className="MoliDebug-button MoliDebug-button--green"
-                        onClick={this.resetEnvironmentOverrides}
-                      >
-                        ◀ Reset override
-                      </button>
-                    ) : (
-                      <button
-                        className="MoliDebug-button MoliDebug-button--yellow MoliDebug-button--greyText"
-                        onClick={this.overrideEnvironmentToTest}
-                      >
-                        ▶ Override to test
-                      </button>
-                    )}
-                    <button
-                      className="MoliDebug-button MoliDebug-button--blue"
-                      onClick={() => this.props.onShowOverlaysChange(!this.props.showOverlays)}
-                    >
-                      {this.props.showOverlays ? '◀ Hide overlays' : '▶ Show overlays'}
-                    </button>
-                  </div>
-                  {interstitialSlot && (
-                    <div className="MoliDebug-tagContainer">
-                      <TagLabel>Interstitital Test Mode</TagLabel>
-                      {isInterstitialTestEnabled ? (
-                        <button
-                          className="MoliDebug-button MoliDebug-button--green"
-                          onClick={() => {
-                            removeBrowserStorageValue(interstitialTestKey, localStorage);
-                            this.refreshInterstitial(interstitialSlot);
-                          }}
-                        >
-                          ◀ Reset interstitial test
-                        </button>
-                      ) : (
-                        <button
-                          className={`MoliDebug-button MoliDebug-button--yellow MoliDebug-button--greyText ${
-                            !isEnvironmentOverridden ? 'MoliDebug-button--disabled' : ''
-                          }`}
-                          onClick={() => {
-                            setBrowserStorageValue(interstitialTestKey, 'true', localStorage);
-                            this.refreshInterstitial(interstitialSlot);
-                          }}
-                          disabled={!isEnvironmentOverridden}
-                        >
-                          ▶ Test interstitial
-                        </button>
-                      )}
-                      {!isEnvironmentOverridden && (
-                        <p className="MoliDebug-info">
-                          ❗️Please activate the overall test mode before testing the interstitial.
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  <div className="MoliDebug-tagContainer">
-                    <TagLabel>Delay loading ads (only in test environment)</TagLabel>
-                    <input
-                      type="number"
-                      placeholder="in milliseconds"
-                      value={debugDelay}
-                      list="debug-delay-suggestions"
-                      disabled={runtimeConfig.environment !== 'test'}
-                      onChange={e =>
-                        setDebugDelayToLocalStorage(window, e.currentTarget.valueAsNumber)
-                      }
-                    />
-                    <datalist id="debug-delay-suggestions">
-                      <option value={500} />
-                      <option value={1000} />
-                      <option value={2000} />
-                      <option value={3000} />
-                    </datalist>
-                  </div>
-                  <div className="MoliDebug-tagContainer">
-                    <button
-                      className="MoliDebug-button MoliDebug-button--blue"
-                      onClick={() => {
-                        config.slots.forEach(removeTestSlotSizeFromLocalStorage);
-                        window.location.reload();
-                      }}
-                    >
-                      ▶ Reset all test slot sizes
-                    </button>
-                  </div>
-                  {modules && (
-                    <>
-                      <h5>
-                        {this.collapseToggle('modules')}
-                        Moli Modules
-                      </h5>
-                      {expandSection.modules && (
-                        <>
-                          {Object.entries(modules).map(([module, config], index) => {
-                            const moduleConfig = config as modules.IModuleConfig;
-                            return (
-                              <div key={index}>
-                                <div
-                                  className="MoliDebug-tagContainer MoliDebug-module"
-                                  data-module-key={index + 1}
-                                >
-                                  <Tag variant={moduleConfig.enabled ? 'green' : 'grey'}>
-                                    {module}
-                                  </Tag>
-                                </div>
-                                {moduleConfig && (
-                                  <Fragment>
-                                    <h6>Module Config</h6>
-                                    {this.unwrapConfig(moduleConfig)}
-                                  </Fragment>
-                                )}
-                                {index !== Object.keys(modules).length - 1 && <hr />}
-                              </div>
-                            );
-                          })}
-                        </>
-                      )}
-                    </>
-                  )}
-                </div>
+      <>
+        <Block title="Tools" color="moli">
+          {interstitialSlot && (
+            <TagContainer>
+              <TagLabel>Interstitital Test Mode</TagLabel>
+              {isInterstitialTestEnabled ? (
+                <Btn
+                  variant="green"
+                  onClick={() => {
+                    removeBrowserStorageValue(interstitialTestKey, localStorage);
+                    this.refreshInterstitial(interstitialSlot);
+                  }}
+                >
+                  ◀ Reset interstitial test
+                </Btn>
+              ) : (
+                <Btn
+                  variant="yellow"
+                  onClick={() => {
+                    setBrowserStorageValue(interstitialTestKey, 'true', localStorage);
+                    this.refreshInterstitial(interstitialSlot);
+                  }}
+                  disabled={!isEnvironmentOverridden}
+                >
+                  ▶ Test interstitial
+                </Btn>
               )}
-            </div>
-
-            <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--slots">
-              <h4>
-                {this.collapseToggle('slots')}
-                Slots
-              </h4>
-
-              {expandSection.slots && (
-                <div>
-                  <div className="MoliDebug-panel MoliDebug-panel--grey">
-                    Slot sizes are annotated to show the origin of their validation state:
-                    <ul>
-                      <li>
-                        <strong>Ⓢ</strong> means that the validation originates from the{' '}
-                        <strong>slot's own sizeConfig</strong>,
-                      </li>
-                      <li>
-                        <strong>Ⓖ</strong> indicates that the validation was done using the{' '}
-                        <strong>global sizeConfig</strong>.
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="MoliDebug-panel MoliDebug-panel--grey">
-                    <label className="MoliDebug-checkBox">
-                      <input
-                        type="checkbox"
-                        onChange={e =>
-                          this.setState({
-                            showOnlyRenderedSlots: (e.target as HTMLInputElement).checked
-                          })
-                        }
-                      />
-                      Show only rendered slots
-                    </label>
-                  </div>
-
-                  {config.slots.map((slot, index) =>
-                    this.isSlotRendered(slot) || !showOnlyRenderedSlots ? (
-                      <div key={index}>
-                        <strong>{slot.behaviour.loaded}</strong> slot with DOM ID{' '}
-                        <strong>{slot.domId}</strong>
-                        <AdSlotConfig labelConfigService={labelConfigService} slot={slot} />
-                      </div>
-                    ) : null
-                  )}
-                </div>
+              {!isEnvironmentOverridden && (
+                <p className="mt-2 max-w-md">
+                  ❗️Please activate the test mode (Overview tab) before testing the interstitial.
+                </p>
               )}
+            </TagContainer>
+          )}
+          <TagContainer>
+            <TagLabel>Delay loading ads (only in test environment)</TagLabel>
+            <TextInput
+              type="number"
+              placeholder="in milliseconds"
+              value={debugDelay}
+              list="debug-delay-suggestions"
+              disabled={runtimeConfig.environment !== 'test'}
+              onChange={e => setDebugDelayToLocalStorage(window, e.currentTarget.valueAsNumber)}
+            />
+            <datalist id="debug-delay-suggestions">
+              <option value={500} />
+              <option value={1000} />
+              <option value={2000} />
+              <option value={3000} />
+            </datalist>
+          </TagContainer>
+          <TagContainer>
+            <Btn
+              variant="blue"
+              onClick={() => {
+                config.slots.forEach(removeTestSlotSizeFromLocalStorage);
+                window.location.reload();
+              }}
+            >
+              ▶ Reset all test slot sizes
+            </Btn>
+          </TagContainer>
+        </Block>
+
+        <Block title="Consent" color="consent">
+          <ConsentConfig />
+        </Block>
+
+        <Block title="Supply Chain" color="supplyChain">
+          <TagContainer>
+            <TagLabel>Seller ID (ads.txt)</TagLabel>
+            <Tag
+              variant={adstxtEntry[1] === config?.schain.supplyChainStartNode.sid ? 'green' : 'red'}
+            >
+              {adstxtEntry[1]}
+            </Tag>
+          </TagContainer>
+          <TagContainer>
+            <TagLabel>Status</TagLabel>
+            <Tag variant={adstxtEntry[2] ? 'blue' : 'red'}>{adstxtEntry[2]}</Tag>
+          </TagContainer>
+          <p className="mt-2 max-w-md">
+            {config?.schain.supplyChainStartNode.sid === adstxtEntry[1]
+              ? `✅ Seller ids in ad tag config and ads.txt of domain ${adstxtDomain} are matching!`
+              : `❗️Seller ids in ad tag config (${config?.schain.supplyChainStartNode.sid}) and ads.txt of current domain (${adstxtDomain}, ${adstxtEntry[1]}) are different!`}
+          </p>
+          {this.state.adstxtError !== '' && (
+            <Panel variant="red">{`${this.state.adstxtError} If you use this console locally or on the demo page, try to enable CORS by using a CORS unblocking browser extension.`}</Panel>
+          )}
+          <form
+            className="mb-2 mt-2 flex max-w-md flex-col gap-2 rounded-md bg-[#edf6fc] p-2 text-black"
+            onSubmit={async event => {
+              event.preventDefault();
+              const newAdsTxtDomain = event.target[0].value;
+              this.setState({
+                adstxtDomain: newAdsTxtDomain,
+                adstxtEntry: (await this.findPublisherEntryInAdsTxt(newAdsTxtDomain)) ?? []
+              });
+            }}
+          >
+            <label htmlFor="newDomain">
+              Use different ads.txt domain for seller id comparison:
+            </label>
+            <div>
+              <TextInput placeholder="Enter new domain" name="newDomain" id="newDomain" />
+              <Btn type="submit">Go!</Btn>
             </div>
+          </form>
+        </Block>
 
-            <div className="MoliDebug-sidebarSection  MoliDebug-sidebarSection--targeting">
-              <h4>
-                {this.collapseToggle('targeting')}
-                Targeting
-              </h4>
+        <Block title="Ad Density" color="adDensity">
+          <form
+            className="mb-2 mt-2 flex max-w-md flex-col gap-2 rounded-md bg-[#edf6fc] p-2 text-black"
+            onSubmit={async event => {
+              event.preventDefault();
+              const contentSelector = event.target[0].value;
+              const { totalAdDensity, adAreaPerSlot } = calculateAdDensity(
+                contentSelector,
+                undefined
+              );
 
-              {expandSection.targeting && (
-                <div>
-                  {config.targeting && (
-                    <div>
-                      <h5>Key/value pairs</h5>
-                      {this.keyValues({
-                        ...config.targeting.keyValues,
-                        ...runtimeConfig.keyValues
-                      })}
-                      <h5>Labels from publisher</h5>
-                      {this.labels([...runtimeConfig.labels, ...(config.targeting?.labels ?? [])])}
-                      <h5>Labels from label size config</h5>
-                      {this.labels(
-                        labelConfigService
-                          .getSupportedLabels()
-                          .filter(l1 => !(config.targeting!.labels || []).find(l2 => l2 === l1))
-                      )}
-                    </div>
-                  )}
-                  {!config.targeting && <span>No targeting config present.</span>}
-                </div>
-              )}
+              const percentagePerSlot = adAreaPerSlot.map(adArea => {
+                if (!adArea || !adDensity.totalAdDensity) {
+                  return {
+                    adSlotId: adArea?.adSlot ? adArea.adSlot : 'unknown',
+                    percentage: '0.00'
+                  };
+                }
+                return {
+                  adSlotId: adArea.adSlot,
+                  percentage: ((adArea.adArea / adDensity.totalAdDensity) * 100).toFixed(2)
+                };
+              });
+
+              this.setState({
+                adDensity: { totalAdDensity, percentagePerSlot }
+              });
+            }}
+          >
+            <label htmlFor="adDensitySelector">Calculate ad density of the content element</label>
+            <div>
+              <TextInput
+                placeholder="Enter CSS selector"
+                name="adDensitySelector"
+                id="adDensitySelector"
+              />
+              <Btn type="submit">Go!</Btn>
             </div>
+          </form>
+          <TagContainer>
+            <TagLabel>Ad Density</TagLabel>
+            <Tag variant={'green'}>{adDensity.totalAdDensity}</Tag>
+          </TagContainer>
+          {adDensity.percentagePerSlot.length > 0 && (
+            <>
+              <SubHeadline>Percentage of ad slot area on total ad area</SubHeadline>
+              {adDensity.percentagePerSlot.map(percentage => {
+                return (
+                  <TagContainer key={percentage.adSlotId}>
+                    <TagLabel>{extractPositionFromPath(percentage.adSlotId)}</TagLabel>
+                    <Tag variant={'green'}>{percentage.percentage}%</Tag>
+                  </TagContainer>
+                );
+              })}
+            </>
+          )}
+        </Block>
 
-            <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--sizeConfig">
-              <h4>
-                {this.collapseToggle('labelSizeConfig')}
-                Label Size config
-              </h4>
-
-              {expandSection.labelSizeConfig && (
-                <div>
-                  {config.labelSizeConfig && config.labelSizeConfig.length > 0 && (
-                    <LabelConfigDebug labelSizeConfig={config.labelSizeConfig} />
-                  )}
-                  {(!config.labelSizeConfig || config.labelSizeConfig.length === 0) && (
-                    <span>No size config present.</span>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {config.prebid && (
-              <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--prebid">
-                <h4>
-                  {this.collapseToggle('prebid')}
-                  Prebid
-                </h4>
-
-                {expandSection.prebid && (
-                  <div>
-                    <div className="MoliDebug-tagContainer">
-                      <TagLabel>Version</TagLabel>
-                      {window.pbjs.version ? (
-                        <Tag>{window.pbjs.version.toString()}</Tag>
-                      ) : (
-                        <Tag variant="red">Prebid not found</Tag>
-                      )}
-                    </div>
-
-                    <div className="MoliDebug-tagContainer">
-                      <TagLabel>Prebid debug</TagLabel>
-                      <Tag variant={config.prebid.config.debug ? 'yellow' : undefined}>
-                        {config.prebid.config.debug ? 'enabled' : 'disabled'}
-                      </Tag>
-                    </div>
-
-                    {config.prebid.config.enableSendAllBids !== undefined && (
-                      <div className="MoliDebug-tagContainer">
-                        <TagLabel>sendAllBids enabled</TagLabel>
-                        <Tag>{config.prebid.config.enableSendAllBids.toString()}</Tag>
-                      </div>
-                    )}
-
-                    {config.prebid.config.bidderTimeout && (
-                      <div className="MoliDebug-tagContainer">
-                        <TagLabel>Bidder timeout</TagLabel>
-                        <Tag>{`${config.prebid.config.bidderTimeout.toString()}ms`}</Tag>
-                      </div>
-                    )}
-
-                    {config.prebid.config.consentManagement && (
-                      <div>
-                        <h5>Consent management</h5>
-                        <div className="MoliDebug-tagContainer">
-                          <TagLabel>allowAuctionWithoutConsent</TagLabel>
-                          <Tag>
-                            {(
-                              !!config.prebid.config.consentManagement.gdpr
-                                ?.allowAuctionWithoutConsent ?? 'true'
-                            ).toString()}
-                          </Tag>
-                        </div>
-                        {config.prebid.config.consentManagement.gdpr?.cmpApi && (
-                          <div className="MoliDebug-tagContainer">
-                            <TagLabel>CMP API</TagLabel>
-                            <Tag>
-                              {config.prebid.config.consentManagement.gdpr?.cmpApi ?? 'iab'}
-                            </Tag>
-                          </div>
-                        )}
-                        <div className="MoliDebug-tagContainer">
-                          <TagLabel>CMP timeout</TagLabel>
-                          <Tag>{`${
-                            config.prebid.config.consentManagement.gdpr?.timeout ?? 10000
-                          }ms`}</Tag>
-                        </div>
-                      </div>
-                    )}
-
-                    {config.prebid.config.userSync && (
-                      <div>
-                        <h5>User sync</h5>
-                        <div className="MoliDebug-tagContainer">
-                          <TagLabel>Sync enabled</TagLabel>
-                          <Tag>
-                            {config.prebid.config.userSync.syncEnabled === undefined
-                              ? `${window.pbjs
-                                  .getConfig()
-                                  .userSync?.syncEnabled?.toString()} (default from prebid config - no value in moli config)`
-                              : config.prebid.config.userSync.syncEnabled.toString()}
-                          </Tag>
-                        </div>
-                        {config.prebid.config.userSync.syncDelay !== undefined && (
-                          <div className="MoliDebug-tagContainer">
-                            <TagLabel>Sync delay</TagLabel>
-                            <Tag>{`${config.prebid.config.userSync.syncDelay}ms`}</Tag>
-                          </div>
-                        )}
-                        {config.prebid.config.userSync.syncsPerBidder !== undefined && (
-                          <div className="MoliDebug-tagContainer">
-                            <TagLabel>Syncs per bidder</TagLabel>
-                            <Tag>{config.prebid.config.userSync.syncsPerBidder.toString()}</Tag>
-                          </div>
-                        )}
-                        <div className="MoliDebug-tagContainer">
-                          <TagLabel>User sync override enabled</TagLabel>
-                          <Tag>{(!!config.prebid.config.userSync.enableOverride).toString()}</Tag>
-                        </div>
-                        {config.prebid.config.userSync.filterSettings && (
-                          <div>
-                            <h6>Filter Settings</h6>
-                            {config.prebid.config.userSync.filterSettings.all &&
-                              this.filterSetting(
-                                'All',
-                                config.prebid.config.userSync.filterSettings.all
-                              )}
-                            {config.prebid.config.userSync.filterSettings.iframe &&
-                              this.filterSetting(
-                                'iFrame',
-                                config.prebid.config.userSync.filterSettings.iframe
-                              )}
-                            {config.prebid.config.userSync.filterSettings.image &&
-                              this.filterSetting(
-                                'Image',
-                                config.prebid.config.userSync.filterSettings.image
-                              )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    <h5>Currency</h5>
-                    <div className="MoliDebug-tagContainer">
-                      <TagLabel>Ad server currency</TagLabel>
-                      <Tag>
-                        {config.prebid.config.currency?.adServerCurrency ?? 'EUR (default)'}
-                      </Tag>
-                    </div>
-                    <div className="MoliDebug-tagContainer">
-                      <TagLabel>Granularity multiplier</TagLabel>
-                      <Tag>
-                        {config.prebid.config.currency?.granularityMultiplier.toString() ??
-                          'not set'}
-                      </Tag>
-                    </div>
-                    <div className="MoliDebug-tagContainer">
-                      <TagLabel>Default Rates, USD → EUR</TagLabel>
-                      <Tag>
-                        {config.prebid.config.currency?.defaultRates.USD.EUR?.toString() ??
-                          'not set'}
-                      </Tag>
-                    </div>
-                  </div>
-                )}
+        <Block title={<>Validation {this.validationCountTag()}</>} color="validation">
+          <div className="flex max-w-md flex-col gap-1">
+            {this.state.messages.length === 0 && (
+              <div className="d-alert d-alert-success rounded-md px-2 py-1 text-sm">
+                <span>✔ No configuration issues found</span>
               </div>
             )}
-
-            {config.a9 && (
-              <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--a9">
-                <h4>
-                  {this.collapseToggle('a9')}
-                  A9
-                </h4>
-
-                {expandSection.a9 && (
-                  <div>
-                    <div className="MoliDebug-tagContainer">
-                      <TagLabel>PubID</TagLabel>
-                      <Tag variant={config.a9.pubID ? 'blue' : 'red'}>{config.a9.pubID}</Tag>
-                    </div>
-                    <div className="MoliDebug-tagContainer">
-                      <TagLabel>Timeout</TagLabel>
-                      <Tag variant={config.a9.timeout ? 'blue' : 'red'}>
-                        {config.a9.timeout.toFixed(0)}ms
-                      </Tag>
-                    </div>
-                    <div className="MoliDebug-tagContainer">
-                      <TagLabel>CMP timeout</TagLabel>
-                      <Tag variant={config.a9.cmpTimeout ? 'blue' : 'red'}>
-                        {config.a9.cmpTimeout.toFixed(0)}ms
-                      </Tag>
-                    </div>
-                  </div>
+            {this.state.messages.map((message, index) => (
+              <div
+                key={index}
+                className={classList(
+                  'd-alert rounded-md px-2 py-1 text-sm',
+                  [message.kind === 'error', 'd-alert-error'],
+                  [message.kind === 'warning', 'd-alert-warning'],
+                  [message.kind === 'optimization', 'd-alert-info']
                 )}
+              >
+                <span>{message.text}</span>
               </div>
-            )}
-
-            <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--consent">
-              <h4>
-                {this.collapseToggle('consent')}
-                Consent
-              </h4>
-
-              {expandSection.consent && (
-                <div>
-                  <ConsentConfig />
-                </div>
-              )}
-            </div>
-
-            <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--supplyChain">
-              <h4>
-                {this.collapseToggle('supplyChain')}
-                Supply Chain
-              </h4>
-
-              {expandSection.supplyChain && (
-                <>
-                  <div className="MoliDebug-tagContainer">
-                    <TagLabel>Seller ID (ads.txt)</TagLabel>
-                    <Tag
-                      variant={
-                        adstxtEntry[1] === config?.schain.supplyChainStartNode.sid ? 'green' : 'red'
-                      }
-                    >
-                      {adstxtEntry[1]}
-                    </Tag>
-                  </div>
-                  <div className="MoliDebug-tagContainer">
-                    <TagLabel>Status</TagLabel>
-                    <Tag variant={adstxtEntry[2] ? 'blue' : 'red'}>{adstxtEntry[2]}</Tag>
-                  </div>
-                  <p className="MoliDebug-info">
-                    {config?.schain.supplyChainStartNode.sid === adstxtEntry[1]
-                      ? `✅ Seller ids in ad tag config and ads.txt of domain ${adstxtDomain} are matching!`
-                      : `❗️Seller ids in ad tag config (${config?.schain.supplyChainStartNode.sid}) and ads.txt of current domain (${adstxtDomain}, ${adstxtEntry[1]}) are different!`}
-                  </p>
-                  {this.state.adstxtError !== '' && (
-                    <p className="MoliDebug-panel MoliDebug-panel--red">{`${this.state.adstxtError} If you use this console locally or on the demo page, try to enable CORS by using a CORS unblocking browser extension.`}</p>
-                  )}
-                  <form
-                    className="MoliDebug-formContainer MoliDebug-panel MoliDebug-panel--blue"
-                    onSubmit={async event => {
-                      event.preventDefault();
-                      const newAdsTxtDomain = event.target[0].value;
-                      this.setState({
-                        adstxtDomain: newAdsTxtDomain,
-                        adstxtEntry: (await this.findPublisherEntryInAdsTxt(newAdsTxtDomain)) ?? []
-                      });
-                    }}
-                  >
-                    <label htmlFor="newDomain">
-                      Use different ads.txt domain for seller id comparison:
-                    </label>
-                    <div>
-                      <input
-                        type="text"
-                        placeholder="Enter new domain"
-                        name="newDomain"
-                        id="newDomain"
-                      ></input>
-                      <button className="MoliDebug-button" type="submit">
-                        Go!
-                      </button>
-                    </div>
-                  </form>
-                </>
-              )}
-            </div>
-
-            <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--supplyChain">
-              <h4>
-                {this.collapseToggle('adDensity')}
-                Ad Density
-              </h4>
-
-              {expandSection.adDensity && (
-                <>
-                  <form
-                    className="MoliDebug-formContainer MoliDebug-panel MoliDebug-panel--blue"
-                    onSubmit={async event => {
-                      event.preventDefault();
-                      const contentSelector = event.target[0].value;
-                      const { totalAdDensity, adAreaPerSlot } = calculateAdDensity(
-                        contentSelector,
-                        undefined
-                      );
-
-                      const percentagePerSlot = adAreaPerSlot.map(adArea => {
-                        if (!adArea || !adDensity.totalAdDensity) {
-                          return {
-                            adSlotId: adArea?.adSlot ? adArea.adSlot : 'unknown',
-                            percentage: '0.00'
-                          };
-                        }
-                        return {
-                          adSlotId: adArea.adSlot,
-                          percentage: ((adArea.adArea / adDensity.totalAdDensity) * 100).toFixed(2)
-                        };
-                      });
-
-                      this.setState({
-                        adDensity: { totalAdDensity, percentagePerSlot }
-                      });
-                    }}
-                  >
-                    <label htmlFor="adDensitySelector">
-                      Calculate ad density of the content element
-                    </label>
-                    <div>
-                      <input
-                        type="text"
-                        placeholder="Enter CSS selector"
-                        name="adDensitySelector"
-                        id="adDensitySelector"
-                      ></input>
-                      <button className="MoliDebug-button" type="submit">
-                        Go!
-                      </button>
-                    </div>
-                  </form>
-                  <div className="MoliDebug-tagContainer">
-                    <TagLabel>Ad Density</TagLabel>
-                    <Tag variant={'green'}>{adDensity.totalAdDensity}</Tag>
-                  </div>
-                  {adDensity.percentagePerSlot.length > 0 && (
-                    <>
-                      <hr />
-                      <h4>Percentage of ad slot area on total ad area</h4>
-                      {adDensity.percentagePerSlot.map(percentage => {
-                        return (
-                          <div className="MoliDebug-tagContainer" key={percentage.adSlotId}>
-                            <TagLabel>{extractPositionFromPath(percentage.adSlotId)}</TagLabel>
-                            <Tag variant={'green'}>{percentage.percentage}%</Tag>
-                          </div>
-                        );
-                      })}
-                      <hr />
-                    </>
-                  )}
-                </>
-              )}
-            </div>
+            ))}
           </div>
-        )}
-      </div>
+        </Block>
+      </>
     );
-  }
+  };
 
   public listener = (): void => {
     this.setState({ browserResized: true });
@@ -909,6 +875,43 @@ export class GlobalConfig
 
   public componentWillUnmount = (): void => {
     this.props.windowResizeService.unregister(this);
+  };
+
+  private validationCountTag = (): React.ReactElement => (
+    <Tag
+      variant={
+        this.state.messages.some(m => m.kind === 'error')
+          ? 'red'
+          : this.state.messages.length > 0
+            ? 'yellow'
+            : 'green'
+      }
+    >
+      {this.state.messages.length}
+    </Tag>
+  );
+
+  private openSlotInAdSetup = (domId: string): void => {
+    this.setState({ activeTab: 'adSetup', selectedSlotDomId: domId });
+  };
+
+  /**
+   * The sizes that are actually requested for the slot, capped at three.
+   */
+  private requestedSizesLabel = (slot: AdSlot): string => {
+    const supportedSizes = new SizeConfigService(
+      slot.sizeConfig,
+      this.props.labelConfigService.getSupportedLabels(),
+      window
+    ).filterSupportedSizes(slot.sizes);
+
+    if (supportedSizes.length === 0) {
+      return 'no sizes requested';
+    }
+    const formatted = supportedSizes
+      .slice(0, 3)
+      .map(size => (size === 'fluid' ? 'fluid' : `${size[0]}x${size[1]}`));
+    return formatted.join(' · ') + (supportedSizes.length > 3 ? ' · …' : '');
   };
 
   private resetEnvironmentOverrides = () => {
@@ -929,60 +932,14 @@ export class GlobalConfig
     window.localStorage.removeItem(BrowserStorageKeys.moliVersion);
   };
 
-  private unwrapConfig = (moduleConfig: Object, subEntry: boolean = false): React.ReactElement => {
-    return (
-      <Fragment>
-        {Object.keys(moduleConfig).map((key, index) => {
-          const configValue = moduleConfig[key];
-          const configValueType: 'other' | 'object' | 'array' =
-            typeof configValue === 'object'
-              ? Array.isArray(configValue)
-                ? 'array'
-                : 'object'
-              : 'other';
-
-          return (
-            <div
-              key={index}
-              className={classList('MoliDebug-tagContainer', [
-                subEntry,
-                'MoliDebug-tagContainer--subEntry'
-              ])}
-            >
-              <TagLabel>{key}</TagLabel>
-              {configValueType === 'array' &&
-                (configValue.length === 0 ? (
-                  <i>No values</i>
-                ) : (
-                  configValue.map((value: unknown, index: number) =>
-                    typeof value === 'object' ? (
-                      this.unwrapConfig(value as Object, true)
-                    ) : (
-                      <Tag variant="green" key={index}>
-                        {value !== undefined ? (value as any).toString() : 'undefined'}
-                      </Tag>
-                    )
-                  )
-                ))}
-              {configValueType === 'object' && this.unwrapConfig(configValue, true)}
-              {configValueType === 'other' && configValue !== undefined && (
-                <Tag variant="green">{configValue.toString()}</Tag>
-              )}
-            </div>
-          );
-        })}
-      </Fragment>
-    );
-  };
-
-  private setTheme = (theme: Theme) =>
-    this.setState({ theme }, () => this.props.themingService.applyTheme(theme));
+  private setThemeConfig = (themeConfig: ThemeConfig) =>
+    this.setState({ themeConfig }, () => this.props.themingService.setThemeConfig(themeConfig));
 
   private keyValues = (keyValues: googleAdManager.KeyValueMap): React.ReactElement => {
     const properties = Object.keys(keyValues);
 
     return properties.length > 0 ? (
-      <table className="MoliDebug-keyValueTable">
+      <table className="d-table d-table-xs w-auto text-left">
         <thead>
           <tr>
             <th>Key</th>
@@ -1013,7 +970,7 @@ export class GlobalConfig
 
   private labels = (labels: string[] | undefined): React.ReactElement => {
     return (
-      <div className="MoliDebug-tagContainer">
+      <div className="mt-2 flex flex-wrap items-center gap-y-1">
         {labels &&
           labels.map((label, index) => (
             <Tag key={index} variant="blue" spacing="medium">
@@ -1032,16 +989,16 @@ export class GlobalConfig
     return (
       <div>
         <strong>{name}</strong>
-        <div className="MoliDebug-tagContainer">
+        <TagContainer>
           <TagLabel>Bidders</TagLabel>
           {filterSetting.bidders === '*'
             ? this.standardTagFromString('all')
             : filterSetting.bidders.map(this.standardTagFromString)}
-        </div>
-        <div className="MoliDebug-tagContainer">
+        </TagContainer>
+        <TagContainer>
           <TagLabel>Include/exclude</TagLabel>
           {this.standardTagFromString(filterSetting.filter)}
-        </div>
+        </TagContainer>
       </div>
     );
   };
@@ -1052,60 +1009,6 @@ export class GlobalConfig
 
   private toggleSidebar = (): void => {
     this.setState({ sidebarHidden: !this.state.sidebarHidden });
-  };
-
-  private collapseToggle = (
-    section: keyof Pick<
-      IGlobalConfigState['expandSection'],
-      | 'slots'
-      | 'moli'
-      | 'modules'
-      | 'targeting'
-      | 'prebid'
-      | 'a9'
-      | 'labelSizeConfig'
-      | 'consent'
-      | 'supplyChain'
-      | 'adDensity'
-    >
-  ): React.ReactElement => {
-    const toggleValue = (
-      section: keyof Pick<
-        IGlobalConfigState['expandSection'],
-        | 'slots'
-        | 'moli'
-        | 'modules'
-        | 'targeting'
-        | 'prebid'
-        | 'a9'
-        | 'labelSizeConfig'
-        | 'consent'
-        | 'supplyChain'
-        | 'adDensity'
-      >
-    ) => {
-      const oldVal = this.state.expandSection[section];
-      this.setState({ expandSection: { ...this.state.expandSection, [section]: !oldVal } });
-    };
-    return (
-      <button
-        className="MoliDebug-adSlot-button"
-        title={`${this.state.expandSection[section] ? 'collapse' : 'expand'} ${section}`}
-        onClick={() => toggleValue(section)}
-      >
-        {this.state.expandSection[section] ? '⊖' : '⊕'}
-      </button>
-    );
-  };
-
-  private iconForMessageKind = (kind: Message['kind'] | 'empty'): React.ReactElement => {
-    return (
-      <span className="MoliDebug-configMessage-icon">
-        {kind === 'error' && <span>&#x2757;</span>}
-        {kind === 'warning' && <span>&#x26A0;</span>}
-        {kind === 'empty' && <span>✔</span>}
-      </span>
-    );
   };
 
   private reportMissingConfig = (messages: Message[]): void => {

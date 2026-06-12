@@ -59,8 +59,12 @@ export default [
       typescript({ tsconfig: 'tsconfig.build.json' }),
       postcss({
         extract: false,
+        // never inject into the publisher page <head>; the CSS string is imported
+        // in globalConfig.tsx and rendered as a <style> tag inside the shadow root.
+        // daisyUI emits :root rules that would otherwise restyle the publisher page.
+        inject: false,
         config: {
-          path: 'postcss.config.js'
+          path: 'ad-tag/source/ts/console'
         }
       }),
       // react uses this variable to determine if it should be in dev mode, so we need to replace it

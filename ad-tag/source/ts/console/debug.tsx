@@ -2,9 +2,6 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { GlobalConfig } from './components/globalConfig';
-import { AdSlotConfig } from './components/adSlotConfig';
-
-import './debug.pcss';
 
 import { ThemingService } from './util/themingService';
 import { WindowResizeService } from './util/windowResizeService';
@@ -35,11 +32,7 @@ if (moliConfig) {
   // attach shadow DOM to container
   const shadowRoot = container.attachShadow({ mode: 'open' });
 
-  // function component to manage showOverlays state
   const DebugConsole = () => {
-    const [showOverlays, setShowOverlays] = React.useState(false);
-    const slotRoots = React.useRef(new Map<string, ReturnType<typeof createRoot>>());
-
     React.useEffect(() => {
       setTimeout(() => {
         const globalConfigComponentRoot = shadowRoot.getElementById('moli-console-global-config');
@@ -49,36 +42,8 @@ if (moliConfig) {
       }, 200);
     }, []);
 
-    React.useEffect(() => {
-      if (showOverlays) {
-        moliConfig.slots.forEach(slot => {
-          const slotDomElement = document.getElementById(slot.domId);
-          if (slotDomElement && labelConfigService.filterSlot(slot)) {
-            let slotConfigRoot = slotRoots.current.get(slot.domId);
-            if (!slotConfigRoot) {
-              slotConfigRoot = createRoot(slotDomElement);
-              slotRoots.current.set(slot.domId, slotConfigRoot);
-            }
-            slotConfigRoot.render(
-              <AdSlotConfig
-                labelConfigService={labelConfigService}
-                slot={slot}
-                parentElement={slotDomElement}
-              />
-            );
-          }
-        });
-      } else {
-        // Unmount overlays when showOverlays is false
-        slotRoots.current.forEach(root => {
-          root.unmount();
-        });
-        slotRoots.current.clear();
-      }
-    }, [showOverlays]);
-
     return (
-      <>
+      <div className="font-sans text-base text-foreground antialiased">
         <GlobalConfig
           config={moliConfig}
           runtimeConfig={window.moli.getRuntimeConfig()}
@@ -86,10 +51,8 @@ if (moliConfig) {
           labelConfigService={labelConfigService}
           windowResizeService={new WindowResizeService()}
           themingService={themingService}
-          showOverlays={showOverlays}
-          onShowOverlaysChange={setShowOverlays}
         />
-      </>
+      </div>
     );
   };
 

@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { Tag } from './tag';
-import { classList } from '../util/stringUtils';
+import { Tag, TagLabel } from './tag';
+import { TagContainer } from './ui';
 import type { googleAdManager, sizeConfigs } from '../../types/moliConfig';
 
 type ISizeConfigProps = {
@@ -16,71 +16,59 @@ export const SizeConfigDebug: React.FC<ISizeConfigProps> = ({ sizeConfig, suppor
         const mediaQueryMatches = window.matchMedia(sizeConfigEntry.mediaQuery).matches;
 
         return (
-          <div key={idx} className="MoliDebug-sidebarSection MoliDebug-sidebarSection--noBorder">
+          <div key={idx} className="mb-2">
             Entry <strong>#{idx + 1}</strong>
-            <div className="MoliDebug-tagContainer">
-              <span className="MoliDebug-tagLabel">Media query</span>
-              <div
-                className={classList(
-                  'MoliDebug-tag',
-                  [mediaQueryMatches, 'MoliDebug-tag--green'],
-                  [!mediaQueryMatches, 'MoliDebug-tag--red']
-                )}
+            <TagContainer>
+              <TagLabel>Media query</TagLabel>
+              <Tag
+                variant={mediaQueryMatches ? 'green' : 'red'}
                 title={`Media query ${mediaQueryMatches ? 'matches' : "doesn't match"}`}
               >
                 {sizeConfigEntry.mediaQuery}
-              </div>
-            </div>
+              </Tag>
+            </TagContainer>
             {sizeConfigEntry.labelAll && (
-              <div className="MoliDebug-tagContainer">
-                <span className="MoliDebug-tagLabel">Label All</span>
+              <TagContainer>
+                <TagLabel>Label All</TagLabel>
                 {sizeConfigEntry.labelAll.map(label => {
                   const labelMatches = supportedLabels.includes(label);
                   return (
-                    <div
+                    <Tag
                       key={label}
-                      className={classList(
-                        'MoliDebug-tag',
-                        [labelMatches, 'MoliDebug-tag--green'],
-                        [!labelMatches, 'MoliDebug-tag--red']
-                      )}
+                      variant={labelMatches ? 'green' : 'red'}
                       title={`Labels ${labelMatches ? 'match' : "don't match"}`}
                     >
                       {label}
-                    </div>
+                    </Tag>
                   );
                 })}
-              </div>
+              </TagContainer>
             )}
             {sizeConfigEntry.labelNone && (
-              <div className="MoliDebug-tagContainer">
-                <span className="MoliDebug-tagLabel">Label None</span>
+              <TagContainer>
+                <TagLabel>Label None</TagLabel>
                 {sizeConfigEntry.labelNone.map(label => {
                   const labelMatches = supportedLabels.includes(label);
                   return (
-                    <div
+                    <Tag
                       key={label}
-                      className={classList(
-                        'MoliDebug-tag',
-                        [!labelMatches, 'MoliDebug-tag--green'],
-                        [labelMatches, 'MoliDebug-tag--red']
-                      )}
+                      variant={labelMatches ? 'red' : 'green'}
                       title={`Labels ${labelMatches ? 'match' : "don't match"}`}
                     >
                       {label}
-                    </div>
+                    </Tag>
                   );
                 })}
-              </div>
+              </TagContainer>
             )}
-            <div className="MoliDebug-tagContainer">
-              <span className="MoliDebug-tagLabel">Supported slot sizes</span>
+            <TagContainer>
+              <TagLabel>Supported slot sizes</TagLabel>
               {sizeConfigEntry.sizesSupported.map((slotSize: googleAdManager.SlotSize) => {
                 const sizeString =
                   slotSize === 'fluid' ? slotSize : `${slotSize[0]}x${slotSize[1]}`;
                 return <Tag key={sizeString}>{sizeString}</Tag>;
               })}
-            </div>
+            </TagContainer>
           </div>
         );
       })}

@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { Tag } from './tag';
-import { classList } from '../util/stringUtils';
+import { Tag, TagLabel } from './tag';
+import { TagContainer } from './ui';
 import type { sizeConfigs } from '../../types/moliConfig';
 
 type ISLabelConfigProps = {
@@ -14,27 +14,23 @@ export const LabelConfigDebug: React.FC<ISLabelConfigProps> = ({ labelSizeConfig
       {labelSizeConfig.map((labelSizeConfigEntry, idx) => {
         const mediaQueryMatches = window.matchMedia(labelSizeConfigEntry.mediaQuery).matches;
         return (
-          <div key={idx} className="MoliDebug-sidebarSection MoliDebug-sidebarSection--noBorder">
+          <div key={idx} className="mb-2">
             Entry <strong>#{idx + 1}</strong>
-            <div className="MoliDebug-tagContainer">
-              <span className="MoliDebug-tagLabel">Media query</span>
-              <div
-                className={classList(
-                  'MoliDebug-tag',
-                  [mediaQueryMatches, 'MoliDebug-tag--green'],
-                  [!mediaQueryMatches, 'MoliDebug-tag--red']
-                )}
+            <TagContainer>
+              <TagLabel>Media query</TagLabel>
+              <Tag
+                variant={mediaQueryMatches ? 'green' : 'red'}
                 title={`Media query ${mediaQueryMatches ? 'matches' : "doesn't match"}`}
               >
                 {labelSizeConfigEntry.mediaQuery}
-              </div>
-            </div>
-            <div className="MoliDebug-tagContainer">
-              <span className="MoliDebug-tagLabel">Supported labels</span>
+              </Tag>
+            </TagContainer>
+            <TagContainer>
+              <TagLabel>Supported labels</TagLabel>
               {labelSizeConfigEntry.labelsSupported.map(label => (
                 <Tag key={label}>{label}</Tag>
               ))}
-            </div>
+            </TagContainer>
           </div>
         );
       })}
