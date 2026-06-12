@@ -13,7 +13,6 @@ import { SizeConfigService } from '../../ads/sizeConfigService';
 import { prebidjs } from '../../types/prebidjs';
 
 type IAdSlotConfigProps = {
-  parentElement?: HTMLElement;
   slot: AdSlot;
   labelConfigService: LabelConfigService;
   /** open the slot card right away, e.g. when linked from the overview tab */
@@ -23,7 +22,6 @@ type IAdSlotConfigProps = {
 type SlotTab = 'overview' | 'sizeConfig' | 'bidders';
 
 type IAdSlotConfigState = {
-  dimensions?: { width: number; height: number };
   expanded: boolean;
   activeTab: SlotTab;
 };
@@ -34,27 +32,15 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
   constructor(props: IAdSlotConfigProps) {
     super(props);
 
-    const initialState = {
+    this.state = {
       expanded: !!props.initiallyExpanded,
       activeTab: 'overview' as const
     };
-
-    if (props.parentElement) {
-      props.parentElement.classList.add('relative');
-
-      const { width, height } = props.parentElement.getBoundingClientRect();
-      this.state = {
-        dimensions: { width, height },
-        ...initialState
-      };
-    } else {
-      this.state = initialState;
-    }
   }
 
   render(): React.ReactNode {
-    const { labelConfigService, slot, parentElement } = this.props;
-    const { dimensions, expanded, activeTab } = this.state;
+    const { labelConfigService, slot } = this.props;
+    const { expanded, activeTab } = this.state;
     const slotValid =
       slot.behaviour.loaded === 'infinite' ? true : labelConfigService.filterSlot(slot);
     const slotElementExists = !!document.getElementById(slot.domId);
@@ -105,13 +91,8 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
         className={classList(
           'd-collapse d-collapse-arrow mb-2 rounded-md border-y-0 border-l-4 border-r-0 border-solid bg-base-200',
           [slotVisible, 'border-l-primary'],
-          [!slotVisible, 'border-l-base-300'],
-          [
-            !!parentElement,
-            'absolute left-0 top-0 z-[99999998] h-full min-h-[100px] w-full min-w-[300px] overflow-y-auto bg-base-100/90'
-          ]
+          [!slotVisible, 'border-l-base-300']
         )}
-        style={dimensions}
         title={
           slotVisible
             ? 'Slot requested'

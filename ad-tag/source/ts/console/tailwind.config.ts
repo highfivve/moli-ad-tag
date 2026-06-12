@@ -134,8 +134,8 @@ for (const colorName in themeAndTailwindColors) {
 
 export default {
   darkMode: ['class'],
-  // the console CSS is injected into the publisher page <head> as well as the shadow root.
-  // Preflight resets element styles globally and would break the publisher page.
+  // preflight resets element styles via html/body selectors that don't exist
+  // inside the console shadow root, so it's disabled
   corePlugins: {
     preflight: false
   },
@@ -195,8 +195,8 @@ export default {
   safelist: colorSafeList,
   plugins: [tailwindAnimate, daisyui],
   daisyui: {
-    // the console CSS is injected into the publisher page <head>; the prefix
-    // avoids collisions with common class names like .btn or .badge
+    // prefix daisyUI component classes to make them distinguishable from
+    // tailwind utilities and custom classes
     prefix: 'd-',
     logs: false,
     themes: [

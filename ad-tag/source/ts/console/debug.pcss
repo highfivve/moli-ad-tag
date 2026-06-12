@@ -6,10 +6,9 @@
 
 /*
  * Design tokens used by the tailwind config (hsl(var(--...)) colors, --radius).
- * Declared on :root (page head injection) and :host (shadow root injection);
- * custom properties inherit across the shadow boundary.
+ * This CSS is only rendered as a <style> tag inside the console shadow root,
+ * so the tokens are declared on :host. Nothing must leak to the publisher page.
  */
-:root,
 :host {
   --background: 0 0% 100%;
   --foreground: 240 10% 3.9%;

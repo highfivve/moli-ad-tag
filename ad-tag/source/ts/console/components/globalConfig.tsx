@@ -60,8 +60,6 @@ type IGlobalConfigProps = {
   labelConfigService: LabelConfigService;
   windowResizeService: WindowResizeService;
   themingService: ThemingService;
-  showOverlays: boolean;
-  onShowOverlaysChange: (show: boolean) => void;
 };
 type AdDensityState = {
   totalAdDensity: number | undefined;
@@ -679,14 +677,6 @@ export class GlobalConfig
     return (
       <>
         <Block title="Tools" color="moli">
-          <TagContainer>
-            <TagLabel>Show slot overlays</TagLabel>
-            <Toggle
-              checked={this.props.showOverlays}
-              title="Render the slot configuration as overlays on the page"
-              onChange={show => this.props.onShowOverlaysChange(show)}
-            />
-          </TagContainer>
           {interstitialSlot && (
             <TagContainer>
               <TagLabel>Interstitital Test Mode</TagLabel>
