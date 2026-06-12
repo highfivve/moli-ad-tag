@@ -2,6 +2,7 @@ import React, { Component, Fragment } from 'react';
 
 import { AdSlotConfig } from './adSlotConfig';
 import { Tag, TagLabel } from './tag';
+import { Btn, Panel, Section, SubHeadline, TagContainer, TextInput } from './ui';
 import { classList } from '../util/stringUtils';
 import { IWindowEventObserver, WindowResizeService } from '../util/windowResizeService';
 import { Theme, ThemingService } from '../util/themingService';
@@ -78,6 +79,7 @@ type IGlobalConfigState = {
     yieldOptimization: boolean;
     supplyChain: boolean;
     adDensity: boolean;
+    validation: boolean;
   };
   messages: Message[];
   browserResized: boolean;
@@ -116,7 +118,8 @@ export class GlobalConfig
         consent: false,
         yieldOptimization: false,
         supplyChain: false,
-        adDensity: false
+        adDensity: false,
+        validation: true
       },
       messages: [],
       browserResized: false,
@@ -262,7 +265,10 @@ export class GlobalConfig
     const interstitialSlot = window.moli
       .getConfig()
       ?.slots.find(slot => slot.position === 'interstitial');
-    const classes = classList('MoliDebug-sidebar', [sidebarHidden, 'is-hidden']);
+    const classes = classList(
+      'fixed right-0 top-0 z-[99999999] box-border block max-h-screen w-full max-w-full overflow-y-auto bg-base-100 pb-4 pt-10 text-left text-sm text-base-content shadow-[-3px_0_5px_0_rgba(0,0,0,0.2)] md:w-auto md:min-w-[500px] md:max-w-[700px]',
+      [sidebarHidden, 'hidden']
+    );
     const showHideMessage = `${sidebarHidden ? 'Show' : 'Hide'} moli global config panel`;
     const isEnvironmentOverridden = !!getActiveEnvironmentOverride(window);
     const interstitialTestKey = 'test-interstitial';
@@ -276,7 +282,7 @@ export class GlobalConfig
       <div id="moli-console-global-config">
         <style>{styles}</style>
         <button
-          className="MoliDebug-sidebar-closeHandle"
+          className="d-btn d-btn-warning d-btn-sm fixed left-0 top-0 z-[100000000] w-screen justify-start rounded-none font-normal normal-case md:left-auto md:right-0 md:w-auto md:rounded-bl-md"
           title={showHideMessage}
           onClick={this.toggleSidebar}
         >
@@ -286,68 +292,60 @@ export class GlobalConfig
         </button>
         {config && (
           <div className={classes} data-ref={debugSidebarSelector}>
-            <div className="MoliDebug-sidebarSection  MoliDebug-sidebarSection--moli">
-              <div className="MoliDebug-tagContainer">
-                <div className="MoliDebug-tagContainer">
-                  <TagLabel>Config version</TagLabel>
-                  <Tag variant={isVersionOverridden ? 'yellow' : 'blue'}>
-                    {currentConfigVersion}
-                  </Tag>
-                  <input
-                    type="text"
-                    value={this.state.configVersion}
-                    placeholder={currentConfigVersion}
-                    onChange={e => {
-                      this.setState({ configVersion: e.currentTarget.value });
-                    }}
-                  />
-                  <button
-                    className="MoliDebug-button"
-                    onClick={() => this.overrideConfigVersion(this.state.configVersion)}
-                    title="Reload"
-                  >
-                    load
-                  </button>
-                  <button
-                    className="MoliDebug-button MoliDebug-button--green"
-                    onClick={this.clearConfigVersionOverride}
-                    title="Reset"
-                  >
-                    reset
-                  </button>
-                </div>
-                <div className="MoliDebug-tagContainer">
-                  <TagLabel>Config label</TagLabel>
-                  <Tag>{configLabel}</Tag>
-                </div>
-                <br />
+            <div className="mb-2 border-l-4 border-l-[#998fc7] pb-2 pl-3">
+              <TagContainer>
+                <TagLabel>Config version</TagLabel>
+                <Tag variant={isVersionOverridden ? 'yellow' : 'secondary'}>
+                  {currentConfigVersion}
+                </Tag>
+                <TextInput
+                  value={this.state.configVersion}
+                  placeholder={currentConfigVersion}
+                  onChange={e => {
+                    this.setState({ configVersion: e.currentTarget.value });
+                  }}
+                />
+                <Btn
+                  onClick={() => this.overrideConfigVersion(this.state.configVersion)}
+                  title="Reload"
+                >
+                  load
+                </Btn>
+                <Btn variant="green" onClick={this.clearConfigVersionOverride} title="Reset">
+                  reset
+                </Btn>
+              </TagContainer>
+              <TagContainer>
+                <TagLabel>Config label</TagLabel>
+                <Tag variant="secondary">{configLabel}</Tag>
+              </TagContainer>
+              <TagContainer>
                 <TagLabel>Appearance</TagLabel>
                 {isDarkTheme && (
-                  <button
-                    className="MoliDebug-button"
-                    onClick={switchToLightTheme}
-                    title="Switch to light theme"
-                  >
+                  <Btn onClick={switchToLightTheme} title="Switch to light theme">
                     🌔 dark
-                  </button>
+                  </Btn>
                 )}
                 {!isDarkTheme && (
-                  <button
-                    className="MoliDebug-button"
-                    onClick={switchToDarkTheme}
-                    title="Switch to dark theme"
-                  >
+                  <Btn onClick={switchToDarkTheme} title="Switch to dark theme">
                     🌞 light
-                  </button>
+                  </Btn>
                 )}
-              </div>
-              <h4>
-                {this.collapseToggle('moli')}
-                Moli <span>{window.moli.version}</span>
-              </h4>
+              </TagContainer>
+            </div>
+            <Section
+              title={
+                <>
+                  Moli <span className="font-normal">{window.moli.version}</span>
+                </>
+              }
+              color="moli"
+              expanded={expandSection.moli}
+              onToggle={this.toggleSection('moli')}
+            >
               {expandSection.moli && (
                 <div>
-                  <div className="MoliDebug-tagContainer">
+                  <TagContainer>
                     <TagLabel>Overall Mode</TagLabel>
                     {runtimeConfig.environment === 'test' ? (
                       <Tag variant="yellow">Test</Tag>
@@ -355,45 +353,37 @@ export class GlobalConfig
                       <Tag variant="green">Production</Tag>
                     )}
                     {isEnvironmentOverridden ? (
-                      <button
-                        className="MoliDebug-button MoliDebug-button--green"
-                        onClick={this.resetEnvironmentOverrides}
-                      >
+                      <Btn variant="green" onClick={this.resetEnvironmentOverrides}>
                         ◀ Reset override
-                      </button>
+                      </Btn>
                     ) : (
-                      <button
-                        className="MoliDebug-button MoliDebug-button--yellow MoliDebug-button--greyText"
-                        onClick={this.overrideEnvironmentToTest}
-                      >
+                      <Btn variant="yellow" onClick={this.overrideEnvironmentToTest}>
                         ▶ Override to test
-                      </button>
+                      </Btn>
                     )}
-                    <button
-                      className="MoliDebug-button MoliDebug-button--blue"
+                    <Btn
+                      variant="blue"
                       onClick={() => this.props.onShowOverlaysChange(!this.props.showOverlays)}
                     >
                       {this.props.showOverlays ? '◀ Hide overlays' : '▶ Show overlays'}
-                    </button>
-                  </div>
+                    </Btn>
+                  </TagContainer>
                   {interstitialSlot && (
-                    <div className="MoliDebug-tagContainer">
+                    <TagContainer>
                       <TagLabel>Interstitital Test Mode</TagLabel>
                       {isInterstitialTestEnabled ? (
-                        <button
-                          className="MoliDebug-button MoliDebug-button--green"
+                        <Btn
+                          variant="green"
                           onClick={() => {
                             removeBrowserStorageValue(interstitialTestKey, localStorage);
                             this.refreshInterstitial(interstitialSlot);
                           }}
                         >
                           ◀ Reset interstitial test
-                        </button>
+                        </Btn>
                       ) : (
-                        <button
-                          className={`MoliDebug-button MoliDebug-button--yellow MoliDebug-button--greyText ${
-                            !isEnvironmentOverridden ? 'MoliDebug-button--disabled' : ''
-                          }`}
+                        <Btn
+                          variant="yellow"
                           onClick={() => {
                             setBrowserStorageValue(interstitialTestKey, 'true', localStorage);
                             this.refreshInterstitial(interstitialSlot);
@@ -401,18 +391,18 @@ export class GlobalConfig
                           disabled={!isEnvironmentOverridden}
                         >
                           ▶ Test interstitial
-                        </button>
+                        </Btn>
                       )}
                       {!isEnvironmentOverridden && (
-                        <p className="MoliDebug-info">
+                        <p className="mt-2 max-w-md">
                           ❗️Please activate the overall test mode before testing the interstitial.
                         </p>
                       )}
-                    </div>
+                    </TagContainer>
                   )}
-                  <div className="MoliDebug-tagContainer">
+                  <TagContainer>
                     <TagLabel>Delay loading ads (only in test environment)</TagLabel>
-                    <input
+                    <TextInput
                       type="number"
                       placeholder="in milliseconds"
                       value={debugDelay}
@@ -428,45 +418,47 @@ export class GlobalConfig
                       <option value={2000} />
                       <option value={3000} />
                     </datalist>
-                  </div>
-                  <div className="MoliDebug-tagContainer">
-                    <button
-                      className="MoliDebug-button MoliDebug-button--blue"
+                  </TagContainer>
+                  <TagContainer>
+                    <Btn
+                      variant="blue"
                       onClick={() => {
                         config.slots.forEach(removeTestSlotSizeFromLocalStorage);
                         window.location.reload();
                       }}
                     >
                       ▶ Reset all test slot sizes
-                    </button>
-                  </div>
+                    </Btn>
+                  </TagContainer>
                   {modules && (
                     <>
-                      <h5>
-                        {this.collapseToggle('modules')}
+                      <SubHeadline>
+                        <Btn
+                          title={`${expandSection.modules ? 'collapse' : 'expand'} modules`}
+                          onClick={this.toggleSection('modules')}
+                        >
+                          {expandSection.modules ? '⊖' : '⊕'}
+                        </Btn>{' '}
                         Moli Modules
-                      </h5>
+                      </SubHeadline>
                       {expandSection.modules && (
                         <>
                           {Object.entries(modules).map(([module, config], index) => {
                             const moduleConfig = config as modules.IModuleConfig;
                             return (
                               <div key={index}>
-                                <div
-                                  className="MoliDebug-tagContainer MoliDebug-module"
-                                  data-module-key={index + 1}
-                                >
+                                <div className="d-divider my-1 text-xs">module {index + 1}</div>
+                                <TagContainer>
                                   <Tag variant={moduleConfig.enabled ? 'green' : 'grey'}>
                                     {module}
                                   </Tag>
-                                </div>
+                                </TagContainer>
                                 {moduleConfig && (
                                   <Fragment>
-                                    <h6>Module Config</h6>
+                                    <h6 className="mt-2 text-xs font-bold">Module Config</h6>
                                     {this.unwrapConfig(moduleConfig)}
                                   </Fragment>
                                 )}
-                                {index !== Object.keys(modules).length - 1 && <hr />}
                               </div>
                             );
                           })}
@@ -476,17 +468,17 @@ export class GlobalConfig
                   )}
                 </div>
               )}
-            </div>
+            </Section>
 
-            <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--slots">
-              <h4>
-                {this.collapseToggle('slots')}
-                Slots
-              </h4>
-
+            <Section
+              title="Slots"
+              color="slots"
+              expanded={expandSection.slots}
+              onToggle={this.toggleSection('slots')}
+            >
               {expandSection.slots && (
                 <div>
-                  <div className="MoliDebug-panel MoliDebug-panel--grey">
+                  <Panel variant="grey">
                     Slot sizes are annotated to show the origin of their validation state:
                     <ul>
                       <li>
@@ -498,11 +490,12 @@ export class GlobalConfig
                         <strong>global sizeConfig</strong>.
                       </li>
                     </ul>
-                  </div>
+                  </Panel>
 
-                  <div className="MoliDebug-panel MoliDebug-panel--grey">
-                    <label className="MoliDebug-checkBox">
+                  <Panel variant="grey">
+                    <label className="flex select-none items-center gap-2">
                       <input
+                        className="d-checkbox d-checkbox-primary d-checkbox-xs border border-solid border-primary"
                         type="checkbox"
                         onChange={e =>
                           this.setState({
@@ -512,7 +505,7 @@ export class GlobalConfig
                       />
                       Show only rendered slots
                     </label>
-                  </div>
+                  </Panel>
 
                   {config.slots.map((slot, index) =>
                     this.isSlotRendered(slot) || !showOnlyRenderedSlots ? (
@@ -525,26 +518,26 @@ export class GlobalConfig
                   )}
                 </div>
               )}
-            </div>
+            </Section>
 
-            <div className="MoliDebug-sidebarSection  MoliDebug-sidebarSection--targeting">
-              <h4>
-                {this.collapseToggle('targeting')}
-                Targeting
-              </h4>
-
+            <Section
+              title="Targeting"
+              color="targeting"
+              expanded={expandSection.targeting}
+              onToggle={this.toggleSection('targeting')}
+            >
               {expandSection.targeting && (
                 <div>
                   {config.targeting && (
                     <div>
-                      <h5>Key/value pairs</h5>
+                      <SubHeadline>Key/value pairs</SubHeadline>
                       {this.keyValues({
                         ...config.targeting.keyValues,
                         ...runtimeConfig.keyValues
                       })}
-                      <h5>Labels from publisher</h5>
+                      <SubHeadline>Labels from publisher</SubHeadline>
                       {this.labels([...runtimeConfig.labels, ...(config.targeting?.labels ?? [])])}
-                      <h5>Labels from label size config</h5>
+                      <SubHeadline>Labels from label size config</SubHeadline>
                       {this.labels(
                         labelConfigService
                           .getSupportedLabels()
@@ -555,14 +548,14 @@ export class GlobalConfig
                   {!config.targeting && <span>No targeting config present.</span>}
                 </div>
               )}
-            </div>
+            </Section>
 
-            <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--sizeConfig">
-              <h4>
-                {this.collapseToggle('labelSizeConfig')}
-                Label Size config
-              </h4>
-
+            <Section
+              title="Label Size config"
+              color="sizeConfig"
+              expanded={expandSection.labelSizeConfig}
+              onToggle={this.toggleSection('labelSizeConfig')}
+            >
               {expandSection.labelSizeConfig && (
                 <div>
                   {config.labelSizeConfig && config.labelSizeConfig.length > 0 && (
@@ -573,18 +566,18 @@ export class GlobalConfig
                   )}
                 </div>
               )}
-            </div>
+            </Section>
 
             {config.prebid && (
-              <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--prebid">
-                <h4>
-                  {this.collapseToggle('prebid')}
-                  Prebid
-                </h4>
-
+              <Section
+                title="Prebid"
+                color="prebid"
+                expanded={expandSection.prebid}
+                onToggle={this.toggleSection('prebid')}
+              >
                 {expandSection.prebid && (
                   <div>
-                    <div className="MoliDebug-tagContainer">
+                    <div className="mt-2 flex flex-wrap items-center gap-y-1">
                       <TagLabel>Version</TagLabel>
                       {window.pbjs.version ? (
                         <Tag>{window.pbjs.version.toString()}</Tag>
@@ -593,7 +586,7 @@ export class GlobalConfig
                       )}
                     </div>
 
-                    <div className="MoliDebug-tagContainer">
+                    <div className="mt-2 flex flex-wrap items-center gap-y-1">
                       <TagLabel>Prebid debug</TagLabel>
                       <Tag variant={config.prebid.config.debug ? 'yellow' : undefined}>
                         {config.prebid.config.debug ? 'enabled' : 'disabled'}
@@ -601,14 +594,14 @@ export class GlobalConfig
                     </div>
 
                     {config.prebid.config.enableSendAllBids !== undefined && (
-                      <div className="MoliDebug-tagContainer">
+                      <div className="mt-2 flex flex-wrap items-center gap-y-1">
                         <TagLabel>sendAllBids enabled</TagLabel>
                         <Tag>{config.prebid.config.enableSendAllBids.toString()}</Tag>
                       </div>
                     )}
 
                     {config.prebid.config.bidderTimeout && (
-                      <div className="MoliDebug-tagContainer">
+                      <div className="mt-2 flex flex-wrap items-center gap-y-1">
                         <TagLabel>Bidder timeout</TagLabel>
                         <Tag>{`${config.prebid.config.bidderTimeout.toString()}ms`}</Tag>
                       </div>
@@ -616,8 +609,8 @@ export class GlobalConfig
 
                     {config.prebid.config.consentManagement && (
                       <div>
-                        <h5>Consent management</h5>
-                        <div className="MoliDebug-tagContainer">
+                        <SubHeadline>Consent management</SubHeadline>
+                        <div className="mt-2 flex flex-wrap items-center gap-y-1">
                           <TagLabel>allowAuctionWithoutConsent</TagLabel>
                           <Tag>
                             {(
@@ -627,14 +620,14 @@ export class GlobalConfig
                           </Tag>
                         </div>
                         {config.prebid.config.consentManagement.gdpr?.cmpApi && (
-                          <div className="MoliDebug-tagContainer">
+                          <div className="mt-2 flex flex-wrap items-center gap-y-1">
                             <TagLabel>CMP API</TagLabel>
                             <Tag>
                               {config.prebid.config.consentManagement.gdpr?.cmpApi ?? 'iab'}
                             </Tag>
                           </div>
                         )}
-                        <div className="MoliDebug-tagContainer">
+                        <div className="mt-2 flex flex-wrap items-center gap-y-1">
                           <TagLabel>CMP timeout</TagLabel>
                           <Tag>{`${
                             config.prebid.config.consentManagement.gdpr?.timeout ?? 10000
@@ -645,8 +638,8 @@ export class GlobalConfig
 
                     {config.prebid.config.userSync && (
                       <div>
-                        <h5>User sync</h5>
-                        <div className="MoliDebug-tagContainer">
+                        <SubHeadline>User sync</SubHeadline>
+                        <div className="mt-2 flex flex-wrap items-center gap-y-1">
                           <TagLabel>Sync enabled</TagLabel>
                           <Tag>
                             {config.prebid.config.userSync.syncEnabled === undefined
@@ -657,24 +650,24 @@ export class GlobalConfig
                           </Tag>
                         </div>
                         {config.prebid.config.userSync.syncDelay !== undefined && (
-                          <div className="MoliDebug-tagContainer">
+                          <div className="mt-2 flex flex-wrap items-center gap-y-1">
                             <TagLabel>Sync delay</TagLabel>
                             <Tag>{`${config.prebid.config.userSync.syncDelay}ms`}</Tag>
                           </div>
                         )}
                         {config.prebid.config.userSync.syncsPerBidder !== undefined && (
-                          <div className="MoliDebug-tagContainer">
+                          <div className="mt-2 flex flex-wrap items-center gap-y-1">
                             <TagLabel>Syncs per bidder</TagLabel>
                             <Tag>{config.prebid.config.userSync.syncsPerBidder.toString()}</Tag>
                           </div>
                         )}
-                        <div className="MoliDebug-tagContainer">
+                        <div className="mt-2 flex flex-wrap items-center gap-y-1">
                           <TagLabel>User sync override enabled</TagLabel>
                           <Tag>{(!!config.prebid.config.userSync.enableOverride).toString()}</Tag>
                         </div>
                         {config.prebid.config.userSync.filterSettings && (
                           <div>
-                            <h6>Filter Settings</h6>
+                            <h6 className="mt-2 text-xs font-bold">Filter Settings</h6>
                             {config.prebid.config.userSync.filterSettings.all &&
                               this.filterSetting(
                                 'All',
@@ -695,21 +688,21 @@ export class GlobalConfig
                       </div>
                     )}
 
-                    <h5>Currency</h5>
-                    <div className="MoliDebug-tagContainer">
+                    <SubHeadline>Currency</SubHeadline>
+                    <div className="mt-2 flex flex-wrap items-center gap-y-1">
                       <TagLabel>Ad server currency</TagLabel>
                       <Tag>
                         {config.prebid.config.currency?.adServerCurrency ?? 'EUR (default)'}
                       </Tag>
                     </div>
-                    <div className="MoliDebug-tagContainer">
+                    <div className="mt-2 flex flex-wrap items-center gap-y-1">
                       <TagLabel>Granularity multiplier</TagLabel>
                       <Tag>
                         {config.prebid.config.currency?.granularityMultiplier.toString() ??
                           'not set'}
                       </Tag>
                     </div>
-                    <div className="MoliDebug-tagContainer">
+                    <div className="mt-2 flex flex-wrap items-center gap-y-1">
                       <TagLabel>Default Rates, USD → EUR</TagLabel>
                       <Tag>
                         {config.prebid.config.currency?.defaultRates.USD.EUR?.toString() ??
@@ -718,29 +711,29 @@ export class GlobalConfig
                     </div>
                   </div>
                 )}
-              </div>
+              </Section>
             )}
 
             {config.a9 && (
-              <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--a9">
-                <h4>
-                  {this.collapseToggle('a9')}
-                  A9
-                </h4>
-
+              <Section
+                title="A9"
+                color="a9"
+                expanded={expandSection.a9}
+                onToggle={this.toggleSection('a9')}
+              >
                 {expandSection.a9 && (
                   <div>
-                    <div className="MoliDebug-tagContainer">
+                    <div className="mt-2 flex flex-wrap items-center gap-y-1">
                       <TagLabel>PubID</TagLabel>
                       <Tag variant={config.a9.pubID ? 'blue' : 'red'}>{config.a9.pubID}</Tag>
                     </div>
-                    <div className="MoliDebug-tagContainer">
+                    <div className="mt-2 flex flex-wrap items-center gap-y-1">
                       <TagLabel>Timeout</TagLabel>
                       <Tag variant={config.a9.timeout ? 'blue' : 'red'}>
                         {config.a9.timeout.toFixed(0)}ms
                       </Tag>
                     </div>
-                    <div className="MoliDebug-tagContainer">
+                    <div className="mt-2 flex flex-wrap items-center gap-y-1">
                       <TagLabel>CMP timeout</TagLabel>
                       <Tag variant={config.a9.cmpTimeout ? 'blue' : 'red'}>
                         {config.a9.cmpTimeout.toFixed(0)}ms
@@ -748,31 +741,31 @@ export class GlobalConfig
                     </div>
                   </div>
                 )}
-              </div>
+              </Section>
             )}
 
-            <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--consent">
-              <h4>
-                {this.collapseToggle('consent')}
-                Consent
-              </h4>
-
+            <Section
+              title="Consent"
+              color="consent"
+              expanded={expandSection.consent}
+              onToggle={this.toggleSection('consent')}
+            >
               {expandSection.consent && (
                 <div>
                   <ConsentConfig />
                 </div>
               )}
-            </div>
+            </Section>
 
-            <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--supplyChain">
-              <h4>
-                {this.collapseToggle('supplyChain')}
-                Supply Chain
-              </h4>
-
+            <Section
+              title="Supply Chain"
+              color="supplyChain"
+              expanded={expandSection.supplyChain}
+              onToggle={this.toggleSection('supplyChain')}
+            >
               {expandSection.supplyChain && (
                 <>
-                  <div className="MoliDebug-tagContainer">
+                  <div className="mt-2 flex flex-wrap items-center gap-y-1">
                     <TagLabel>Seller ID (ads.txt)</TagLabel>
                     <Tag
                       variant={
@@ -782,20 +775,20 @@ export class GlobalConfig
                       {adstxtEntry[1]}
                     </Tag>
                   </div>
-                  <div className="MoliDebug-tagContainer">
+                  <div className="mt-2 flex flex-wrap items-center gap-y-1">
                     <TagLabel>Status</TagLabel>
                     <Tag variant={adstxtEntry[2] ? 'blue' : 'red'}>{adstxtEntry[2]}</Tag>
                   </div>
-                  <p className="MoliDebug-info">
+                  <p className="mt-2 max-w-md">
                     {config?.schain.supplyChainStartNode.sid === adstxtEntry[1]
                       ? `✅ Seller ids in ad tag config and ads.txt of domain ${adstxtDomain} are matching!`
                       : `❗️Seller ids in ad tag config (${config?.schain.supplyChainStartNode.sid}) and ads.txt of current domain (${adstxtDomain}, ${adstxtEntry[1]}) are different!`}
                   </p>
                   {this.state.adstxtError !== '' && (
-                    <p className="MoliDebug-panel MoliDebug-panel--red">{`${this.state.adstxtError} If you use this console locally or on the demo page, try to enable CORS by using a CORS unblocking browser extension.`}</p>
+                    <Panel variant="red">{`${this.state.adstxtError} If you use this console locally or on the demo page, try to enable CORS by using a CORS unblocking browser extension.`}</Panel>
                   )}
                   <form
-                    className="MoliDebug-formContainer MoliDebug-panel MoliDebug-panel--blue"
+                    className="mb-2 mt-2 flex max-w-md flex-col gap-2 rounded-md bg-[#edf6fc] p-2 text-black"
                     onSubmit={async event => {
                       event.preventDefault();
                       const newAdsTxtDomain = event.target[0].value;
@@ -809,31 +802,24 @@ export class GlobalConfig
                       Use different ads.txt domain for seller id comparison:
                     </label>
                     <div>
-                      <input
-                        type="text"
-                        placeholder="Enter new domain"
-                        name="newDomain"
-                        id="newDomain"
-                      ></input>
-                      <button className="MoliDebug-button" type="submit">
-                        Go!
-                      </button>
+                      <TextInput placeholder="Enter new domain" name="newDomain" id="newDomain" />
+                      <Btn type="submit">Go!</Btn>
                     </div>
                   </form>
                 </>
               )}
-            </div>
+            </Section>
 
-            <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--supplyChain">
-              <h4>
-                {this.collapseToggle('adDensity')}
-                Ad Density
-              </h4>
-
+            <Section
+              title="Ad Density"
+              color="adDensity"
+              expanded={expandSection.adDensity}
+              onToggle={this.toggleSection('adDensity')}
+            >
               {expandSection.adDensity && (
                 <>
                   <form
-                    className="MoliDebug-formContainer MoliDebug-panel MoliDebug-panel--blue"
+                    className="mb-2 mt-2 flex max-w-md flex-col gap-2 rounded-md bg-[#edf6fc] p-2 text-black"
                     onSubmit={async event => {
                       event.preventDefault();
                       const contentSelector = event.target[0].value;
@@ -864,39 +850,82 @@ export class GlobalConfig
                       Calculate ad density of the content element
                     </label>
                     <div>
-                      <input
-                        type="text"
+                      <TextInput
                         placeholder="Enter CSS selector"
                         name="adDensitySelector"
                         id="adDensitySelector"
-                      ></input>
-                      <button className="MoliDebug-button" type="submit">
-                        Go!
-                      </button>
+                      />
+                      <Btn type="submit">Go!</Btn>
                     </div>
                   </form>
-                  <div className="MoliDebug-tagContainer">
+                  <div className="mt-2 flex flex-wrap items-center gap-y-1">
                     <TagLabel>Ad Density</TagLabel>
                     <Tag variant={'green'}>{adDensity.totalAdDensity}</Tag>
                   </div>
                   {adDensity.percentagePerSlot.length > 0 && (
                     <>
-                      <hr />
-                      <h4>Percentage of ad slot area on total ad area</h4>
+                      <SubHeadline>Percentage of ad slot area on total ad area</SubHeadline>
                       {adDensity.percentagePerSlot.map(percentage => {
                         return (
-                          <div className="MoliDebug-tagContainer" key={percentage.adSlotId}>
+                          <div
+                            className="mt-2 flex flex-wrap items-center gap-y-1"
+                            key={percentage.adSlotId}
+                          >
                             <TagLabel>{extractPositionFromPath(percentage.adSlotId)}</TagLabel>
                             <Tag variant={'green'}>{percentage.percentage}%</Tag>
                           </div>
                         );
                       })}
-                      <hr />
                     </>
                   )}
                 </>
               )}
-            </div>
+            </Section>
+
+            <Section
+              title={
+                <>
+                  Validation{' '}
+                  <Tag
+                    variant={
+                      this.state.messages.some(m => m.kind === 'error')
+                        ? 'red'
+                        : this.state.messages.length > 0
+                          ? 'yellow'
+                          : 'green'
+                    }
+                  >
+                    {this.state.messages.length}
+                  </Tag>
+                </>
+              }
+              color="validation"
+              expanded={expandSection.validation}
+              onToggle={this.toggleSection('validation')}
+            >
+              {expandSection.validation && (
+                <div className="flex max-w-md flex-col gap-1">
+                  {this.state.messages.length === 0 && (
+                    <div className="d-alert d-alert-success rounded-md px-2 py-1 text-sm">
+                      <span>✔ No configuration issues found</span>
+                    </div>
+                  )}
+                  {this.state.messages.map((message, index) => (
+                    <div
+                      key={index}
+                      className={classList(
+                        'd-alert rounded-md px-2 py-1 text-sm',
+                        [message.kind === 'error', 'd-alert-error'],
+                        [message.kind === 'warning', 'd-alert-warning'],
+                        [message.kind === 'optimization', 'd-alert-info']
+                      )}
+                    >
+                      <span>{message.text}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Section>
           </div>
         )}
       </div>
@@ -942,13 +971,7 @@ export class GlobalConfig
               : 'other';
 
           return (
-            <div
-              key={index}
-              className={classList('MoliDebug-tagContainer', [
-                subEntry,
-                'MoliDebug-tagContainer--subEntry'
-              ])}
-            >
+            <TagContainer key={index} subEntry={subEntry}>
               <TagLabel>{key}</TagLabel>
               {configValueType === 'array' &&
                 (configValue.length === 0 ? (
@@ -968,7 +991,7 @@ export class GlobalConfig
               {configValueType === 'other' && configValue !== undefined && (
                 <Tag variant="green">{configValue.toString()}</Tag>
               )}
-            </div>
+            </TagContainer>
           );
         })}
       </Fragment>
@@ -982,7 +1005,7 @@ export class GlobalConfig
     const properties = Object.keys(keyValues);
 
     return properties.length > 0 ? (
-      <table className="MoliDebug-keyValueTable">
+      <table className="d-table d-table-xs w-auto text-left">
         <thead>
           <tr>
             <th>Key</th>
@@ -1013,7 +1036,7 @@ export class GlobalConfig
 
   private labels = (labels: string[] | undefined): React.ReactElement => {
     return (
-      <div className="MoliDebug-tagContainer">
+      <div className="mt-2 flex flex-wrap items-center gap-y-1">
         {labels &&
           labels.map((label, index) => (
             <Tag key={index} variant="blue" spacing="medium">
@@ -1032,13 +1055,13 @@ export class GlobalConfig
     return (
       <div>
         <strong>{name}</strong>
-        <div className="MoliDebug-tagContainer">
+        <div className="mt-2 flex flex-wrap items-center gap-y-1">
           <TagLabel>Bidders</TagLabel>
           {filterSetting.bidders === '*'
             ? this.standardTagFromString('all')
             : filterSetting.bidders.map(this.standardTagFromString)}
         </div>
-        <div className="MoliDebug-tagContainer">
+        <div className="mt-2 flex flex-wrap items-center gap-y-1">
           <TagLabel>Include/exclude</TagLabel>
           {this.standardTagFromString(filterSetting.filter)}
         </div>
@@ -1054,58 +1077,9 @@ export class GlobalConfig
     this.setState({ sidebarHidden: !this.state.sidebarHidden });
   };
 
-  private collapseToggle = (
-    section: keyof Pick<
-      IGlobalConfigState['expandSection'],
-      | 'slots'
-      | 'moli'
-      | 'modules'
-      | 'targeting'
-      | 'prebid'
-      | 'a9'
-      | 'labelSizeConfig'
-      | 'consent'
-      | 'supplyChain'
-      | 'adDensity'
-    >
-  ): React.ReactElement => {
-    const toggleValue = (
-      section: keyof Pick<
-        IGlobalConfigState['expandSection'],
-        | 'slots'
-        | 'moli'
-        | 'modules'
-        | 'targeting'
-        | 'prebid'
-        | 'a9'
-        | 'labelSizeConfig'
-        | 'consent'
-        | 'supplyChain'
-        | 'adDensity'
-      >
-    ) => {
-      const oldVal = this.state.expandSection[section];
-      this.setState({ expandSection: { ...this.state.expandSection, [section]: !oldVal } });
-    };
-    return (
-      <button
-        className="MoliDebug-adSlot-button"
-        title={`${this.state.expandSection[section] ? 'collapse' : 'expand'} ${section}`}
-        onClick={() => toggleValue(section)}
-      >
-        {this.state.expandSection[section] ? '⊖' : '⊕'}
-      </button>
-    );
-  };
-
-  private iconForMessageKind = (kind: Message['kind'] | 'empty'): React.ReactElement => {
-    return (
-      <span className="MoliDebug-configMessage-icon">
-        {kind === 'error' && <span>&#x2757;</span>}
-        {kind === 'warning' && <span>&#x26A0;</span>}
-        {kind === 'empty' && <span>✔</span>}
-      </span>
-    );
+  private toggleSection = (section: keyof IGlobalConfigState['expandSection']) => () => {
+    const oldVal = this.state.expandSection[section];
+    this.setState({ expandSection: { ...this.state.expandSection, [section]: !oldVal } });
   };
 
   private reportMissingConfig = (messages: Message[]): void => {

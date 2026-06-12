@@ -41,7 +41,7 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
     super(props);
 
     if (props.parentElement) {
-      props.parentElement.classList.add('MoliDebug-posRelative');
+      props.parentElement.classList.add('relative');
 
       const { width, height } = props.parentElement.getBoundingClientRect();
       this.state = {
@@ -76,6 +76,11 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
       }
     }
 
+    const btnBase = 'd-btn d-btn-xs d-btn-square font-normal';
+    const btnRendered = 'd-btn-secondary';
+    const btnNotRendered = 'd-btn-error text-white';
+    const btnInfinite = 'd-btn-warning';
+
     const getBucketName = (bucket?: bucket.AdSlotBucket): string => {
       if (!bucket) {
         return 'default';
@@ -89,15 +94,18 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
     return (
       <div
         className={classList(
-          'MoliDebug-adSlot',
-          [!!parentElement, 'MoliDebug-adSlot--overlay'],
-          [!parentElement && slotVisible, 'is-rendered'],
-          [!parentElement && !slotVisible, 'is-notRendered'],
-          [isConfiguredInfiniteSlot, 'is-configuredInfinite']
+          'mb-4 box-border flex min-h-[34px] flex-col bg-white/80 text-left text-sm',
+          [
+            !!parentElement,
+            'absolute left-0 top-0 z-[99999998] h-full min-h-[100px] w-full min-w-[300px] overflow-y-auto rounded border border-black'
+          ],
+          [!parentElement && slotVisible, 'border-l-4 border-l-success'],
+          [!parentElement && !slotVisible, 'border-l-4 border-l-error'],
+          [isConfiguredInfiniteSlot, 'border-l-4 border-l-warning']
         )}
         style={dimensions}
       >
-        <div className="MoliDebug-adSlot-buttons">
+        <div className="flex min-h-[34px] items-center gap-1 py-1">
           {!parentElement && (
             <button
               title={
@@ -106,10 +114,10 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
                   : `Slot ${slotVisible ? '' : 'not '}rendered`
               }
               className={classList(
-                'MoliDebug-adSlot-button',
-                [slotVisible, 'is-rendered'],
-                [!slotVisible, 'is-notRendered'],
-                [isConfiguredInfiniteSlot, 'is-configuredInfinite']
+                btnBase,
+                [slotVisible, btnRendered],
+                [!slotVisible, btnNotRendered],
+                [isConfiguredInfiniteSlot, btnInfinite]
               )}
               onClick={this.toggleGeneral}
             >
@@ -118,7 +126,7 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
           )}
           <button
             title="Show general slot info"
-            className={classList('MoliDebug-adSlot-button', [showGeneral, 'is-active'])}
+            className={classList(btnBase, [showGeneral, 'd-btn-active'])}
             onClick={this.toggleGeneral}
           >
             &#9432;
@@ -127,10 +135,10 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
             <button
               title="Show A9 config"
               className={classList(
-                'MoliDebug-adSlot-button',
-                [showA9, 'is-active'],
-                [a9Valid, 'is-rendered'],
-                [!a9Valid, 'is-notRendered']
+                btnBase,
+                [showA9, 'd-btn-active'],
+                [a9Valid, btnRendered],
+                [!a9Valid, btnNotRendered]
               )}
               onClick={this.toggleA9}
             >
@@ -141,10 +149,10 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
             <button
               title="Show Prebid config"
               className={classList(
-                'MoliDebug-adSlot-button',
-                [showPrebid, 'is-active'],
-                [prebidValid, 'is-rendered'],
-                [!prebidValid, 'is-notRendered']
+                btnBase,
+                [showPrebid, 'd-btn-active'],
+                [prebidValid, btnRendered],
+                [!prebidValid, btnNotRendered]
               )}
               onClick={this.togglePrebid}
             >
@@ -155,33 +163,35 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
             <button
               title="Show sizeConfig"
               className={classList(
-                'MoliDebug-adSlot-button MoliDebug-adSlot-button--sizeConfig',
-                [slotValid, 'is-rendered'],
-                [!slotValid, 'is-notRendered'],
-                [showSizeConfig, 'is-active']
+                btnBase,
+                [slotValid, btnRendered],
+                [!slotValid, btnNotRendered],
+                [showSizeConfig, 'd-btn-active']
               )}
               onClick={this.toggleSizeConfig}
-            />
+            >
+              📐
+            </button>
           )}
           {isConfiguredInfiniteSlot && (
             <p>Looking up infinite slots is currently not implemented</p>
           )}
         </div>
         {showGeneral && (
-          <div className="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
-            <div className="MoliDebug-tagContainer">
+          <div className="mb-4 mt-1 max-w-md rounded-md bg-[#edf6fc] p-2 text-sm text-black shadow-md">
+            <div className="mt-2 flex flex-wrap items-center gap-y-1">
               <Tag variant="green">{slot.position}</Tag>
               <Tag variant="yellow">{slot.behaviour.loaded}</Tag>
               {slot.behaviour.bucket && (
                 <Tag variant="blue">{getBucketName(slot.behaviour.bucket)}</Tag>
               )}
             </div>
-            <div className="MoliDebug-tagContainer">
+            <div className="mt-2 flex flex-wrap items-center gap-y-1">
               <span
                 className={classList(
-                  'MoliDebug-tagLabel',
-                  [slotElementExists, 'MoliDebug-tag--greenText'],
-                  [!slotElementExists, 'MoliDebug-tag--redText']
+                  'inline-block min-w-36 max-w-96 pr-1 font-medium',
+                  [slotElementExists, 'text-success'],
+                  [!slotElementExists, 'text-error']
                 )}
               >
                 DOM ID
@@ -193,33 +203,33 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
                 {slot.domId}
               </Tag>
             </div>
-            <div className="MoliDebug-tagContainer">
-              <span className="MoliDebug-tagLabel">AdUnit path</span>
+            <div className="mt-2 flex flex-wrap items-center gap-y-1">
+              <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">AdUnit path</span>
               <Tag>{slot.adUnitPath}</Tag>
             </div>
             {slot.sizes.length > 0 && (
-              <div className="MoliDebug-tagContainer">
-                <span className="MoliDebug-tagLabel">Sizes</span>
+              <div className="mt-2 flex flex-wrap items-center gap-y-1">
+                <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Sizes</span>
                 {this.validateSlotSizes(slot.sizes).map(validatedSlotSize =>
                   this.tagFromValidatedSlotSize(validatedSlotSize, !!slot.sizeConfig)
                 )}
               </div>
             )}
-            <div className="MoliDebug-tagContainer">{this.labelConfig(slot)}</div>
+            <div className="mt-2 flex flex-wrap items-center gap-y-1">{this.labelConfig(slot)}</div>
           </div>
         )}
         {showA9 && slot.a9 && (
-          <div className="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
+          <div className="mb-4 mt-1 max-w-md rounded-md bg-[#edf6fc] p-2 text-sm text-black shadow-md">
             {this.a9Config(slot.a9)}
           </div>
         )}
         {showPrebid && slot.prebid && (
-          <div className="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
+          <div className="mb-4 mt-1 max-w-md rounded-md bg-[#edf6fc] p-2 text-sm text-black shadow-md">
             {this.prebidConfig(slot.prebid)}
           </div>
         )}
         {showSizeConfig && slot.sizeConfig && (
-          <div className="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
+          <div className="mb-4 mt-1 max-w-md rounded-md bg-[#edf6fc] p-2 text-sm text-black shadow-md">
             <SizeConfigDebug
               sizeConfig={slot.sizeConfig}
               supportedLabels={labelConfigService.getSupportedLabels()}
@@ -246,22 +256,22 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
       return (
         <div key={index}>
           {index > 0 && <hr />}
-          {hasMultipleBids && <h5>{index + 1}. config</h5>}
-          <div className="MoliDebug-tagContainer">
-            <span className="MoliDebug-tagLabel">Code</span>
+          {hasMultipleBids && <h5 className="mb-1 mt-3 text-sm font-bold">{index + 1}. config</h5>}
+          <div className="mt-2 flex flex-wrap items-center gap-y-1">
+            <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Code</span>
             <Tag variant="green">{prebidAdUnit.code || this.props.slot.domId}</Tag>
           </div>
           {banner && (
-            <div className="MoliDebug-tagContainer">
-              <span className="MoliDebug-tagLabel">Banner sizes</span>
+            <div className="mt-2 flex flex-wrap items-center gap-y-1">
+              <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Banner sizes</span>
               {this.validateSlotSizes(banner.sizes).map(validatedSlotSize =>
                 this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig)
               )}
             </div>
           )}
           {video && (
-            <div className="MoliDebug-tagContainer">
-              <span className="MoliDebug-tagLabel">Video</span>
+            <div className="mt-2 flex flex-wrap items-center gap-y-1">
+              <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Video</span>
               <Tag variant="green">{video.context}</Tag>
               {!!video.playerSize &&
                 this.validateSlotSizes(
@@ -272,21 +282,25 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
             </div>
           )}
           {native && (
-            <div className="MoliDebug-tagContainer">
-              <span className="MoliDebug-tagLabel">Native</span>
+            <div className="mt-2 flex flex-wrap items-center gap-y-1">
+              <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Native</span>
               <Tag variant="green">true</Tag>
             </div>
           )}
           {prebidAdUnit.bids.map((bid: prebidjs.IBid, idx: number) => (
             <Fragment key={idx}>
               <hr />
-              <div className="MoliDebug-tagContainer">
-                <span className="MoliDebug-tagLabel">Bidder #{idx + 1}</span>
+              <div className="mt-2 flex flex-wrap items-center gap-y-1">
+                <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">
+                  Bidder #{idx + 1}
+                </span>
                 <Tag variant="blue">{bid.bidder ?? bid.module}</Tag>
               </div>
-              <div className="MoliDebug-tagContainer">{this.labelConfig(bid)}</div>
-              <div className="MoliDebug-tagContainer">
-                <span className="MoliDebug-tagLabel">Params</span>
+              <div className="mt-2 flex flex-wrap items-center gap-y-1">
+                {this.labelConfig(bid)}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-y-1">
+                <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Params</span>
                 <Tag>{JSON.stringify(bid.params)}</Tag>
               </div>
             </Fragment>
@@ -300,7 +314,7 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
     } else {
       return (
         <div>
-          <h5>{elements.length} bid configurations</h5>
+          <h5 className="mb-1 mt-3 text-sm font-bold">{elements.length} bid configurations</h5>
           {elements}
         </div>
       );
@@ -312,15 +326,15 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
     return (
       <div>
         {
-          <div className="MoliDebug-tagContainer">
-            <span className="MoliDebug-tagLabel">Sizes</span>
+          <div className="mt-2 flex flex-wrap items-center gap-y-1">
+            <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Sizes</span>
             {this.validateSlotSizes(this.props.slot.sizes.filter(AdSlotConfig.isFixedSize)).map(
               validatedSlotSize =>
                 this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig)
             )}
           </div>
         }
-        <div className="MoliDebug-tagContainer">{this.labelConfig(a9)}</div>
+        <div className="mt-2 flex flex-wrap items-center gap-y-1">{this.labelConfig(a9)}</div>
       </div>
     );
   };
@@ -448,9 +462,9 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
           <div>
             <span
               className={classList(
-                'MoliDebug-tagLabel',
-                [labelAllMatches, 'MoliDebug-tag--greenText'],
-                [!labelAllMatches, 'MoliDebug-tag--redText']
+                'inline-block min-w-36 max-w-96 pr-1 font-medium',
+                [labelAllMatches, 'text-success'],
+                [!labelAllMatches, 'text-error']
               )}
             >
               labelAll
@@ -466,9 +480,9 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
           <div>
             <span
               className={classList(
-                'MoliDebug-tagLabel',
-                [labelAnyMatches, 'MoliDebug-tag--greenText'],
-                [!labelAnyMatches, 'MoliDebug-tag--redText']
+                'inline-block min-w-36 max-w-96 pr-1 font-medium',
+                [labelAnyMatches, 'text-success'],
+                [!labelAnyMatches, 'text-error']
               )}
             >
               labelAny

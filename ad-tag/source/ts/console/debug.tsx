@@ -78,7 +78,7 @@ if (moliConfig) {
     }, [showOverlays]);
 
     return (
-      <>
+      <div className="font-sans text-base text-foreground antialiased">
         <GlobalConfig
           config={moliConfig}
           runtimeConfig={window.moli.getRuntimeConfig()}
@@ -89,7 +89,7 @@ if (moliConfig) {
           showOverlays={showOverlays}
           onShowOverlaysChange={setShowOverlays}
         />
-      </>
+      </div>
     );
   };
 

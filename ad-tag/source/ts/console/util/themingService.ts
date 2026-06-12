@@ -39,6 +39,9 @@ export class ThemingService {
     } else {
       this.rootElement?.classList.remove('dark');
     }
+    // daisyUI selects its theme via the data-theme attribute, while the
+    // tailwind `dark:` variant uses the .dark class - keep both in sync
+    this.rootElement?.setAttribute('data-theme', theme);
   };
 
   private static currentSystemTheme = (): Theme =>

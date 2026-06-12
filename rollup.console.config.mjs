@@ -60,7 +60,7 @@ export default [
       postcss({
         extract: false,
         config: {
-          path: 'postcss.config.js'
+          path: 'ad-tag/source/ts/console'
         }
       }),
       // react uses this variable to determine if it should be in dev mode, so we need to replace it

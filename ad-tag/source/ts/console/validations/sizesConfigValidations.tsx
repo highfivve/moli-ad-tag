@@ -109,7 +109,7 @@ const formatSizesConfigMsg = (missingSizes: MissingSizesType[]) => {
   return (
     <div>
       The following slots have sizes that need to be supported/defined:
-      <table className={'size-valid-table'}>
+      <table className="d-table d-table-xs w-auto text-center [&_td]:border [&_th]:border [&_th]:bg-base-200">
         <thead>
           <tr>
             <th>Slot ID</th>
