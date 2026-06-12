@@ -15,6 +15,8 @@ type IAdSlotConfigProps = {
   parentElement?: HTMLElement;
   slot: AdSlot;
   labelConfigService: LabelConfigService;
+  /** open the general info panel right away, e.g. when linked from the overview tab */
+  initiallyExpanded?: boolean;
 };
 type IAdSlotConfigState = {
   dimensions?: { width: number; height: number };
@@ -40,16 +42,21 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
   constructor(props: IAdSlotConfigProps) {
     super(props);
 
+    const initialPanelState = {
+      ...defaultPanelState,
+      showGeneral: !!props.initiallyExpanded
+    };
+
     if (props.parentElement) {
       props.parentElement.classList.add('relative');
 
       const { width, height } = props.parentElement.getBoundingClientRect();
       this.state = {
         dimensions: { width, height },
-        ...defaultPanelState
+        ...initialPanelState
       };
     } else {
-      this.state = defaultPanelState;
+      this.state = initialPanelState;
     }
   }
 

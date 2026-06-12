@@ -10,6 +10,7 @@ export type SectionColor =
   | 'slots'
   | 'targeting'
   | 'sizeConfig'
+  | 'modules'
   | 'prebid'
   | 'a9'
   | 'consent'
@@ -22,6 +23,7 @@ const sectionAccent: Record<SectionColor, string> = {
   slots: 'border-l-[#506684]',
   targeting: 'border-l-[#998fc7]',
   sizeConfig: 'border-l-[#d4c2fc]',
+  modules: 'border-l-[#8a7de0]',
   prebid: 'border-l-[#76949f]',
   a9: 'border-l-[#ea9445]',
   consent: 'border-l-[#d9f4c7]',
@@ -30,33 +32,74 @@ const sectionAccent: Record<SectionColor, string> = {
   validation: 'border-l-[#f4ef88]'
 };
 
-type SectionProps = {
+type BlockProps = {
   readonly title: React.ReactNode;
   readonly color: SectionColor;
-  readonly expanded: boolean;
-  readonly onToggle: () => void;
 };
 
 /**
- * Collapsible sidebar section with a colored left border indicating the topic.
+ * Titled content block with a colored left border indicating the topic.
  */
-export const Section: React.FC<PropsWithChildren<SectionProps>> = ({
-  title,
-  color,
-  expanded,
-  onToggle,
-  children
-}) => (
-  <section
-    className={classList(
-      'd-collapse d-collapse-arrow mb-2 rounded-none border-l-4 bg-base-100',
-      sectionAccent[color]
-    )}
-  >
-    <input type="checkbox" checked={expanded} onChange={onToggle} aria-label={`toggle ${color}`} />
-    <div className="d-collapse-title min-h-0 py-2 pl-3 text-base font-semibold">{title}</div>
-    <div className="d-collapse-content pl-3 text-sm">{children}</div>
+export const Block: React.FC<PropsWithChildren<BlockProps>> = ({ title, color, children }) => (
+  <section className={classList('mb-4 border-l-4 bg-base-100 pl-3', sectionAccent[color])}>
+    <h4 className="mb-1 text-base font-semibold">{title}</h4>
+    <div className="pb-1 text-sm">{children}</div>
   </section>
+);
+
+type TabsProps<T extends string> = {
+  readonly tabs: ReadonlyArray<{ readonly id: T; readonly label: React.ReactNode }>;
+  readonly active: T;
+  readonly onSelect: (id: T) => void;
+};
+
+/**
+ * Top level navigation between the console pages.
+ */
+export const Tabs = <T extends string>({
+  tabs,
+  active,
+  onSelect
+}: TabsProps<T>): React.ReactElement => (
+  <div role="tablist" className="d-tabs d-tabs-bordered d-tabs-lg mx-3 mb-3">
+    {tabs.map(tab => (
+      <button
+        key={tab.id}
+        role="tab"
+        aria-selected={tab.id === active}
+        // border/background resets needed because preflight is disabled and the
+        // browser default button styles would leak into the daisyUI tab look
+        className={classList('d-tab border-x-0 border-t-0 bg-transparent font-semibold', [
+          tab.id === active,
+          'd-tab-active'
+        ])}
+        onClick={() => onSelect(tab.id)}
+      >
+        {tab.label}
+      </button>
+    ))}
+  </div>
+);
+
+type ToggleProps = {
+  readonly checked: boolean;
+  readonly disabled?: boolean;
+  readonly title?: string;
+  readonly onChange: (checked: boolean) => void;
+};
+
+/**
+ * On/off switch. Border set explicitly because preflight is disabled.
+ */
+export const Toggle: React.FC<ToggleProps> = ({ checked, disabled, title, onChange }) => (
+  <input
+    type="checkbox"
+    className="d-toggle d-toggle-secondary d-toggle-sm border border-solid border-base-300"
+    checked={checked}
+    disabled={disabled}
+    title={title}
+    onChange={e => onChange((e.target as HTMLInputElement).checked)}
+  />
 );
 
 type TagContainerProps = {
