@@ -25,6 +25,7 @@ import {
   MoliConfig
 } from '../../types/moliConfig';
 import { LabelConfigService } from '../../ads/labelConfigService';
+import { SizeConfigService } from '../../ads/sizeConfigService';
 import { checkBucketConfig, checkSkinConfig } from '../validations/bucketValidations';
 import {
   getActiveEnvironmentOverride,
@@ -405,19 +406,34 @@ export class GlobalConfig
           color="slots"
         >
           {requestedSlots.length === 0 && <span>No ad slots have been requested.</span>}
-          {requestedSlots.map((slot, index) => (
-            <TagContainer key={`${slot.domId}-${index}`}>
-              <button
-                className="d-link p-0 text-left text-sm text-base-content"
-                title="Open in Ad Setup"
-                onClick={() => this.openSlotInAdSetup(slot.domId)}
-              >
-                {slot.domId}
-              </button>
-              <Tag variant="grey">{slot.position}</Tag>
-              <Tag variant="transparent">{slot.behaviour.loaded}</Tag>
-            </TagContainer>
-          ))}
+          {requestedSlots.length > 0 && (
+            <ul className="m-0 flex list-none flex-col rounded-md bg-base-100 p-0 shadow-md">
+              {requestedSlots.map((slot, index) => (
+                <li
+                  key={`${slot.domId}-${index}`}
+                  className={classList(
+                    'grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 p-3',
+                    [index > 0, 'border-0 border-t border-solid border-base-200']
+                  )}
+                >
+                  <div className="text-xl">✨</div>
+                  <div>
+                    <div className="break-all font-medium">{slot.domId}</div>
+                    <div className="text-xs font-semibold uppercase opacity-60">
+                      {this.requestedSizesLabel(slot)}
+                    </div>
+                  </div>
+                  <button
+                    className="d-btn d-btn-ghost d-btn-sm font-normal normal-case"
+                    title="Open in Ad Setup"
+                    onClick={() => this.openSlotInAdSetup(slot.domId)}
+                  >
+                    details
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </Block>
       </>
     );
@@ -887,6 +903,25 @@ export class GlobalConfig
 
   private openSlotInAdSetup = (domId: string): void => {
     this.setState({ activeTab: 'adSetup', selectedSlotDomId: domId });
+  };
+
+  /**
+   * The sizes that are actually requested for the slot, capped at three.
+   */
+  private requestedSizesLabel = (slot: AdSlot): string => {
+    const supportedSizes = new SizeConfigService(
+      slot.sizeConfig,
+      this.props.labelConfigService.getSupportedLabels(),
+      window
+    ).filterSupportedSizes(slot.sizes);
+
+    if (supportedSizes.length === 0) {
+      return 'no sizes requested';
+    }
+    const formatted = supportedSizes
+      .slice(0, 3)
+      .map(size => (size === 'fluid' ? 'fluid' : `${size[0]}x${size[1]}`));
+    return formatted.join(' · ') + (supportedSizes.length > 3 ? ' · …' : '');
   };
 
   private resetEnvironmentOverrides = () => {
