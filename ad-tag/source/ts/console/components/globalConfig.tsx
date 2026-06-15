@@ -249,14 +249,39 @@ export class GlobalConfig
             <nav className="sticky top-0 z-10 mb-3 flex items-center gap-3 bg-base-100 px-3 py-1">
               <Tabs<ConsoleTab>
                 tabs={[
-                  { id: 'overview', label: 'Overview' },
-                  { id: 'adSetup', label: 'Ad Setup' },
-                  { id: 'debugging', label: <>Debugging {this.validationCountTag()}</> }
+                  {
+                    id: 'overview',
+                    label: (
+                      <>
+                        <span className="sm:hidden">🏠</span>
+                        <span className="hidden sm:inline">Overview</span>
+                      </>
+                    )
+                  },
+                  {
+                    id: 'adSetup',
+                    label: (
+                      <>
+                        <span className="sm:hidden">⚙️</span>
+                        <span className="hidden sm:inline">Ad Setup</span>
+                      </>
+                    )
+                  },
+                  {
+                    id: 'debugging',
+                    label: (
+                      <>
+                        <span className="sm:hidden">🐞</span>
+                        <span className="hidden sm:inline">Debugging</span>{' '}
+                        {this.validationCountTag()}
+                      </>
+                    )
+                  }
                 ]}
                 active={activeTab}
                 onSelect={tab => this.setState({ activeTab: tab })}
               />
-              {this.renderThemeDropdown()}
+              <div className="hidden sm:block">{this.renderThemeDropdown()}</div>
               <button
                 className="d-btn d-btn-ghost d-btn-sm d-btn-square text-base"
                 title="Close moli console"
@@ -284,7 +309,7 @@ export class GlobalConfig
     const activeOption = options.find(option => option.id === themeConfig) ?? options[0];
 
     return (
-      <div className="d-dropdown d-dropdown-end ml-auto">
+      <div className="d-dropdown d-dropdown-end ml-auto min-w-24">
         <button
           tabIndex={0}
           className="d-btn d-btn-ghost d-btn-sm font-normal normal-case"
@@ -417,7 +442,7 @@ export class GlobalConfig
                   <div className="text-xl">✨</div>
                   <div>
                     <div className="break-all font-medium">{slot.domId}</div>
-                    <div className="text-xs font-semibold uppercase opacity-60">
+                    <div className="text-xs font-semibold opacity-60">
                       {this.requestedSizesLabel(slot)}
                     </div>
                   </div>
@@ -973,7 +998,7 @@ export class GlobalConfig
       <div className="mt-2 flex flex-wrap items-center gap-y-1">
         {labels &&
           labels.map((label, index) => (
-            <Tag key={index} variant="blue" spacing="medium">
+            <Tag key={index} variant="grey" spacing="medium">
               {label}
             </Tag>
           ))}
@@ -1004,7 +1029,11 @@ export class GlobalConfig
   };
 
   private standardTagFromString = (content: string): React.ReactElement => {
-    return <Tag key={content}>{content}</Tag>;
+    return (
+      <Tag key={content} variant="grey">
+        {content}
+      </Tag>
+    );
   };
 
   private toggleSidebar = (): void => {
