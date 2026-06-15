@@ -417,7 +417,7 @@ export class GlobalConfig
                   <div className="text-xl">✨</div>
                   <div>
                     <div className="break-all font-medium">{slot.domId}</div>
-                    <div className="text-xs font-semibold uppercase opacity-60">
+                    <div className="text-xs font-semibold opacity-60">
                       {this.requestedSizesLabel(slot)}
                     </div>
                   </div>
@@ -973,7 +973,7 @@ export class GlobalConfig
       <div className="mt-2 flex flex-wrap items-center gap-y-1">
         {labels &&
           labels.map((label, index) => (
-            <Tag key={index} variant="blue" spacing="medium">
+            <Tag key={index} variant="grey" spacing="medium">
               {label}
             </Tag>
           ))}
@@ -1004,7 +1004,7 @@ export class GlobalConfig
   };
 
   private standardTagFromString = (content: string): React.ReactElement => {
-    return <Tag key={content}>{content}</Tag>;
+    return <Tag key={content} variant="grey">{content}</Tag>;
   };
 
   private toggleSidebar = (): void => {

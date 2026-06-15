@@ -96,7 +96,7 @@ type ToggleProps = {
 export const Toggle: React.FC<ToggleProps> = ({ checked, disabled, title, onChange }) => (
   <input
     type="checkbox"
-    className="d-toggle d-toggle-secondary d-toggle-sm border border-solid border-base-300"
+    className="d-toggle d-toggle-secondary d-toggle-sm border border-solid border-primary"
     checked={checked}
     disabled={disabled}
     title={title}
