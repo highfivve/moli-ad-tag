@@ -145,8 +145,17 @@ export const createStickyHeaderAd = (): IModule => {
 
             // initialize observer only if fadeOutTrigger is not disabled
             if (config.fadeOutTrigger !== false) {
-              const options = config.fadeOutTrigger.options ?? {
+              const baseOptions = config.fadeOutTrigger.options ?? {
                 rootMargin: '0px'
+              };
+              const options: IntersectionObserverInit & {
+                delay?: number;
+                trackVisibility?: boolean;
+              } = {
+                ...baseOptions,
+                // Delay observer callbacks so fade-out checks only start after minimum visibility time.
+                delay: minVisibleDuration,
+                trackVisibility: true
               };
 
               // start observing the first element that matches the selector
