@@ -158,10 +158,10 @@ describe('sticky header ad module', () => {
 
     it('should keep ad visible for minVisibleDurationMs even if trigger starts in viewport', async () => {
       const minVisibleDurationMs = 200;
-      let delayedStandardResultHandler: (() => void) | undefined;
+      const delayedHandlers: Array<() => void> = [];
       const setTimeoutStub = sandbox.stub(jsDomWindow, 'setTimeout').callsFake((handler, timeout) => {
         if (typeof handler === 'function') {
-          delayedStandardResultHandler = handler as () => void;
+          delayedHandlers.push(handler as () => void);
         }
         return timeout as any;
       });
@@ -212,6 +212,8 @@ describe('sticky header ad module', () => {
 
         expect(intersectionObserverConstructor).to.have.been.calledOnce;
         expect(observerCallback).to.not.be.undefined;
+        expect(observer.observe).to.not.have.been.called;
+        expect(setTimeoutStub).to.have.been.calledWith(Sinon.match.func, minVisibleDurationMs);
 
         observerCallback!(
           [
@@ -227,10 +229,10 @@ describe('sticky header ad module', () => {
         );
 
         await Promise.resolve();
-        expect(setTimeoutStub).to.have.been.calledWith(Sinon.match.func, minVisibleDurationMs);
         expect(container.classList.contains(fadeOutClassName)).to.be.false;
 
-        delayedStandardResultHandler!();
+        delayedHandlers.forEach(handler => handler());
+        expect(observer.observe).to.have.been.calledOnceWithExactly(target);
         await Promise.resolve();
         expect(container.classList.contains(fadeOutClassName)).to.be.true;
       } finally {
