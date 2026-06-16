@@ -1,6 +1,38 @@
 {
   "version": "1",
   "requestAds": true,
+  "targeting": {
+    "labels": [
+      "orbidder",
+      "equativ",
+      "stroeerCore",
+      "ttd",
+      "theTradeDesk",
+      "ra",
+      "richAudience",
+      "criteo",
+      "visx",
+      "teads",
+      "ix",
+      "indexExchange",
+      "gumgum",
+      "yieldlab",
+      "seedtag",
+      "dspx",
+      "pubstack",
+      "pubstack_server",
+      "seedingAlliance",
+      "appnexus",
+      "appNexus",
+      "smilewanted",
+      "a9"
+    ],
+    "keyValues": {
+      "tags": [ "example" ],
+      "iab_v3": [ "123", "124" ],
+      "openrtb_page_cat": [ "IAB1", "IAB2" ]
+    }
+  },
   "slots": [
     {
       "domId": "content_1",

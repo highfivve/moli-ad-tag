@@ -63,7 +63,7 @@ export const Tabs = <T extends string>({
   onSelect,
   className
 }: TabsProps<T>): React.ReactElement => (
-  <div role="tablist" className={classList('d-tabs d-tabs-bordered', className ?? '')}>
+  <div role="tablist" className={classList('d-tabs d-tabs-bordered w-full', className ?? '')}>
     {tabs.map(tab => (
       <button
         key={tab.id}
