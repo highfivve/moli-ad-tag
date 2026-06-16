@@ -541,7 +541,7 @@ export class GlobalConfig
           <Block title="Prebid" color="prebid">
             <TagContainer>
               <TagLabel>Version</TagLabel>
-              {window.pbjs.version ? (
+              {window.pbjs?.version ? (
                 <Tag>{window.pbjs.version.toString()}</Tag>
               ) : (
                 <Tag variant="red">Prebid not found</Tag>
@@ -602,8 +602,8 @@ export class GlobalConfig
                   <Tag>
                     {config.prebid.config.userSync.syncEnabled === undefined
                       ? `${window.pbjs
-                          .getConfig()
-                          .userSync?.syncEnabled?.toString()} (default from prebid config - no value in moli config)`
+                          ?.getConfig?.()
+                          ?.userSync?.syncEnabled?.toString()} (default from prebid config - no value in moli config)`
                       : config.prebid.config.userSync.syncEnabled.toString()}
                   </Tag>
                 </TagContainer>
@@ -1082,7 +1082,7 @@ export class GlobalConfig
       });
     }
 
-    if (!window.pbjs.version) {
+    if (!window.pbjs?.version) {
       messages.push({
         kind: 'error',
         text: 'No prebid instance available! Either remove the prebid configuration or add prebid to the ad tag'
