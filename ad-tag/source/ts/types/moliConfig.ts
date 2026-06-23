@@ -2134,6 +2134,13 @@ export namespace modules {
          */
         readonly value?: string;
       };
+
+      /**
+       * If set, the CPM of the skin will not only be compared with the slots it blocks
+       * but also with other skins that have this flag.
+       * Only the flagged skin with the highest CPM will be displayed.
+       */
+      readonly compareWithOtherSkins?: boolean;
     };
   }
 

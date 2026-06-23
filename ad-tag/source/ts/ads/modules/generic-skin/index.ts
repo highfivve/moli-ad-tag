@@ -95,6 +95,46 @@ export const createSkin = (): ISkinModule => {
 
   const config__ = (): Object | null => skinModuleConfig;
 
+  const getSkinBids = (
+    config: modules.skin.SkinConfig,
+    bidResponses: prebidjs.IBidResponsesMap
+  ): prebidjs.BidResponse[] => {
+    const skinBidResponse = bidResponses[config.skinAdSlotDomId];
+    const isSkinBid = (bid: prebidjs.BidResponse) => {
+      // go through all filters and check if one matches
+      const oneFilterApplied = config.formatFilter.some(filter => {
+        switch (filter.bidder) {
+          case '*':
+            return true;
+          case 'gumgum':
+            return (
+              bid.bidder === prebidjs.GumGum &&
+              // if auid is set, it must match the bid.ad.auid
+              (filter.auid === undefined ||
+                (typeof bid.ad !== 'string' && bid.ad.auid === filter.auid))
+            );
+          default:
+            return bid.bidder === filter.bidder;
+        }
+      });
+      // check cpm to make sure this is a valid bid
+      return bid.cpm > 0 && oneFilterApplied;
+    };
+
+    return skinBidResponse
+      ? // sort to make sure index 0 is the highest bidding skin
+        skinBidResponse.bids.filter(isSkinBid).sort((bid1, bid2) => bid2.cpm - bid1.cpm)
+      : [];
+  };
+
+  const getHighestSkinBidCpm = (
+    config: modules.skin.SkinConfig,
+    bidResponses: prebidjs.IBidResponsesMap
+  ): number | null => {
+    const skinBids = getSkinBids(config, bidResponses);
+    return skinBids.length > 0 ? skinBids[0].cpm : null;
+  };
+
   /**
    * Check this skin config against the given bid responses to see if there are any skin bids inside, and if so (and
    * if the respective check is enabled), compare the highest-bidding skin cpm to the combined cpm of the other bids
@@ -157,23 +197,53 @@ export const createSkin = (): ISkinModule => {
   };
 
   /**
+   *    Config selection priority:
+   *    1. If multiple configs with `compareWithOtherSkins: true` match, selects the one with the highest skin CPM.
+   *    2. Otherwise, returns the first matching config (where configEffect !== NoBlocking).
+   *    3. Returns undefined if no config matches.
    *
    * @param skinModuleConfig
    * @param bidResponses
    * @param log
-   * @return the first skin config with matching filters. If no config matches, undefined is being returned
+   * @return the most appropriate skin configuration based on bid responses
    */
   const selectConfig = (
     skinModuleConfig: modules.skin.SkinModuleConfig,
     bidResponses: prebidjs.IBidResponsesMap,
     log: MoliRuntime.MoliLogger
-  ): { skinConfig: modules.skin.SkinConfig; configEffect: SkinConfigEffect } | undefined =>
-    skinModuleConfig.configs
-      .map(config => ({
-        skinConfig: config,
-        configEffect: getConfigEffect(config, bidResponses, log)
-      }))
-      .find(({ configEffect }) => configEffect !== SkinConfigEffect.NoBlocking);
+  ): { skinConfig: modules.skin.SkinConfig; configEffect: SkinConfigEffect } | undefined => {
+    const configEvaluations = skinModuleConfig.configs.map(config => ({
+      skinConfig: config,
+      configEffect: getConfigEffect(config, bidResponses, log),
+      highestSkinCpm: getHighestSkinBidCpm(config, bidResponses)
+    }));
+
+    const matchingConfigs = configEvaluations.filter(
+      ({ configEffect }) => configEffect !== SkinConfigEffect.NoBlocking
+    );
+
+    const compareWithOtherSkinsConfigs = matchingConfigs.filter(
+      ({ skinConfig }) => skinConfig.compareWithOtherSkins
+    );
+
+    if (compareWithOtherSkinsConfigs.length > 1) {
+      return compareWithOtherSkinsConfigs.reduce((selectedConfig, currentConfig) => {
+        if (
+          selectedConfig.highestSkinCpm === null ||
+          (currentConfig.highestSkinCpm !== null &&
+            currentConfig.highestSkinCpm > selectedConfig.highestSkinCpm)
+        ) {
+          return currentConfig;
+        }
+        return selectedConfig;
+      });
+    }
+
+    const fallbackConfig = matchingConfigs[0];
+    return fallbackConfig
+      ? { skinConfig: fallbackConfig.skinConfig, configEffect: fallbackConfig.configEffect }
+      : undefined;
+  };
 
   /**
    * Destroy the slot defined by the given DOM ID.
