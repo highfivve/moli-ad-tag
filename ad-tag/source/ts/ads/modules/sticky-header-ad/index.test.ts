@@ -159,12 +159,14 @@ describe('sticky header ad module', () => {
     it('should keep ad visible for minVisibleDurationMs even if trigger starts in viewport', async () => {
       const minVisibleDurationMs = 200;
       const delayedHandlers: Array<() => void> = [];
-      const setTimeoutStub = sandbox.stub(jsDomWindow, 'setTimeout').callsFake((handler, timeout) => {
-        if (typeof handler === 'function') {
-          delayedHandlers.push(handler as () => void);
-        }
-        return timeout as any;
-      });
+      const setTimeoutStub = sandbox
+        .stub(jsDomWindow, 'setTimeout')
+        .callsFake((handler, timeout) => {
+          if (typeof handler === 'function') {
+            delayedHandlers.push(handler as () => void);
+          }
+          return timeout as any;
+        });
 
       const container = jsDomWindow.document.createElement('div');
       container.setAttribute('data-ref', 'header-ad');
@@ -193,16 +195,18 @@ describe('sticky header ad module', () => {
       (jsDomWindow as any).IntersectionObserver = intersectionObserverConstructor;
       (globalThis as any).IntersectionObserver = intersectionObserverConstructor;
 
-      sandbox.stub(jsDomWindow.googletag.pubads(), 'addEventListener').callsFake((_event, listener) => {
-        (listener as any)({
-          slot: {
-            getSlotElementId: () => headerAdDomId
-          },
-          advertiserId: 42,
-          isEmpty: false
+      sandbox
+        .stub(jsDomWindow.googletag.pubads(), 'addEventListener')
+        .callsFake((_event, listener) => {
+          (listener as any)({
+            slot: {
+              getSlotElementId: () => headerAdDomId
+            },
+            advertiserId: 42,
+            isEmpty: false
+          });
+          return jsDomWindow.googletag.pubads();
         });
-        return jsDomWindow.googletag.pubads();
-      });
 
       try {
         const module = createStickyHeaderAdModule(headerAdDomId, [], minVisibleDurationMs);
