@@ -3,6 +3,73 @@
   "requestAds": true,
   "slots": [
     {
+      "domId": "header",
+      "adUnitPath": "/1/header",
+      "behaviour": {
+        "loaded": "eager"
+      },
+      "position": "in-page",
+      "sizes": [
+        [728, 90],
+        [300, 100],
+        [970, 90],
+        [970, 250],
+        [900, 250],
+        [970, 80],
+        [300, 50],
+        [800, 250],
+        [300, 75],
+        [320, 50],
+        [320, 100]
+      ],
+      "sizeConfig": [
+        {
+          "mediaQuery": "(max-width: 767px)",
+          "sizesSupported": [
+            [300, 100],
+            [300, 50],
+            [300, 75],
+            [320, 50],
+            [320, 100]
+          ]
+        },
+        {
+          "mediaQuery": "(min-width: 392px) and (max-width: 767px)",
+          "sizesSupported": []
+        },
+        {
+          "mediaQuery": "(min-width: 1006px)",
+          "sizesSupported": [
+            [800, 250],
+            [728, 90],
+            [970, 90],
+            [970, 250],
+            [900, 250],
+            [970, 80]
+          ]
+        },
+        {
+          "mediaQuery": "(min-width: 936px)",
+          "sizesSupported": [
+            [800, 250],
+            [728, 90],
+            [900, 250]
+          ]
+        },
+        {
+          "mediaQuery": "(min-width: 836px)",
+          "sizesSupported": [
+            [800, 250],
+            [728, 90]
+          ]
+        },
+        {
+          "mediaQuery": "(min-width: 768px)",
+          "sizesSupported": [[728, 90]]
+        }
+      ]
+    },
+    {
       "domId": "content_1",
       "adUnitPath": "/1/content_1",
       "behaviour": {
@@ -183,6 +250,17 @@
         "desktop": "floorad"
       },
       "disallowedAdvertiserIds": [123, 456, 678]
+    },
+    "stickyHeaderAd": {
+      "enabled": true,
+      "destroySlot": false,
+      "headerAdDomId": "header",
+      "fadeOutTrigger": {
+        "selector": "#content_1"
+      },
+      "fadeOutClassName": "h5v-header-ad--fadeOut",
+      "minVisibleDurationMs": 6000,
+      "disallowedAdvertiserIds": []
     },
     "yieldOptimization": {
       "enabled": false,
