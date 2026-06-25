@@ -75,7 +75,8 @@ describe('sticky header ad module', () => {
 
   const createStickyHeaderAdModule = (
     headerAdDomId: string,
-    disallowedAdvertiserIds: number[] = []
+    disallowedAdvertiserIds: number[] = [],
+    minVisibleDurationMs?: number
   ) => {
     const module = createStickyHeaderAd();
     module.configure__({
@@ -84,6 +85,7 @@ describe('sticky header ad module', () => {
         headerAdDomId,
         fadeOutClassName,
         disallowedAdvertiserIds,
+        minVisibleDurationMs,
         fadeOutTrigger: {
           selector: fadeOutTriggerSelector
         }
@@ -152,6 +154,94 @@ describe('sticky header ad module', () => {
         'sticky-header-ads',
         'Could not find sticky header container with selector \'[data-ref="header-ad"]\''
       );
+    });
+
+    it('should keep ad visible for minVisibleDurationMs even if trigger starts in viewport', async () => {
+      const minVisibleDurationMs = 200;
+      const delayedHandlers: Array<() => void> = [];
+      const setTimeoutStub = sandbox
+        .stub(jsDomWindow, 'setTimeout')
+        .callsFake((handler, timeout) => {
+          if (typeof handler === 'function') {
+            delayedHandlers.push(handler as () => void);
+          }
+          return timeout as any;
+        });
+
+      const container = jsDomWindow.document.createElement('div');
+      container.setAttribute('data-ref', 'header-ad');
+      jsDomWindow.document.body.appendChild(container);
+
+      const target = jsDomWindow.document.createElement('div');
+      target.className = 'trigger';
+      jsDomWindow.document.body.appendChild(target);
+
+      let observerCallback: IntersectionObserverCallback | undefined;
+      const observer = {
+        observe: sandbox.stub(),
+        disconnect: sandbox.stub(),
+        unobserve: sandbox.stub(),
+        takeRecords: sandbox.stub().returns([]),
+        root: null,
+        rootMargin: '0px',
+        thresholds: []
+      } as any as IntersectionObserver;
+
+      const intersectionObserverConstructor = sandbox.spy(function (callback: any) {
+        observerCallback = callback;
+        return observer;
+      });
+      const originalIntersectionObserver = (globalThis as any).IntersectionObserver;
+      (jsDomWindow as any).IntersectionObserver = intersectionObserverConstructor;
+      (globalThis as any).IntersectionObserver = intersectionObserverConstructor;
+
+      sandbox
+        .stub(jsDomWindow.googletag.pubads(), 'addEventListener')
+        .callsFake((_event, listener) => {
+          (listener as any)({
+            slot: {
+              getSlotElementId: () => headerAdDomId
+            },
+            advertiserId: 42,
+            isEmpty: false
+          });
+          return jsDomWindow.googletag.pubads();
+        });
+
+      try {
+        const module = createStickyHeaderAdModule(headerAdDomId, [], minVisibleDurationMs);
+        const headerSlot = createAdSlotConfig(headerAdDomId, 'desktop');
+        const step = module.prepareRequestAdsSteps__()[0];
+        await step(adPipelineContext(moliConfig([headerSlot])), [headerSlot]);
+
+        expect(intersectionObserverConstructor).to.have.been.calledOnce;
+        expect(observerCallback).to.not.be.undefined;
+        expect(observer.observe).to.not.have.been.called;
+        expect(setTimeoutStub).to.have.been.calledWith(Sinon.match.func, minVisibleDurationMs);
+
+        observerCallback!(
+          [
+            {
+              target,
+              isIntersecting: true,
+              boundingClientRect: {
+                y: 20
+              }
+            } as any
+          ],
+          observer
+        );
+
+        await Promise.resolve();
+        expect(container.classList.contains(fadeOutClassName)).to.be.false;
+
+        delayedHandlers.forEach(handler => handler());
+        expect(observer.observe).to.have.been.calledOnceWithExactly(target);
+        await Promise.resolve();
+        expect(container.classList.contains(fadeOutClassName)).to.be.true;
+      } finally {
+        (globalThis as any).IntersectionObserver = originalIntersectionObserver;
+      }
     });
   });
 });
