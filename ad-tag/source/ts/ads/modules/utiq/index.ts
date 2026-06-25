@@ -212,6 +212,30 @@ export const createUtiq = (): IModule => {
   let utiqConfig: modules.utiq.UtiqConfig | null = null;
   let scriptLoaded = false;
 
+
+  const hasRequiredPurposeConsent = (context: AdPipelineContext): boolean => {
+    const tcData = context.tcData__;
+
+    if (!tcData.gdprApplies) {
+      return true;
+    }
+
+    return !requiredPurposeIds.some(purposeId => !tcData.purpose.consents[purposeId]);
+  };
+
+  const hasRequiredVendorConsent = (
+    context: AdPipelineContext,
+    vendorId?: string
+  ): boolean => {
+    const tcData = context.tcData__;
+
+    if (!vendorId || !tcData.gdprApplies) {
+      return true;
+    }
+
+    return tcData.vendor.consents[vendorId];
+  };
+
   const loadUtiq = (config: modules.utiq.UtiqConfig, context: AdPipelineContext): Promise<void> => {
     if (context.env__ === 'test') {
       return Promise.resolve();
@@ -219,6 +243,19 @@ export const createUtiq = (): IModule => {
 
     // don't load script if it has been loaded before
     if (scriptLoaded) {
+      return Promise.resolve();
+    }
+
+    if (!hasRequiredVendorConsent(context, config.vendorId)) {
+      context.logger__.debug(
+        'Utiq',
+        'Skipping Utiq load because vendor consent is missing',
+        config.vendorId
+      );
+      return Promise.resolve();
+    }
+
+    if (!hasRequiredPurposeConsent(context)) {
       return Promise.resolve();
     }
 
@@ -259,14 +296,6 @@ export const createUtiq = (): IModule => {
       });
     }
 
-    if (
-      context.tcData__.gdprApplies &&
-      requiredPurposeIds.some(
-        purposeId => context.tcData__.gdprApplies && !context.tcData__.purpose.consents[purposeId]
-      )
-    ) {
-      return Promise.resolve();
-    }
 
     const minAdRequests =
       config.delay?.enabled && config.delay.minAdRequests ? config.delay.minAdRequests : 0;
