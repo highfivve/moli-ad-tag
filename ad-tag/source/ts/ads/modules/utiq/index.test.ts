@@ -30,13 +30,15 @@ describe('Utiq Module', () => {
   const createUtiqModule = (
     enabled: boolean = true,
     options?: modules.utiq.UtiqConfigOptions,
-    delay?: modules.utiq.UtiqConfig['delay']
+    delay?: modules.utiq.UtiqConfig['delay'],
+    vendorId?: string
   ) => {
     const module = createUtiq();
     module.configure__({
       utiq: {
         enabled: enabled,
         assetUrl: 'http://localhost/utiqLoader.js',
+        ...(vendorId ? { vendorId: vendorId } : {}),
         ...(delay ? { delay: delay } : {}),
         ...(options ? { options: options } : {})
       }
@@ -174,6 +176,27 @@ describe('Utiq Module', () => {
         assetUrl: 'http://localhost/utiqLoader.js'
       });
       expect((jsDomWindow as any).Utiq.queue).to.be.deep.equal([]);
+    });
+
+    it('should not load utiq if vendor consent is missing', async () => {
+      const { initStep } = createUtiqModule(true, undefined, undefined, '123');
+
+      await initStep!(adPipelineContext());
+
+      expect(loadScriptStub).to.have.not.been.called;
+    });
+
+    it('should load utiq if vendor consent is given', async () => {
+      const { module, initStep } = createUtiqModule(true, undefined, undefined, '123');
+
+      await initStep!({ ...adPipelineContext(), tcData__: fullConsent({ 123: true }) });
+
+      expect(loadScriptStub).to.have.been.calledOnce;
+      expect(loadScriptStub).to.have.been.calledOnceWithExactly({
+        name: module.name,
+        loadMethod: AssetLoadMethod.TAG,
+        assetUrl: 'http://localhost/utiqLoader.js'
+      });
     });
 
     it('should load utiq script only once', async () => {

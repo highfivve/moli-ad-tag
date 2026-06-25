@@ -2390,6 +2390,13 @@ export namespace modules {
       readonly assetUrl?: string;
 
       /**
+       * Optional TCF vendor ID that must have consent before Utiq is loaded.
+       *
+       * Use this when your CMP exposes Utiq activation via vendor consent.
+       */
+      readonly vendorId?: string;
+
+      /**
        * The Utiq loader script can be configured using the Utiq.config object. The configuration object is a JavaScript
        * @see https://docs.utiq.com/docs/configuration-options
        */
