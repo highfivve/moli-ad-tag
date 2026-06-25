@@ -551,6 +551,83 @@ describe('Skin Module', () => {
         expect(skinConfig?.configEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
         expect(trackSkinCpmLow).to.not.have.been.called;
       });
+
+      it('should select the highest cpm skin among configs that compareWithOtherSkins', () => {
+        const flaggedSkinConfigLow: modules.skin.SkinConfig = {
+          formatFilter: [{ bidder: '*' }],
+          skinAdSlotDomId: 'wp-slot',
+          blockedAdSlotDomIds: ['sky-slot'],
+          hideSkinAdSlot: false,
+          hideBlockedSlots: false,
+          enableCpmComparison: false,
+          compareWithOtherSkins: true
+        };
+
+        const flaggedSkinConfigHigh: modules.skin.SkinConfig = {
+          formatFilter: [{ bidder: '*' }],
+          skinAdSlotDomId: 'header-slot',
+          blockedAdSlotDomIds: ['floorad'],
+          hideSkinAdSlot: false,
+          hideBlockedSlots: false,
+          enableCpmComparison: false,
+          compareWithOtherSkins: true
+        };
+
+        const skinModuleConfig = modulesConfig({
+          configs: [flaggedSkinConfigLow, flaggedSkinConfigHigh]
+        }).skin!;
+        const configuredModule = skinModule(skinModuleConfig);
+
+        const selectedConfig = configuredModule.selectConfig(
+          skinModuleConfig,
+          {
+            'wp-slot': { bids: [dspxBidResponse(1.1)] },
+            'header-slot': { bids: [visxBidResponse(1.2)] }
+          },
+          noopLogger
+        );
+
+        expect(selectedConfig?.skinConfig).to.equal(flaggedSkinConfigHigh);
+        expect(selectedConfig?.configEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
+      });
+
+      it('should keep selecting the first matching config if only one config compares with other skins', () => {
+        const nonFlaggedConfig: modules.skin.SkinConfig = {
+          formatFilter: [{ bidder: '*' }],
+          skinAdSlotDomId: 'wp-slot',
+          blockedAdSlotDomIds: ['sky-slot'],
+          hideSkinAdSlot: false,
+          hideBlockedSlots: false,
+          enableCpmComparison: false
+        };
+
+        const flaggedConfig: modules.skin.SkinConfig = {
+          formatFilter: [{ bidder: '*' }],
+          skinAdSlotDomId: 'mobile-skin-slot',
+          blockedAdSlotDomIds: ['sky-slot'],
+          hideSkinAdSlot: false,
+          hideBlockedSlots: false,
+          enableCpmComparison: false,
+          compareWithOtherSkins: true
+        };
+
+        const skinModuleConfig = modulesConfig({
+          configs: [nonFlaggedConfig, flaggedConfig]
+        }).skin!;
+        const configuredModule = skinModule(skinModuleConfig);
+
+        const selectedConfig = configuredModule.selectConfig(
+          skinModuleConfig,
+          {
+            'wp-slot': { bids: [dspxBidResponse(1)] },
+            'mobile-skin-slot': { bids: [visxBidResponse(2)] }
+          },
+          noopLogger
+        );
+
+        expect(selectedConfig?.skinConfig).to.equal(nonFlaggedConfig);
+        expect(selectedConfig?.configEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
+      });
     });
 
     describe('destroySkinSlot', () => {
