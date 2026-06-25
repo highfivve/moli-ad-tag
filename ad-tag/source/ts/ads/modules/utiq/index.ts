@@ -212,7 +212,6 @@ export const createUtiq = (): IModule => {
   let utiqConfig: modules.utiq.UtiqConfig | null = null;
   let scriptLoaded = false;
 
-
   const hasRequiredPurposeConsent = (context: AdPipelineContext): boolean => {
     const tcData = context.tcData__;
 
@@ -223,10 +222,7 @@ export const createUtiq = (): IModule => {
     return !requiredPurposeIds.some(purposeId => !tcData.purpose.consents[purposeId]);
   };
 
-  const hasRequiredVendorConsent = (
-    context: AdPipelineContext,
-    vendorId?: string
-  ): boolean => {
+  const hasRequiredVendorConsent = (context: AdPipelineContext, vendorId?: string): boolean => {
     const tcData = context.tcData__;
 
     if (!vendorId || !tcData.gdprApplies) {
@@ -295,7 +291,6 @@ export const createUtiq = (): IModule => {
         }
       });
     }
-
 
     const minAdRequests =
       config.delay?.enabled && config.delay.minAdRequests ? config.delay.minAdRequests : 0;
