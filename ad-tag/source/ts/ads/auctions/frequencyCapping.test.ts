@@ -87,8 +87,8 @@ describe('FrequencyCapping', () => {
   afterEach(() => {
     sandbox.reset();
     sandbox.clock.restore();
-    wpSlot.clearTargeting();
-    interstitalSlot.clearTargeting();
+    wpSlot.setConfig({ targeting: null });
+    interstitalSlot.setConfig({ targeting: null });
   });
 
   it('should not add a frequency cap if configs are empty', () => {

@@ -203,7 +203,7 @@ export const a9ClearTargetingStep = (): PrepareRequestAdsStep =>
           adSlot
             .getTargetingKeys()
             .filter(key => key === 'amznp' || key === 'amznsz' || key === 'amznbid')
-            .forEach(key => adSlot.clearTargeting(key));
+            .forEach(key => adSlot.setConfig({ targeting: { [key]: null } }));
         });
         resolve();
       });

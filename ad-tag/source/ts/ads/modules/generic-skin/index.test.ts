@@ -838,7 +838,7 @@ describe('Skin Module', () => {
       );
 
       it('should set page level targeting if a skin is selected', () => {
-        const setTargetingSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'setTargeting');
+        const setConfigSpy = sandbox.spy(jsDomWindow.googletag, 'setConfig');
         const configuredModule = skinModule({ configs: [skinConfig] });
         const runner = configuredModule.runSkinConfigs({
           enabled: true,
@@ -853,12 +853,12 @@ describe('Skin Module', () => {
           slotDefinitions
         );
 
-        expect(setTargetingSpy).to.have.been.calledOnce;
-        expect(setTargetingSpy).to.have.been.calledWithExactly('skin', '1');
+        expect(setConfigSpy).to.have.been.calledOnce;
+        expect(setConfigSpy).to.have.been.calledWithExactly({ targeting: { skin: '1' } });
       });
 
       it('should set page level targeting with the given value', () => {
-        const setTargetingSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'setTargeting');
+        const setConfigSpy = sandbox.spy(jsDomWindow.googletag, 'setConfig');
 
         const skinConfigWithValue: modules.skin.SkinConfig = {
           ...skinConfig,
@@ -881,12 +881,12 @@ describe('Skin Module', () => {
           slotDefinitions
         );
 
-        expect(setTargetingSpy).to.have.been.calledOnce;
-        expect(setTargetingSpy).to.have.been.calledWithExactly('skin', 'foo');
+        expect(setConfigSpy).to.have.been.calledOnce;
+        expect(setConfigSpy).to.have.been.calledWithExactly({ targeting: { skin: 'foo' } });
       });
 
       it('should not set page level targeting if no skin is selected', () => {
-        const setTargetingSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'setTargeting');
+        const setConfigSpy = sandbox.spy(jsDomWindow.googletag, 'setConfig');
         const configuredModule = skinModule({ configs: [skinConfig] });
 
         const runner = configuredModule.runSkinConfigs({
@@ -902,7 +902,7 @@ describe('Skin Module', () => {
           slotDefinitions
         );
 
-        expect(setTargetingSpy).to.have.not.been.called;
+        expect(setConfigSpy).to.have.not.been.called;
       });
     });
   });

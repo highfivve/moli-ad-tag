@@ -24,7 +24,7 @@ describe('Pubstack Module', () => {
   const { jsDomWindow } = createDomAndWindow();
 
   const googletagStub = createGoogletagStub();
-  const setTargetingSpy = sandbox.spy(googletagStub.pubads(), 'setTargeting');
+  const setConfigSpy = sandbox.spy(googletagStub, 'setConfig');
 
   jsDomWindow.googletag = googletagStub;
 
@@ -139,14 +139,14 @@ describe('Pubstack Module', () => {
 
     it('should do nothing if the meta tag is missing', async () => {
       await callConfigureStep();
-      expect(setTargetingSpy).to.have.not.been.called;
+      expect(setConfigSpy).to.have.not.been.called;
     });
 
     ['-1', '4', '5', 'five', 'true', 'false'].forEach(content => {
       it(`should ignore invalid value "${content}"`, async () => {
         addMetaTag(content);
         await callConfigureStep();
-        expect(setTargetingSpy).to.have.not.been.called;
+        expect(setConfigSpy).to.have.not.been.called;
       });
     });
 
@@ -154,13 +154,13 @@ describe('Pubstack Module', () => {
       it(`should set pubstack key value with "${content}"`, async () => {
         addMetaTag(content);
         await callConfigureStep();
-        expect(setTargetingSpy).to.have.been.called;
+        expect(setConfigSpy).to.have.been.called;
       });
 
       it(`should do nothing if env is test with valid value ${content}`, async () => {
         addMetaTag(content);
         await callConfigureStep('test');
-        expect(setTargetingSpy).to.have.not.been.called;
+        expect(setConfigSpy).to.have.not.been.called;
       });
     });
   });

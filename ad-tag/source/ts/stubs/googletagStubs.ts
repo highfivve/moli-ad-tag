@@ -7,13 +7,7 @@ const createPubAdsServiceStub = (): googletag.IPubAdsService => {
     set: (_key: string, _value: string): googletag.IPubAdsService => {
       return stub;
     },
-    setTargeting: (_key: string, _value: string | string[]): googletag.IPubAdsService => {
-      return stub;
-    },
     setRequestNonPersonalizedAds: (_value: 0 | 1): googletag.IPubAdsService => {
-      return stub;
-    },
-    clearTargeting: (_: string): googletag.IPubAdsService => {
       return stub;
     },
     refresh: (slots?: googletag.IAdSlot[], options?: { changeCorrelator: boolean }): void => {
@@ -55,14 +49,6 @@ export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.
   let config: GptSlotSettingsConfig = {};
   let targetingMap: Record<string, string[]> = {};
   const stub: googletag.IAdSlot = {
-    clearTargeting(key?: string): void {
-      if (key) {
-        delete targetingMap[key];
-      } else {
-        targetingMap = {};
-      }
-      return;
-    },
     setTargeting: (key: string, value: string | string[]): googletag.IAdSlot => {
       if (typeof value === 'string') {
         targetingMap[key] = [value];
@@ -94,6 +80,19 @@ export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.
     },
     setConfig(additionalConfig: googletag.GptSlotSettingsConfig) {
       config = { ...config, ...additionalConfig };
+      if (additionalConfig.targeting !== undefined) {
+        if (additionalConfig.targeting === null) {
+          targetingMap = {};
+        } else {
+          Object.entries(additionalConfig.targeting).forEach(([key, value]) => {
+            if (value === null) {
+              delete targetingMap[key];
+            } else {
+              targetingMap[key] = typeof value === 'string' ? [value] : value;
+            }
+          });
+        }
+      }
     },
     getConfig<T extends keyof GptSlotSettingsConfig>(
       key: T

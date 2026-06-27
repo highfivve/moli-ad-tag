@@ -31,7 +31,7 @@ use(chaiAsPromised);
 
 describe('BlocklistedUrls Module', () => {
   const sandbox = Sinon.createSandbox();
-  let assetLoaderService, loadJsonStub, googleTagStub, setTargetingSpy;
+  let assetLoaderService, loadJsonStub, googleTagStub, setConfigSpy;
   let { dom, jsDomWindow } = createDomAndWindow();
 
   const setupDomAndServices = () => {
@@ -41,7 +41,7 @@ describe('BlocklistedUrls Module', () => {
     assetLoaderService = createAssetLoaderService(jsDomWindow);
     loadJsonStub = sandbox.stub(assetLoaderService, 'loadJson');
     googleTagStub = createGoogletagStub();
-    setTargetingSpy = sandbox.spy(googleTagStub.pubads(), 'setTargeting');
+    setConfigSpy = sandbox.spy(googleTagStub, 'setConfig');
     jsDomWindow.googletag = googleTagStub;
   };
 
@@ -300,14 +300,14 @@ describe('BlocklistedUrls Module', () => {
       it('should add an init step that sets not key values if no blocklisted urls are defined', async () => {
         const { initStep, config } = createInitializedModule([]);
         return initStep(adPipelineContext(config), []).then(() => {
-          expect(setTargetingSpy).to.have.not.been.called;
+          expect(setConfigSpy).to.have.not.been.called;
         });
       });
 
       it('should add an init step that resolves if no blocklisted urls are found', () => {
         const { initStep, config } = createInitializedModule(['foo']);
         return initStep(adPipelineContext(config), []).then(() => {
-          expect(setTargetingSpy).to.have.not.been.called;
+          expect(setConfigSpy).to.have.not.been.called;
         });
       });
 
@@ -327,16 +327,20 @@ describe('BlocklistedUrls Module', () => {
           it(`should match pattern ${pattern}`, async () => {
             const { initStep, config } = createInitializedModule([pattern]);
             return initStep(adPipelineContext(config), []).then(() => {
-              expect(setTargetingSpy).to.have.been.calledOnce;
-              expect(setTargetingSpy).to.have.been.calledOnceWithExactly('isBlocklisted', 'true');
+              expect(setConfigSpy).to.have.been.calledOnce;
+              expect(setConfigSpy).to.have.been.calledOnceWithExactly({
+                targeting: { isBlocklisted: 'true' }
+              });
             });
           })
         );
         it('should set a custom key-value value', async () => {
           const { initStep, config } = createInitializedModule(['blocklisted'], 'yes');
           return initStep(adPipelineContext(config), []).then(() => {
-            expect(setTargetingSpy).to.have.been.calledOnce;
-            expect(setTargetingSpy).to.have.been.calledOnceWithExactly('isBlocklisted', 'yes');
+            expect(setConfigSpy).to.have.been.calledOnce;
+            expect(setConfigSpy).to.have.been.calledOnceWithExactly({
+              targeting: { isBlocklisted: 'yes' }
+            });
           });
         });
       });
