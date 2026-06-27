@@ -1,14 +1,14 @@
-import { modules } from 'ad-tag/types/moliConfig';
+import { Overridable } from 'ad-tag/types/moliConfig';
 import { LabelCondition } from 'ad-tag/ads/labelConfigService';
 
 /**
- * Result of resolving a module's label-conditioned configuration overrides.
+ * Result of resolving a label-conditioned configuration override.
  */
-export interface ResolvedModuleConfig<C> {
+export interface ResolvedOverridableConfig<C> {
   /**
-   * The effective module configuration with the `overrides` field stripped. This is what gets
-   * passed to the module. Either the first matching override's `config` (full replace) or the
-   * default configuration if no override matched.
+   * The effective configuration with the `overrides` field stripped. This is what gets passed to the
+   * consumer (module or auction feature). Either the first matching override's `config` (full
+   * replace) or the default configuration if no override matched.
    */
   readonly config: C;
 
@@ -25,26 +25,28 @@ export interface ResolvedModuleConfig<C> {
 }
 
 /**
- * Resolves the effective configuration for a module from its default configuration and its ordered
- * list of label-conditioned overrides.
+ * Resolves the effective configuration from a default configuration and an ordered list of
+ * label-conditioned overrides.
  *
  * The first override whose label condition matches the active labels **fully replaces** the default
  * configuration (no field-by-field merge). If no override matches, the default configuration is used.
- * In both cases the returned `config` has its `overrides` field stripped, so modules never see it.
+ * In both cases the returned `config` has its `overrides` field stripped, so consumers never see it.
  *
- * @param base the module configuration as provided by the publisher, possibly carrying `overrides`
+ * Used for both module configs and Global Auction Context feature configs.
+ *
+ * @param base the configuration as provided by the publisher, possibly carrying `overrides`
  * @param isLabelConditionMet predicate evaluating a label condition against the active labels
  */
-export const resolveModuleConfig = <C extends modules.IModuleConfig>(
-  base: modules.Overridable<C>,
+export const resolveOverridableConfig = <C>(
+  base: Overridable<C>,
   isLabelConditionMet: (condition: LabelCondition) => boolean
-): ResolvedModuleConfig<C> => {
+): ResolvedOverridableConfig<C> => {
   const { overrides = [], ...defaultConfig } = base;
 
   const matchedOverrideIndex = overrides.findIndex(isLabelConditionMet);
   const match = overrides[matchedOverrideIndex];
 
-  // full replace: the matched override's `config` is the bare module config without `overrides`
+  // full replace: the matched override's `config` is the bare config without `overrides`
   return match
     ? { config: match.config, matchedOverrideIndex, matchedCondition: match }
     : { config: defaultConfig as unknown as C, matchedOverrideIndex: -1 };

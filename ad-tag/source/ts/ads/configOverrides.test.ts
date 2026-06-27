@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 
-import { resolveModuleConfig } from './moduleConfigOverrides';
+import { resolveOverridableConfig } from './configOverrides';
 import { LabelCondition } from './labelConfigService';
-import { modules } from '../types/moliConfig';
+import { modules, Overridable } from '../types/moliConfig';
 
-describe('resolveModuleConfig', () => {
+describe('resolveOverridableConfig', () => {
   // a simple module config type for testing
   interface TestModuleConfig extends modules.IModuleConfig {
     readonly value: string;
@@ -28,12 +28,12 @@ describe('resolveModuleConfig', () => {
     };
 
   it('returns the default config and index -1 when there are no overrides', () => {
-    const base: modules.Overridable<TestModuleConfig> = {
+    const base: Overridable<TestModuleConfig> = {
       enabled: true,
       value: 'default'
     };
 
-    const result = resolveModuleConfig(base, labelMatcher([]));
+    const result = resolveOverridableConfig(base, labelMatcher([]));
 
     expect(result.config).to.deep.equal({ enabled: true, value: 'default' });
     expect(result.matchedOverrideIndex).to.equal(-1);
@@ -41,7 +41,7 @@ describe('resolveModuleConfig', () => {
   });
 
   it('returns the default config when no override matches', () => {
-    const base: modules.Overridable<TestModuleConfig> = {
+    const base: Overridable<TestModuleConfig> = {
       enabled: true,
       value: 'default',
       overrides: [
@@ -50,20 +50,20 @@ describe('resolveModuleConfig', () => {
       ]
     };
 
-    const result = resolveModuleConfig(base, labelMatcher(['home']));
+    const result = resolveOverridableConfig(base, labelMatcher(['home']));
 
     expect(result.config).to.deep.equal({ enabled: true, value: 'default' });
     expect(result.matchedOverrideIndex).to.equal(-1);
   });
 
   it('fully replaces the default config with the first matching override', () => {
-    const base: modules.Overridable<TestModuleConfig> = {
+    const base: Overridable<TestModuleConfig> = {
       enabled: true,
       value: 'default',
       overrides: [{ labelAll: ['article'], config: { enabled: true, value: 'article' } }]
     };
 
-    const result = resolveModuleConfig(base, labelMatcher(['article']));
+    const result = resolveOverridableConfig(base, labelMatcher(['article']));
 
     expect(result.config).to.deep.equal({ enabled: true, value: 'article' });
     expect(result.matchedOverrideIndex).to.equal(0);
@@ -74,7 +74,7 @@ describe('resolveModuleConfig', () => {
   });
 
   it('picks the first matching override when several match (first match wins)', () => {
-    const base: modules.Overridable<TestModuleConfig> = {
+    const base: Overridable<TestModuleConfig> = {
       enabled: true,
       value: 'default',
       overrides: [
@@ -84,47 +84,47 @@ describe('resolveModuleConfig', () => {
     };
 
     // both conditions match - the first entry must win
-    const result = resolveModuleConfig(base, labelMatcher(['video', 'article']));
+    const result = resolveOverridableConfig(base, labelMatcher(['video', 'article']));
 
     expect(result.config).to.deep.equal({ enabled: true, value: 'video' });
     expect(result.matchedOverrideIndex).to.equal(0);
   });
 
   it('full replace drops default-only fields not present in the override config', () => {
-    const base: modules.Overridable<TestModuleConfig> = {
+    const base: Overridable<TestModuleConfig> = {
       enabled: true,
       value: 'default',
       // override config omits `value` - full replace must not carry it over
       overrides: [{ labelAll: ['minimal'], config: { enabled: true } as TestModuleConfig }]
     };
 
-    const result = resolveModuleConfig(base, labelMatcher(['minimal']));
+    const result = resolveOverridableConfig(base, labelMatcher(['minimal']));
 
     expect(result.config).to.deep.equal({ enabled: true });
     expect((result.config as Partial<TestModuleConfig>).value).to.be.undefined;
   });
 
   it('allows an override to disable the module via enabled: false', () => {
-    const base: modules.Overridable<TestModuleConfig> = {
+    const base: Overridable<TestModuleConfig> = {
       enabled: true,
       value: 'default',
       overrides: [{ labelAny: ['no-module'], config: { enabled: false, value: 'off' } }]
     };
 
-    const result = resolveModuleConfig(base, labelMatcher(['no-module']));
+    const result = resolveOverridableConfig(base, labelMatcher(['no-module']));
 
     expect(result.config.enabled).to.be.false;
     expect(result.matchedOverrideIndex).to.equal(0);
   });
 
   it('strips the overrides field from the default config so modules never see it', () => {
-    const base: modules.Overridable<TestModuleConfig> = {
+    const base: Overridable<TestModuleConfig> = {
       enabled: true,
       value: 'default',
       overrides: [{ labelAll: ['x'], config: { enabled: true, value: 'x' } }]
     };
 
-    const result = resolveModuleConfig(base, labelMatcher([]));
+    const result = resolveOverridableConfig(base, labelMatcher([]));
 
     expect(result.config).to.not.have.property('overrides');
   });

@@ -14,13 +14,20 @@ the `data-labels` script attribute. Labels are immutable within a single pipelin
 A predicate over the active labels, expressed as exactly one of `labelAll` (every listed
 label active), `labelAny` (at least one active), or `labelNone` (none active).
 
-### Module Config Override
-An alternative module configuration selected when its Label Condition matches the active
-labels. Overrides **fully replace** the module's default configuration — they do not merge
-field-by-field. A module has at most one default configuration plus an ordered list of
-overrides; the **first** override whose Label Condition matches wins. If no override matches,
-the default configuration is used.
+### Label-Conditioned Config Override
+An alternative configuration selected when its Label Condition matches the active labels.
+Overrides **fully replace** the default configuration — they do not merge field-by-field. A
+config has at most one default plus an ordered list of overrides; the **first** override whose
+Label Condition matches wins. If no override matches, the default configuration is used.
 
-Distinct from the existing module *activation* gate (`labelCondition` on a module config),
-which only turns a module on or off — an override changes *which configuration* an active
-module runs with.
+Applies to two kinds of configuration:
+
+- **Module config** — entries of `ModulesConfig`. Distinct from the module *activation* gate
+  (`labelCondition` on a module config), which only turns a module on or off — an override
+  changes *which configuration* an active module runs with.
+- **Auction-feature config** — the first-level features of the Global Auction Context
+  (`frequencyCap`, `biddersDisabling`, `adRequestThrottling`, `previousBidCpms`,
+  `interstitial`, `trackWinningBidder`). Auction features have no activation gate; an override
+  with `enabled: false` is the way to turn a feature off for its labels. An override cannot
+  exist without a default — overriding a feature that has no base configuration is not
+  supported.

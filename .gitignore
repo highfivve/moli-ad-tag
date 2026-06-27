@@ -45,3 +45,6 @@ node_modules
 
 # intellij
 .run
+
+# claude
+.claude/settings.local.json

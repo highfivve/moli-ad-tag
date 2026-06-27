@@ -9,6 +9,7 @@ import { noopLogger } from 'ad-tag/stubs/moliStubs';
 import { createEventService } from './eventService';
 import { auction } from 'ad-tag/types/moliConfig';
 import { prebidjs } from 'ad-tag/types/prebidjs';
+import { LabelCondition } from 'ad-tag/ads/labelConfigService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -32,6 +33,36 @@ describe('Global auction context', () => {
     config?: auction.GlobalAuctionContextConfig
   ): GlobalAuctionContext => {
     return createGlobalAuctionContext(jsDomWindow, noopLogger, eventService, config);
+  };
+
+  /**
+   * Builds an `isLabelConditionMet` predicate that evaluates a label condition against a fixed set
+   * of active labels - mirrors the real labelConfigService implementation.
+   */
+  const labelMatcher =
+    (...activeLabels: string[]) =>
+    (condition: LabelCondition): boolean => {
+      const labels = new Set(activeLabels);
+      if ('labelAll' in condition) {
+        return condition.labelAll.every(label => labels.has(label));
+      }
+      if ('labelAny' in condition) {
+        return condition.labelAny.some(label => labels.has(label));
+      }
+      return condition.labelNone.every(label => !labels.has(label));
+    };
+
+  const makeAuctionContextWithLabels = (
+    config: auction.GlobalAuctionContextConfig,
+    ...activeLabels: string[]
+  ): GlobalAuctionContext => {
+    return createGlobalAuctionContext(
+      jsDomWindow,
+      noopLogger,
+      eventService,
+      config,
+      labelMatcher(...activeLabels)
+    );
   };
 
   after(() => {
@@ -302,6 +333,104 @@ describe('Global auction context', () => {
         makeAuctionContext(auctionContextConfig);
         expect(pbjsOnEventSpy).to.have.not.been.called;
       });
+    });
+  });
+
+  describe('label-conditioned feature overrides', () => {
+    it('uses the feature default when no override matches', () => {
+      // previousBidCpms enabled by default; override only applies on the "no-cpms" label
+      makeAuctionContextWithLabels(
+        {
+          previousBidCpms: {
+            enabled: true,
+            overrides: [{ labelAny: ['no-cpms'], config: { enabled: false } }]
+          }
+        },
+        'home'
+      );
+      // default (enabled) is used -> auctionEnd listener wired
+      expect(pbjsOnEventSpy).to.have.been.calledOnceWithExactly('auctionEnd', sinon.match.func);
+    });
+
+    it('applies the first matching override and wires listeners for the selected config', () => {
+      // previousBidCpms disabled by default; the matching override enables it
+      makeAuctionContextWithLabels(
+        {
+          previousBidCpms: {
+            enabled: false,
+            overrides: [{ labelAll: ['article'], config: { enabled: true } }]
+          }
+        },
+        'article'
+      );
+      // override (enabled) selected -> auctionEnd listener wired even though the default was disabled
+      expect(pbjsOnEventSpy).to.have.been.calledOnceWithExactly('auctionEnd', sinon.match.func);
+    });
+
+    it('disables a default-enabled feature via an enabled:false override', () => {
+      // biddersDisabling enabled by default; override turns it off for the "no-disable" label
+      makeAuctionContextWithLabels(
+        {
+          biddersDisabling: {
+            enabled: true,
+            minRate: 0.5,
+            minBidRequests: 2,
+            reactivationPeriod: 3600000,
+            overrides: [
+              {
+                labelAny: ['no-disable'],
+                config: {
+                  enabled: false,
+                  minRate: 0.5,
+                  minBidRequests: 2,
+                  reactivationPeriod: 3600000
+                }
+              }
+            ]
+          }
+        },
+        'no-disable'
+      );
+      // override (disabled) selected -> no auctionEnd listener wired
+      expect(pbjsOnEventSpy).to.have.not.been.called;
+    });
+
+    it('picks the first matching override when several match (first match wins)', () => {
+      const context = makeAuctionContextWithLabels(
+        {
+          frequencyCap: {
+            enabled: false,
+            overrides: [
+              {
+                labelAny: ['a'],
+                config: {
+                  enabled: true,
+                  configs: [{ bidder: 'dspx', domId: 'wp-slot', blockedForMs: 10000 }]
+                }
+              },
+              {
+                labelAny: ['b'],
+                config: {
+                  enabled: true,
+                  configs: [{ bidder: 'appnexus', domId: 'wp-slot', blockedForMs: 99999 }]
+                }
+              }
+            ]
+          }
+        },
+        'a',
+        'b'
+      );
+      // both override conditions match -> the first entry wins and frequencyCap is enabled
+      expect(pbjsOnEventSpy).to.have.been.calledWithExactly('bidWon', sinon.match.func);
+      expect(context.isBidderFrequencyCappedOnSlot('wp-slot', 'dspx')).to.be.false;
+    });
+
+    it('does nothing for a feature with no base config (override-without-base unsupported)', () => {
+      // no frequencyCap key at all -> nothing is resolved, no listeners
+      makeAuctionContextWithLabels({}, 'article');
+      expect(pbjsOnEventSpy).to.have.not.been.called;
+      expect(googletagAddEventListenerSpy).to.have.not.been.called;
     });
   });
 });
