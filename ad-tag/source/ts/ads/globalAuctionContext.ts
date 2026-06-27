@@ -2,7 +2,7 @@ import { prebidjs } from '../types/prebidjs';
 import { googletag } from '../types/googletag';
 import { createBiddersDisabling } from './auctions/biddersDisabling';
 import { createAdRequestThrottling } from './auctions/adRequestThrottling';
-import { auction } from '../types/moliConfig';
+import { auction, Overridable } from '../types/moliConfig';
 import { createFrequencyCapping } from './auctions/frequencyCapping';
 import { createPreviousBidCpms } from './auctions/previousBidCpms';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
@@ -10,6 +10,8 @@ import { EventService } from './eventService';
 import { ConfigureStep, mkConfigureStep } from './adPipeline';
 import { createInterstitialContext } from 'ad-tag/ads/auctions/interstitialContext';
 import { createTrackWinningBidder } from 'ad-tag/ads/auctions/trackWinningBidder';
+import { LabelCondition } from 'ad-tag/ads/labelConfigService';
+import { resolveOverridableConfig } from 'ad-tag/ads/configOverrides';
 
 /**
  * ## Global Auction Context
@@ -68,28 +70,62 @@ export const createGlobalAuctionContext = (
     Pick<typeof globalThis, 'Date'>,
   logger: MoliRuntime.MoliLogger,
   eventService: EventService,
-  config: auction.GlobalAuctionContextConfig = {}
+  config: auction.GlobalAuctionContextConfig = {},
+  isLabelConditionMet: (condition: LabelCondition) => boolean = () => false
 ): GlobalAuctionContext => {
-  const trackWinningBidder = config.trackWinningBidder?.enabled
+  // resolve label-conditioned config overrides for every first-level feature (first match wins,
+  // full replace). runs once when the Global Auction Context is built; SPA navigations call
+  // requestAds directly and never rebuild it, so the selected overrides are fixed for the page
+  // lifetime. the resolver strips `overrides`, so the feature factories never see it.
+  const resolveFeature = <C>(base: Overridable<C> | undefined, feature: string): C | undefined => {
+    if (!base) {
+      return undefined;
+    }
+    const {
+      config: resolved,
+      matchedOverrideIndex,
+      matchedCondition
+    } = resolveOverridableConfig(base, isLabelConditionMet);
+    if (matchedOverrideIndex >= 0) {
+      logger.debug(
+        'GlobalAuctionContext',
+        `feature ${feature}: applying config override #${matchedOverrideIndex}`,
+        matchedCondition
+      );
+    }
+    return resolved;
+  };
+
+  const trackWinningBidderConfig = resolveFeature(config.trackWinningBidder, 'trackWinningBidder');
+  const biddersDisablingConfig = resolveFeature(config.biddersDisabling, 'biddersDisabling');
+  const adRequestThrottlingConfig = resolveFeature(
+    config.adRequestThrottling,
+    'adRequestThrottling'
+  );
+  const frequencyCapConfig = resolveFeature(config.frequencyCap, 'frequencyCap');
+  const previousBidCpmsConfig = resolveFeature(config.previousBidCpms, 'previousBidCpms');
+  const interstitialConfig = resolveFeature(config.interstitial, 'interstitial');
+
+  const trackWinningBidder = trackWinningBidderConfig?.enabled
     ? createTrackWinningBidder()
     : undefined;
 
-  const biddersDisabling = config.biddersDisabling?.enabled
-    ? createBiddersDisabling(config.biddersDisabling, window)
+  const biddersDisabling = biddersDisablingConfig?.enabled
+    ? createBiddersDisabling(biddersDisablingConfig, window)
     : undefined;
 
-  const adRequestThrottling = config.adRequestThrottling?.enabled
-    ? createAdRequestThrottling(config.adRequestThrottling, window)
+  const adRequestThrottling = adRequestThrottlingConfig?.enabled
+    ? createAdRequestThrottling(adRequestThrottlingConfig, window)
     : undefined;
 
-  const frequencyCapping = config.frequencyCap?.enabled
-    ? createFrequencyCapping(config.frequencyCap, window, window.Date.now, logger)
+  const frequencyCapping = frequencyCapConfig?.enabled
+    ? createFrequencyCapping(frequencyCapConfig, window, window.Date.now, logger)
     : undefined;
 
-  const previousBidCpms = config.previousBidCpms?.enabled ? createPreviousBidCpms() : undefined;
+  const previousBidCpms = previousBidCpmsConfig?.enabled ? createPreviousBidCpms() : undefined;
 
-  const interstitial = config.interstitial?.enabled
-    ? createInterstitialContext(config.interstitial, window, window.Date.now, logger)
+  const interstitial = interstitialConfig?.enabled
+    ? createInterstitialContext(interstitialConfig, window, window.Date.now, logger)
     : undefined;
 
   // Ensure pbjs and googletag are initialized
@@ -99,16 +135,16 @@ export const createGlobalAuctionContext = (
 
   // Register events
   if (
-    config.biddersDisabling?.enabled ||
-    config.previousBidCpms?.enabled ||
-    config.frequencyCap?.enabled ||
-    config.interstitial?.enabled
+    biddersDisablingConfig?.enabled ||
+    previousBidCpmsConfig?.enabled ||
+    frequencyCapConfig?.enabled ||
+    interstitialConfig?.enabled
   ) {
     window.pbjs.que.push(() => {
       window.pbjs.onEvent('auctionEnd', auction => {
         biddersDisabling?.onAuctionEnd(auction);
         interstitial?.onAuctionEnd(auction);
-        if (config.previousBidCpms?.enabled && auction.bidsReceived) {
+        if (previousBidCpmsConfig?.enabled && auction.bidsReceived) {
           previousBidCpms?.onAuctionEnd(auction.bidsReceived);
         }
         frequencyCapping?.onAuctionEnd(auction);
@@ -116,7 +152,7 @@ export const createGlobalAuctionContext = (
     });
   }
 
-  if (config.adRequestThrottling?.enabled || config.frequencyCap?.enabled) {
+  if (adRequestThrottlingConfig?.enabled || frequencyCapConfig?.enabled) {
     window.googletag.cmd.push(() => {
       window.googletag.pubads().addEventListener('slotRequested', event => {
         adRequestThrottling?.onSlotRequested(event);
@@ -125,20 +161,20 @@ export const createGlobalAuctionContext = (
     });
   }
 
-  if (config.frequencyCap?.enabled || config.trackWinningBidder?.enabled) {
+  if (frequencyCapConfig?.enabled || trackWinningBidderConfig?.enabled) {
     window.pbjs.que.push(() => {
       window.pbjs.onEvent('bidWon', bid => {
-        if (config.frequencyCap) {
+        if (frequencyCapConfig) {
           frequencyCapping?.onBidWon(bid);
         }
-        if (config.trackWinningBidder) {
+        if (trackWinningBidderConfig) {
           trackWinningBidder?.onBidWon(bid);
         }
       });
     });
   }
 
-  if (config.frequencyCap?.enabled) {
+  if (frequencyCapConfig?.enabled) {
     eventService.addEventListener('beforeRequestAds', () => {
       frequencyCapping?.beforeRequestAds();
     });
@@ -147,7 +183,7 @@ export const createGlobalAuctionContext = (
     });
   }
 
-  if (config.frequencyCap?.enabled || config.interstitial?.enabled) {
+  if (frequencyCapConfig?.enabled || interstitialConfig?.enabled) {
     window.googletag.cmd.push(() => {
       window.googletag.pubads().addEventListener('slotRenderEnded', event => {
         frequencyCapping?.onSlotRenderEnded(event);

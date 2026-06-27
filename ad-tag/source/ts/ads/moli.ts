@@ -15,7 +15,7 @@ import * as adUnitPath from './adUnitPath';
 import { extractTopPrivateDomainFromHostname } from '../util/extractTopPrivateDomainFromHostname';
 import { detectGeoFromBrowser } from '../util/detectGeoFromTimezone';
 import { createLabelConfigService } from './labelConfigService';
-import { resolveModuleConfig } from './moduleConfigOverrides';
+import { resolveOverridableConfig } from './configOverrides';
 import { allowRefreshAdSlot, allowRequestAds } from './spa';
 import {
   AdUnitPathVariables,
@@ -361,7 +361,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
               config: effectiveConfig,
               matchedOverrideIndex,
               matchedCondition
-            } = resolveModuleConfig(base, labelService.isLabelConditionMet);
+            } = resolveOverridableConfig(base, labelService.isLabelConditionMet);
 
             if (matchedOverrideIndex >= 0) {
               getLogger(state.runtimeConfig, window).debug(
@@ -463,7 +463,11 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         if (isSinglePageApp) {
           const requestAdsRuntimeConfig = state.runtimeConfig;
           // initialize first and then make the initial requestAds() call
-          const initialized = adService.initialize(config, requestAdsRuntimeConfig);
+          const initialized = adService.initialize(
+            config,
+            requestAdsRuntimeConfig,
+            labelService.isLabelConditionMet
+          );
           state = {
             state: 'spa-requestAds',
             config: config,
@@ -531,7 +535,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             runtimeConfig: Object.freeze(state.runtimeConfig)
           };
           return adService
-            .initialize(config, state.runtimeConfig)
+            .initialize(config, state.runtimeConfig, labelService.isLabelConditionMet)
             .then(config => adService.requestAds(config, state.runtimeConfig))
             .then(() => {
               state = {

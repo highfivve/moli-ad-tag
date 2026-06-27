@@ -43,7 +43,7 @@ import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
 import { createGlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, behaviour, bucket, Device, Environment, MoliConfig } from '../types/moliConfig';
-import { getDeviceLabel } from 'ad-tag/ads/labelConfigService';
+import { getDeviceLabel, LabelCondition } from 'ad-tag/ads/labelConfigService';
 import { EventService } from 'ad-tag/ads/eventService';
 import { bridgeInitStep } from 'ad-tag/ads/bridge/bridge';
 
@@ -202,7 +202,8 @@ export class AdService {
    */
   public initialize = (
     config: Readonly<MoliConfig>,
-    runtimeConfig: Readonly<MoliRuntime.MoliRuntimeConfig>
+    runtimeConfig: Readonly<MoliRuntime.MoliRuntimeConfig>,
+    isLabelConditionMet: (condition: LabelCondition) => boolean = () => false
   ): Promise<Readonly<MoliConfig>> => {
     const env = AdService.getEnvironment(runtimeConfig);
     const adServer = config.adServer || 'gam';
@@ -260,7 +261,8 @@ export class AdService {
       this.window as AdServiceWindow,
       this.logger,
       this.eventService,
-      config.globalAuctionContext
+      config.globalAuctionContext,
+      isLabelConditionMet
     );
     configure.push(globalAuctionContext.configureStep());
 

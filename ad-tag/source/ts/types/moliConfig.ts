@@ -735,24 +735,24 @@ export namespace auction {
     /**
      * Disable bidders that lack auction participation
      */
-    readonly biddersDisabling?: BidderDisablingConfig;
+    readonly biddersDisabling?: Overridable<BidderDisablingConfig>;
 
     /**
      * Throttle ad requests for a slot to avoid flooding the ad server.
      * This is a general safeguard and should always be active. Mostly single page apps benefit from this, if a dev
      * misuses `React.useEffect` or similar implementations that constantly re-render and thus trigger ad requests.
      */
-    readonly adRequestThrottling?: AdRequestThrottlingConfig;
+    readonly adRequestThrottling?: Overridable<AdRequestThrottlingConfig>;
 
     /**
      * Set frequency capping for a specific slot and bidder
      */
-    readonly frequencyCap?: FrequencyCappingConfig;
+    readonly frequencyCap?: Overridable<FrequencyCappingConfig>;
 
     /**
      * Save previous prebid bid cpms on this position
      */
-    readonly previousBidCpms?: PreviousBidCpmsConfig;
+    readonly previousBidCpms?: Overridable<PreviousBidCpmsConfig>;
 
     /**
      * Additional configuration options for the interstitial ad format.
@@ -760,12 +760,12 @@ export namespace auction {
      * - Set priorities which channel ( gam web interstitial or custom interstitial )
      * - Configure waterfall scenarios for the interstitial ad format "gam > custom" or "custom > gam"
      */
-    readonly interstitial?: InterstitialConfig;
+    readonly interstitial?: Overridable<InterstitialConfig>;
 
     /**
      * Enable tracking the latest winning bidder per ad unit from the prebid `bidWon` event.
      */
-    readonly trackWinningBidder?: TrackWinningBidderConfig;
+    readonly trackWinningBidder?: Overridable<TrackWinningBidderConfig>;
   }
 }
 
@@ -1320,6 +1320,57 @@ export namespace bridge {
   }
 }
 
+/**
+ * ## Label-conditioned config overrides
+ *
+ * Wraps a configuration `C` so a publisher can provide a default configuration plus an ordered list
+ * of label-conditioned `overrides`. At the first ad request the active labels select the **first
+ * matching** override, whose `config` **fully replaces** the default (no field-by-field merge). If no
+ * override matches, the default is used.
+ *
+ * This wrapper is shared by two concepts: module configs (`modules.ModulesConfig`) and the
+ * first-level features of the Global Auction Context (`auction.GlobalAuctionContextConfig`).
+ *
+ * The override selector (`labelAll` / `labelAny` / `labelNone`) picks *which* config. For modules it
+ * is orthogonal to the module activation gate (`labelCondition`); auction features have no separate
+ * activation gate, so an override `config` with `enabled: false` is the only way to disable a feature
+ * for its labels.
+ *
+ * Override selection runs once, at configure / initialize time. SPA navigations do not re-resolve it;
+ * the configuration is fixed for the page lifetime. Implementations never see `overrides` — they
+ * receive an already-resolved configuration.
+ *
+ * The override `config` is the bare config `C`, which has no `overrides` field, so nesting overrides
+ * is structurally impossible.
+ *
+ * @example
+ * ```js
+ * // adReload runs with a 30s interval by default, but only 60s on the "article" label
+ * adReload: {
+ *   enabled: true,
+ *   refreshInterval: 30000,
+ *   overrides: [
+ *     {
+ *       labelAll: ['article'],
+ *       config: { enabled: true, refreshInterval: 60000 }
+ *     },
+ *     {
+ *       labelAny: ['no-reload'],
+ *       config: { enabled: false }
+ *     }
+ *   ]
+ * }
+ * ```
+ */
+export type Overridable<C> = C & {
+  /**
+   * Ordered list of label-conditioned configuration overrides. The first entry whose label
+   * condition matches the active labels fully replaces the default configuration. If none match,
+   * the default configuration is used.
+   */
+  readonly overrides?: ReadonlyArray<LabelCondition & { readonly config: C }>;
+};
+
 export namespace modules {
   export interface IModuleConfig {
     /**
@@ -1332,54 +1383,6 @@ export namespace modules {
      */
     readonly labelCondition?: LabelCondition;
   }
-
-  /**
-   * ## Label-conditioned module config overrides
-   *
-   * Wraps a module configuration `C` so a publisher can provide a default configuration plus an
-   * ordered list of label-conditioned `overrides`. At the first ad request the active labels select
-   * the **first matching** override, whose `config` **fully replaces** the default (no field-by-field
-   * merge). If no override matches, the default is used.
-   *
-   * The override selector (`labelAll` / `labelAny` / `labelNone`) is orthogonal to the module
-   * activation gate (`labelCondition`): the selector picks *which* config, the gate turns the
-   * resolved module on/off. An override `config` may set `enabled: false` to disable the module for
-   * its labels.
-   *
-   * Override selection runs once, at configure time. SPA navigations do not re-resolve it; the module
-   * configuration is fixed for the page lifetime. Module implementations never see `overrides` — they
-   * receive an already-resolved configuration.
-   *
-   * The override `config` is the bare module config `C`, which has no `overrides` field, so nesting
-   * overrides is structurally impossible.
-   *
-   * @example
-   * ```js
-   * // adReload runs with a 30s interval by default, but only 60s on the "article" label
-   * adReload: {
-   *   enabled: true,
-   *   refreshInterval: 30000,
-   *   overrides: [
-   *     {
-   *       labelAll: ['article'],
-   *       config: { enabled: true, refreshInterval: 60000 }
-   *     },
-   *     {
-   *       labelAny: ['no-reload'],
-   *       config: { enabled: false }
-   *     }
-   *   ]
-   * }
-   * ```
-   */
-  export type Overridable<C> = C & {
-    /**
-     * Ordered list of label-conditioned configuration overrides. The first entry whose label
-     * condition matches the active labels fully replaces the default configuration. If none match,
-     * the default configuration is used.
-     */
-    readonly overrides?: ReadonlyArray<LabelCondition & { readonly config: C }>;
-  };
 
   export namespace adreload {
     export type RefreshIntervalOverrideEntry = {

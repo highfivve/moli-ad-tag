@@ -166,3 +166,71 @@ modules: {
 
 Every entry in `modules` supports `overrides`. See the [modules reference](../modules/) for
 the configuration of each module.
+
+## Global Auction Context features
+
+The same override mechanism applies to the first-level features of the Global Auction Context
+(`globalAuctionContext`). All six features support `overrides`:
+
+- `frequencyCap`
+- `biddersDisabling`
+- `adRequestThrottling`
+- `previousBidCpms`
+- `interstitial`
+- `trackWinningBidder`
+
+The selection algorithm is identical: the active labels pick the first matching override, whose
+`config` fully replaces the feature default. If no override matches, the default is used.
+
+Two differences compared to modules:
+
+- **No activation gate.** Auction features have no `labelCondition` gate, so an override `config`
+  with `enabled: false` is the only way to disable a feature for its labels.
+- **Resolution at initialize.** The Global Auction Context is built once when the ad tag
+  initializes. [Single page app](./single-page-app.md) navigations call `requestAds()` directly and
+  never rebuild it, so the selected overrides are fixed for the page lifetime. Set the driving labels
+  before the first `requestAds()`.
+
+Overriding a feature that has no base configuration is not supported: if the feature key is absent,
+nothing is resolved.
+
+### Example
+
+Frequency capping runs with a default configuration, switches to a stricter configuration on the
+`article` label, and is turned off for users carrying the `no-cap` label:
+
+```ts
+const moliConfig: Moli.MoliConfig = {
+  slots: [ /* ... */ ],
+  globalAuctionContext: {
+    // highlight-start
+    frequencyCap: {
+      enabled: true,
+      configs: [{ bidder: 'bidderA', domId: 'wp-slot', blockedForMs: 10000 }],
+      overrides: [
+        {
+          labelAll: ['article'],
+          config: {
+            enabled: true,
+            configs: [{ bidder: 'bidderA', domId: 'wp-slot', blockedForMs: 30000 }]
+          }
+        },
+        {
+          labelAny: ['no-cap'],
+          config: { enabled: false, configs: [] }
+        }
+      ]
+    }
+    // highlight-end
+  }
+};
+```
+
+```ts
+// drives the selection, must run before the first requestAds()
+window.moli.addLabel('article');
+window.moli.requestAds();
+```
+
+As with modules, each override `config` fully replaces the default, so list every field the
+override needs.
