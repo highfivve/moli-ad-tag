@@ -2182,6 +2182,13 @@ export namespace modules {
          */
         readonly value?: string;
       };
+
+      /**
+       * If set, the CPM of the skin will not only be compared with the slots it blocks
+       * but also with other skins that have this flag.
+       * Only the flagged skin with the highest CPM will be displayed.
+       */
+      readonly compareWithOtherSkins?: boolean;
     };
   }
 
@@ -2436,6 +2443,13 @@ export namespace modules {
        * Utiq loads a single javascript. It will only load if consent for **all** purposes is given.
        */
       readonly assetUrl?: string;
+
+      /**
+       * Optional TCF vendor ID that must have consent before Utiq is loaded.
+       *
+       * Use this when your CMP exposes Utiq activation via vendor consent.
+       */
+      readonly vendorId?: string;
 
       /**
        * The Utiq loader script can be configured using the Utiq.config object. The configuration object is a JavaScript

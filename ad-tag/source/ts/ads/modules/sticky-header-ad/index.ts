@@ -88,6 +88,7 @@ export const createStickyHeaderAd = (): IModule => {
    * The instance is also used to ensure that there's only one observer
    */
   let observer: IntersectionObserver | null = null;
+  let observeTargetTimeoutId: number | null = null;
 
   let stickyHeaderAdConfig: modules.stickyHeaderAd.StickyHeaderAdConfig | null = null;
 
@@ -106,6 +107,10 @@ export const createStickyHeaderAd = (): IModule => {
     return config
       ? [
           mkConfigureStepOncePerRequestAdsCycle('sticky-header-ads:cleanup', () => {
+            if (observeTargetTimeoutId !== null) {
+              clearTimeout(observeTargetTimeoutId);
+              observeTargetTimeoutId = null;
+            }
             if (observer) {
               observer.disconnect();
               observer = null;
@@ -185,7 +190,13 @@ export const createStickyHeaderAd = (): IModule => {
                   ),
                   options
                 );
-                observer.observe(target);
+                // Delay observing target so fade-out checks start only after the configured visible duration.
+                observeTargetTimeoutId = ctx.window__.setTimeout(() => {
+                  if (observer) {
+                    observer.observe(target);
+                  }
+                  observeTargetTimeoutId = null;
+                }, minVisibleDuration);
 
                 if (navbar) {
                   observer.observe(navbar);
