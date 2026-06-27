@@ -2345,6 +2345,177 @@ describe('moli', () => {
         expect(configureSpyC).calledOnce;
       });
     });
+
+    describe('config overrides', () => {
+      const registerPubstack = (adTag: ReturnType<typeof createMoliTag>) => {
+        const configureSpy = sandbox.spy();
+        adTag.registerModule({
+          name: 'pubstack',
+          moduleType: 'prebid',
+          description: 'test-module',
+          config__(): Object | null {
+            return null;
+          },
+          configure__: configureSpy,
+          initSteps__(): InitStep[] {
+            return [];
+          },
+          configureSteps__(): ConfigureStep[] {
+            return [];
+          },
+          prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+            return [];
+          }
+        });
+        return configureSpy;
+      };
+
+      it('should use the first matching override and fully replace the default config', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        const configureSpy = registerPubstack(adTag);
+
+        adTag.addLabel('article');
+
+        const configWithModules: MoliConfig = {
+          ...defaultConfig,
+          modules: {
+            pubstack: {
+              tagId: 'default',
+              enabled: true,
+              overrides: [
+                { labelAll: ['article'], config: { tagId: 'article', enabled: true } },
+                { labelAny: ['video'], config: { tagId: 'video', enabled: true } }
+              ]
+            }
+          },
+          requestAds: false
+        };
+
+        await adTag.configure(configWithModules);
+        await adTag.requestAds();
+
+        expect(configureSpy).calledOnce;
+        const resolved = configureSpy.firstCall.args[0].pubstack;
+        expect(resolved).to.deep.equal({ tagId: 'article', enabled: true });
+        expect(resolved).to.not.have.property('overrides');
+      });
+
+      it('should pick the first override when several conditions match', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        const configureSpy = registerPubstack(adTag);
+
+        adTag.addLabel('article');
+        adTag.addLabel('video');
+
+        const configWithModules: MoliConfig = {
+          ...defaultConfig,
+          modules: {
+            pubstack: {
+              tagId: 'default',
+              enabled: true,
+              overrides: [
+                { labelAny: ['video'], config: { tagId: 'video', enabled: true } },
+                { labelAll: ['article'], config: { tagId: 'article', enabled: true } }
+              ]
+            }
+          },
+          requestAds: false
+        };
+
+        await adTag.configure(configWithModules);
+        await adTag.requestAds();
+
+        expect(configureSpy.firstCall.args[0].pubstack.tagId).to.equal('video');
+      });
+
+      it('should fall back to the default config when no override matches', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        const configureSpy = registerPubstack(adTag);
+
+        const configWithModules: MoliConfig = {
+          ...defaultConfig,
+          modules: {
+            pubstack: {
+              tagId: 'default',
+              enabled: true,
+              overrides: [{ labelAll: ['article'], config: { tagId: 'article', enabled: true } }]
+            }
+          },
+          requestAds: false
+        };
+
+        await adTag.configure(configWithModules);
+        await adTag.requestAds();
+
+        expect(configureSpy).calledOnce;
+        const resolved = configureSpy.firstCall.args[0].pubstack;
+        expect(resolved.tagId).to.equal('default');
+        expect(resolved).to.not.have.property('overrides');
+      });
+
+      it('should apply the activation gate to the resolved override config (enabled: false disables)', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        const configureSpy = registerPubstack(adTag);
+
+        adTag.addLabel('no-module');
+
+        const configWithModules: MoliConfig = {
+          ...defaultConfig,
+          modules: {
+            pubstack: {
+              tagId: 'default',
+              enabled: true,
+              overrides: [{ labelAny: ['no-module'], config: { tagId: 'off', enabled: false } }]
+            }
+          },
+          requestAds: false
+        };
+
+        await adTag.configure(configWithModules);
+        await adTag.requestAds();
+
+        // the module still gets configured; the resolved config carries enabled: false so the
+        // module disables itself internally
+        expect(configureSpy).calledOnce;
+        const resolved = configureSpy.firstCall.args[0].pubstack;
+        expect(resolved.enabled).to.be.false;
+        expect(resolved.tagId).to.equal('off');
+      });
+
+      it('should skip configuration when the resolved override config fails its labelCondition gate', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        const configureSpy = registerPubstack(adTag);
+
+        adTag.addLabel('article');
+
+        const configWithModules: MoliConfig = {
+          ...defaultConfig,
+          modules: {
+            pubstack: {
+              tagId: 'default',
+              enabled: true,
+              overrides: [
+                {
+                  labelAll: ['article'],
+                  // gate on the resolved config that can never be met -> module skipped
+                  config: {
+                    tagId: 'article',
+                    enabled: true,
+                    labelCondition: { labelAll: ['missing'] }
+                  }
+                }
+              ]
+            }
+          },
+          requestAds: false
+        };
+
+        await adTag.configure(configWithModules);
+        await adTag.requestAds();
+
+        expect(configureSpy).to.have.not.been.called;
+      });
+    });
   });
 
   describe('requestAds', () => {
