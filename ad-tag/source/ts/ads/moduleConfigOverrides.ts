@@ -39,24 +39,13 @@ export const resolveModuleConfig = <C extends modules.IModuleConfig>(
   base: modules.Overridable<C>,
   isLabelConditionMet: (condition: LabelCondition) => boolean
 ): ResolvedModuleConfig<C> => {
-  const { overrides, ...defaultConfig } = base;
+  const { overrides = [], ...defaultConfig } = base;
 
-  if (overrides) {
-    for (let index = 0; index < overrides.length; index++) {
-      const override = overrides[index];
-      if (isLabelConditionMet(override)) {
-        // full replace: the override's `config` is the bare module config without `overrides`
-        return {
-          config: override.config,
-          matchedOverrideIndex: index,
-          matchedCondition: override
-        };
-      }
-    }
-  }
+  const matchedOverrideIndex = overrides.findIndex(isLabelConditionMet);
+  const match = overrides[matchedOverrideIndex];
 
-  return {
-    config: defaultConfig as unknown as C,
-    matchedOverrideIndex: -1
-  };
+  // full replace: the matched override's `config` is the bare module config without `overrides`
+  return match
+    ? { config: match.config, matchedOverrideIndex, matchedCondition: match }
+    : { config: defaultConfig as unknown as C, matchedOverrideIndex: -1 };
 };
