@@ -4248,6 +4248,10 @@
         "userIdConfig": {
           "$ref": "#/definitions/modules.utiq.UtiqUserIdConfig",
           "description": "Configuration for integrating UTIQ with other user ID solutions."
+        },
+        "vendorId": {
+          "description": "Optional TCF vendor ID that must have consent before Utiq is loaded.\n\nUse this when your CMP exposes Utiq activation via vendor consent.",
+          "type": "string"
         }
       },
       "required": [
