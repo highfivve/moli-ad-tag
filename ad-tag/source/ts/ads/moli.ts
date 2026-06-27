@@ -15,10 +15,12 @@ import * as adUnitPath from './adUnitPath';
 import { extractTopPrivateDomainFromHostname } from '../util/extractTopPrivateDomainFromHostname';
 import { detectGeoFromBrowser } from '../util/detectGeoFromTimezone';
 import { createLabelConfigService } from './labelConfigService';
+import { resolveModuleConfig } from './moduleConfigOverrides';
 import { allowRefreshAdSlot, allowRequestAds } from './spa';
 import {
   AdUnitPathVariables,
   googleAdManager,
+  modules,
   MoliConfig,
   ResolveAdUnitPathOptions
 } from '../types/moliConfig';
@@ -344,30 +346,58 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         );
 
         modules
-          .filter(module => {
+          .map(module => {
             const moduleName = module.name;
-            const moduleConfig = state.config?.modules?.[moduleName];
+            const base = state.config?.modules?.[moduleName];
 
-            if (moduleConfig?.labelCondition) {
-              const areLabelConditionsMet = labelService.isLabelConditionMet(
-                moduleConfig.labelCondition
-              );
-
-              if (!areLabelConditionsMet) {
-                getLogger(state.runtimeConfig, window).debug(
-                  'MoliGlobal',
-                  `skipping configuration of ${module.moduleType} module ${moduleName} due to label condition not met.`
-                );
-                return false;
-              }
+            // module has no configuration at all - nothing to configure
+            if (!base) {
+              return null;
             }
 
-            // if no labelCondition is available or labelConditions are met, the module should be configured
-            return true;
+            // resolve label-conditioned config overrides (first match wins, full replace).
+            // runs once at configure time; SPA navigations do not re-resolve.
+            const {
+              config: effectiveConfig,
+              matchedOverrideIndex,
+              matchedCondition
+            } = resolveModuleConfig(base, labelService.isLabelConditionMet);
+
+            if (matchedOverrideIndex >= 0) {
+              getLogger(state.runtimeConfig, window).debug(
+                'MoliGlobal',
+                `module ${moduleName}: applying config override #${matchedOverrideIndex}`,
+                matchedCondition
+              );
+            }
+
+            // activation gate evaluated on the resolved config
+            if (
+              effectiveConfig.labelCondition &&
+              !labelService.isLabelConditionMet(effectiveConfig.labelCondition)
+            ) {
+              getLogger(state.runtimeConfig, window).debug(
+                'MoliGlobal',
+                `skipping configuration of ${module.moduleType} module ${moduleName} due to label condition not met.`
+              );
+              return null;
+            }
+
+            // pass the resolved modules config (with `overrides` stripped from this entry) to the module
+            const resolvedModulesConfig: modules.ModulesConfig = {
+              ...state.config?.modules,
+              [moduleName]: effectiveConfig
+            };
+
+            return { module, resolvedModulesConfig };
           })
-          .forEach(module => {
+          .filter(
+            (entry): entry is { module: IModule; resolvedModulesConfig: modules.ModulesConfig } =>
+              entry !== null
+          )
+          .forEach(({ module, resolvedModulesConfig }) => {
             try {
-              module.configure__(state.config?.modules ?? {});
+              module.configure__(resolvedModulesConfig);
               getLogger(state.runtimeConfig, window).debug(
                 'MoliGlobal',
                 `configure ${module.moduleType} module ${module.name}`,

@@ -1333,6 +1333,54 @@ export namespace modules {
     readonly labelCondition?: LabelCondition;
   }
 
+  /**
+   * ## Label-conditioned module config overrides
+   *
+   * Wraps a module configuration `C` so a publisher can provide a default configuration plus an
+   * ordered list of label-conditioned `overrides`. At the first ad request the active labels select
+   * the **first matching** override, whose `config` **fully replaces** the default (no field-by-field
+   * merge). If no override matches, the default is used.
+   *
+   * The override selector (`labelAll` / `labelAny` / `labelNone`) is orthogonal to the module
+   * activation gate (`labelCondition`): the selector picks *which* config, the gate turns the
+   * resolved module on/off. An override `config` may set `enabled: false` to disable the module for
+   * its labels.
+   *
+   * Override selection runs once, at configure time. SPA navigations do not re-resolve it; the module
+   * configuration is fixed for the page lifetime. Module implementations never see `overrides` — they
+   * receive an already-resolved configuration.
+   *
+   * The override `config` is the bare module config `C`, which has no `overrides` field, so nesting
+   * overrides is structurally impossible.
+   *
+   * @example
+   * ```js
+   * // adReload runs with a 30s interval by default, but only 60s on the "article" label
+   * adReload: {
+   *   enabled: true,
+   *   refreshInterval: 30000,
+   *   overrides: [
+   *     {
+   *       labelAll: ['article'],
+   *       config: { enabled: true, refreshInterval: 60000 }
+   *     },
+   *     {
+   *       labelAny: ['no-reload'],
+   *       config: { enabled: false }
+   *     }
+   *   ]
+   * }
+   * ```
+   */
+  export type Overridable<C> = C & {
+    /**
+     * Ordered list of label-conditioned configuration overrides. The first entry whose label
+     * condition matches the active labels fully replaces the default configuration. If none match,
+     * the default configuration is used.
+     */
+    readonly overrides?: ReadonlyArray<LabelCondition & { readonly config: C }>;
+  };
+
   export namespace adreload {
     export type RefreshIntervalOverrideEntry = {
       /**
@@ -3023,29 +3071,29 @@ export namespace modules {
   }
 
   export interface ModulesConfig {
-    readonly adex?: adex.AdexConfig;
-    readonly adReload?: adreload.AdReloadModuleConfig;
-    readonly blocklist?:
-      | blocklist.BlocklistUrlsBlockingConfig
-      | blocklist.BlocklistUrlsKeyValueConfig;
-    readonly cleanup?: cleanup.CleanupModuleConfig;
-    readonly custom?: custom.CustomModuleConfig;
-    readonly confiant?: confiant.ConfiantConfig;
-    readonly emetriq?: emetriq.EmetriqModuleConfig;
-    readonly geoedge?: geoedge.GeoEdgeModuleConfig;
-    readonly identitylink?: identitylink.IdentityLinkModuleConfig;
-    readonly pubstack?: pubstack.PubstackConfig;
-    readonly skin?: skin.SkinModuleConfig;
-    readonly stickyHeaderAd?: stickyHeaderAd.StickyHeaderAdConfig;
-    readonly utiq?: utiq.UtiqConfig;
-    readonly prebidFirstPartyData?: prebid_first_party_data.PrebidFirstPartyDataModuleConfig;
-    readonly yieldOptimization?: yield_optimization.YieldOptimizationConfig;
-    readonly stickyFooterAd?: stickyFooterAd.StickyFooterAdConfig;
-    readonly stickyFooterAdV2?: stickyFooterAdV2.StickyFooterAdConfig;
-    readonly lazyload?: lazyload.LazyLoadModuleConfig;
-    readonly zeotap?: zeotap.ZeotapModuleConfig;
-    readonly interstitial?: interstitial.InterstitialModuleConfig;
-    readonly moliAnalytics?: moliAnalytics.MoliAnalyticsConfig;
+    readonly adex?: Overridable<adex.AdexConfig>;
+    readonly adReload?: Overridable<adreload.AdReloadModuleConfig>;
+    readonly blocklist?: Overridable<
+      blocklist.BlocklistUrlsBlockingConfig | blocklist.BlocklistUrlsKeyValueConfig
+    >;
+    readonly cleanup?: Overridable<cleanup.CleanupModuleConfig>;
+    readonly custom?: Overridable<custom.CustomModuleConfig>;
+    readonly confiant?: Overridable<confiant.ConfiantConfig>;
+    readonly emetriq?: Overridable<emetriq.EmetriqModuleConfig>;
+    readonly geoedge?: Overridable<geoedge.GeoEdgeModuleConfig>;
+    readonly identitylink?: Overridable<identitylink.IdentityLinkModuleConfig>;
+    readonly pubstack?: Overridable<pubstack.PubstackConfig>;
+    readonly skin?: Overridable<skin.SkinModuleConfig>;
+    readonly stickyHeaderAd?: Overridable<stickyHeaderAd.StickyHeaderAdConfig>;
+    readonly utiq?: Overridable<utiq.UtiqConfig>;
+    readonly prebidFirstPartyData?: Overridable<prebid_first_party_data.PrebidFirstPartyDataModuleConfig>;
+    readonly yieldOptimization?: Overridable<yield_optimization.YieldOptimizationConfig>;
+    readonly stickyFooterAd?: Overridable<stickyFooterAd.StickyFooterAdConfig>;
+    readonly stickyFooterAdV2?: Overridable<stickyFooterAdV2.StickyFooterAdConfig>;
+    readonly lazyload?: Overridable<lazyload.LazyLoadModuleConfig>;
+    readonly zeotap?: Overridable<zeotap.ZeotapModuleConfig>;
+    readonly interstitial?: Overridable<interstitial.InterstitialModuleConfig>;
+    readonly moliAnalytics?: Overridable<moliAnalytics.MoliAnalyticsConfig>;
   }
 }
 
