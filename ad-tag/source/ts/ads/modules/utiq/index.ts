@@ -229,7 +229,9 @@ export const createUtiq = (): IModule => {
       return true;
     }
 
-    return tcData.vendor.consents[vendorId];
+    // Vendor consent can be provided either as a standard TCF vendor consent
+    // or via customVendorConsents
+    return Boolean(tcData.vendor.consents[vendorId] || tcData.customVendorConsents?.[vendorId]);
   };
 
   const loadUtiq = (config: modules.utiq.UtiqConfig, context: AdPipelineContext): Promise<void> => {

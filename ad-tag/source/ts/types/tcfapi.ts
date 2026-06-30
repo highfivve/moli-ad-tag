@@ -148,6 +148,8 @@ export namespace tcfapi {
         readonly legitimateInterests: BooleanVector;
       };
 
+      readonly customVendorConsents?: BooleanVector;
+
       readonly specialFeatureOptins: BooleanVector;
 
       readonly publisher: {
