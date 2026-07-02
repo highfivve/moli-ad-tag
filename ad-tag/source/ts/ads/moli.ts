@@ -389,18 +389,24 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
               [moduleName]: effectiveConfig
             };
 
-            return { module, resolvedModulesConfig };
+            return { module, resolvedModulesConfig, effectiveConfig };
           })
           .filter(
-            (entry): entry is { module: IModule; resolvedModulesConfig: modules.ModulesConfig } =>
-              entry !== null
+            (
+              entry
+            ): entry is {
+              module: IModule;
+              resolvedModulesConfig: modules.ModulesConfig;
+              effectiveConfig: modules.IModuleConfig;
+            } => entry !== null
           )
-          .forEach(({ module, resolvedModulesConfig }) => {
+          .forEach(({ module, resolvedModulesConfig, effectiveConfig }) => {
             try {
               module.configure__(resolvedModulesConfig);
               getLogger(state.runtimeConfig, window).debug(
                 'MoliGlobal',
                 `configure ${module.moduleType} module ${module.name}`,
+                `module is ${effectiveConfig.enabled ? 'enabled' : 'disabled'}`,
                 module.config__()
               );
               state.runtimeConfig.adPipelineConfig.initSteps.push(...module.initSteps__());
