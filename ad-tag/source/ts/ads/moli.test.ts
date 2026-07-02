@@ -2548,6 +2548,38 @@ describe('moli', () => {
         expect(resolved.tagId).to.equal('off');
       });
 
+      it('should log that the module is disabled when the resolved config has enabled: false', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        const configureSpy = registerPubstack(adTag);
+        const logger = newNoopLogger();
+        const debugLogSpy = sandbox.spy(logger, 'debug');
+
+        adTag.setLogger(logger);
+        adTag.addLabel('no-module');
+
+        const configWithModules: MoliConfig = {
+          ...defaultConfig,
+          modules: {
+            pubstack: {
+              tagId: 'default',
+              enabled: true,
+              overrides: [{ labelAny: ['no-module'], config: { tagId: 'off', enabled: false } }]
+            }
+          },
+          requestAds: false
+        };
+
+        await adTag.configure(configWithModules);
+        await adTag.requestAds();
+
+        expect(configureSpy).calledOnce;
+        expect(debugLogSpy).to.have.been.calledWithMatch(
+          'MoliGlobal',
+          'configure prebid module pubstack',
+          'module is disabled'
+        );
+      });
+
       it('should skip configuration when the resolved override config fails its labelCondition gate', async () => {
         const adTag = createMoliTag(jsDomWindow);
         const configureSpy = registerPubstack(adTag);

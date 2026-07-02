@@ -249,6 +249,10 @@ export const createBlocklistedUrls = (): IModule => {
               const result = entry.reverseMatch === true ? !matcher(entry) : matcher(entry);
               if (result) {
                 ctx.labelConfigService__.addLabel(entry.label);
+                ctx.logger__.debug(
+                  'Blocklist URLs',
+                  `Added label ${entry.label} for url ${ctx.window__.location.href}`
+                );
               }
             });
           })
