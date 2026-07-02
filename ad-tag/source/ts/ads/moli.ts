@@ -22,6 +22,7 @@ import {
   googleAdManager,
   modules,
   MoliConfig,
+  Overridable,
   ResolveAdUnitPathOptions
 } from '../types/moliConfig';
 import { QueryParameters } from 'ad-tag/util/queryParameters';
@@ -348,7 +349,13 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         modules
           .map(module => {
             const moduleName = module.name;
-            const base = state.config?.modules?.[moduleName];
+            const configKey = module.configKey;
+            // configKey is `keyof ModulesConfig`, so the lookup yields the union of all module
+            // config value types. The resolution logic below is config-shape agnostic, so we widen
+            // to `Overridable<any>` (previously the lookup was keyed off `module.name: string`,
+            // which implicitly produced `any`).
+            const base: Overridable<modules.IModuleConfig> | undefined =
+              state.config?.modules?.[configKey];
 
             // module has no configuration at all - nothing to configure
             if (!base) {
@@ -386,7 +393,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             // pass the resolved modules config (with `overrides` stripped from this entry) to the module
             const resolvedModulesConfig: modules.ModulesConfig = {
               ...state.config?.modules,
-              [moduleName]: effectiveConfig
+              [configKey]: effectiveConfig
             };
 
             return { module, resolvedModulesConfig };

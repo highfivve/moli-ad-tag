@@ -238,6 +238,7 @@ export const createStickyHeaderAd = (): IModule => {
 
   return {
     name,
+    configKey: 'stickyHeaderAd',
     description: 'sticky header ad creatives',
     moduleType: 'creatives' as ModuleType,
     config__,

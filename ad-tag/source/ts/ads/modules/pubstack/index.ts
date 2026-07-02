@@ -98,6 +98,7 @@ export const createPubstack = (): IModule => {
 
   return {
     name,
+    configKey: 'pubstack',
     description: 'prebid analytics integration',
     moduleType: 'reporting' as ModuleType,
     config__,

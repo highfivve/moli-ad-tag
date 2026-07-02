@@ -136,6 +136,7 @@ export const createIdentityLink = (): IIdentityLinkModule => {
 
   return {
     name,
+    configKey: 'identitylink',
     description: "Provides LiveRamp's ATS (authenticated traffic solution) functionality to Moli.",
     moduleType: 'identity' as ModuleType,
     config__,

@@ -190,6 +190,7 @@ export const createPrebidFirstPartyDataModule = (): IModule => {
 
   return {
     name,
+    configKey: 'prebidFirstPartyData',
     description: 'Module for passing first party data to prebid auctions',
     moduleType: 'prebid' as ModuleType,
     config__,

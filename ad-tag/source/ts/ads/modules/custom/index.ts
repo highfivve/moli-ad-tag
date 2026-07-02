@@ -83,6 +83,7 @@ export const customModule = (): IModule => {
 
   return {
     name,
+    configKey: 'custom',
     description: 'Injects custom inline JavaScript code',
     moduleType: 'custom',
     config__: () => null,

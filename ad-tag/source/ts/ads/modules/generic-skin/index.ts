@@ -360,6 +360,7 @@ export const createSkin = (): ISkinModule => {
 
   return {
     name,
+    configKey: 'skin',
     description: 'Block other ad slots if a wallpaper has won the auction',
     moduleType: 'prebid' as ModuleType,
     config__,

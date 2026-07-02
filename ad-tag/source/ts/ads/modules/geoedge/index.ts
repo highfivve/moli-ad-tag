@@ -82,6 +82,7 @@ export const geoEdge = (): IModule => {
 
   return {
     name: name,
+    configKey: 'geoedge',
     description: 'ad fraud detection and protection module',
     moduleType: 'ad-fraud',
     config__: () => null,

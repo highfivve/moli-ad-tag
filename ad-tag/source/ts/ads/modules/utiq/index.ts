@@ -337,6 +337,7 @@ export const createUtiq = (): IModule => {
 
   return {
     name: 'utiq',
+    configKey: 'utiq',
     description: 'user module',
     moduleType: 'identity' as ModuleType,
 

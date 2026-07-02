@@ -259,6 +259,7 @@ export const createBlocklistedUrls = (): IModule => {
 
   return {
     name: 'Blocklist URLs',
+    configKey: 'blocklist',
     description: '', // remove descriptions everywhere in the future as they are not used
     moduleType: 'policy',
     config__,

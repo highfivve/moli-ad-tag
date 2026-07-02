@@ -169,6 +169,7 @@ export const YieldOptimization = (
 
   return {
     name,
+    configKey: 'yieldOptimization',
     description,
     moduleType,
     config__,

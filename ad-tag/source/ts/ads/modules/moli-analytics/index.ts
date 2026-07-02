@@ -212,6 +212,7 @@ export const MoliAnalytics = (): IModule => {
 
   return {
     name: 'moli-analytics',
+    configKey: 'moliAnalytics',
     description: 'ad events tracking and analytics module',
     moduleType: 'reporting',
     config__(): modules.moliAnalytics.MoliAnalyticsConfig | null {

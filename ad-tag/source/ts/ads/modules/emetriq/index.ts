@@ -265,6 +265,7 @@ export const createEmetriq = (): IEmetriqModule => {
 
   return {
     name,
+    configKey: 'emetriq',
     description: 'Provides Emetriq data collection functionality to Moli.',
     moduleType: 'dmp' as ModuleType,
     config__,

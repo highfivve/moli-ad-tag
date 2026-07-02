@@ -173,6 +173,7 @@ export const createCleanup = (): ICleanupModule => {
 
   return {
     name,
+    configKey: 'cleanup',
     description: 'cleanup out-of-page formats on navigation or ad-reload',
     moduleType: 'creatives' as ModuleType,
     config__,
