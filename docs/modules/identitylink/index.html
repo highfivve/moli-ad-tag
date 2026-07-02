@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.8.1">
 <title data-rh="true">identitylink | The Publisher Ad Tag</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://highfivve.github.io/moli-ad-tag/docs/modules/identitylink"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="identitylink | The Publisher Ad Tag"><meta data-rh="true" name="description" content="This module provides LiveRamp ATS (authenticated traffic solution) functionality to moli. Basically,"><meta data-rh="true" property="og:description" content="This module provides LiveRamp ATS (authenticated traffic solution) functionality to moli. Basically,"><link data-rh="true" rel="icon" href="/moli-ad-tag/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://highfivve.github.io/moli-ad-tag/docs/modules/identitylink"><link data-rh="true" rel="alternate" href="https://highfivve.github.io/moli-ad-tag/docs/modules/identitylink" hreflang="en"><link data-rh="true" rel="alternate" href="https://highfivve.github.io/moli-ad-tag/docs/modules/identitylink" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"identitylink","item":"https://highfivve.github.io/moli-ad-tag/docs/modules/identitylink"}]}</script><link rel="stylesheet" href="/moli-ad-tag/assets/css/styles.d5c9ce24.css">
-<script src="/moli-ad-tag/assets/js/runtime~main.3039e28c.js" defer="defer"></script>
+<script src="/moli-ad-tag/assets/js/runtime~main.641fc857.js" defer="defer"></script>
 <script src="/moli-ad-tag/assets/js/main.25268965.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -36,23 +36,35 @@ users are identified cross-platform using a hash of their email address.</p>
 <li><code>IModule</code></li>
 </ul>
 <h4 class="anchor anchorWithStickyNavbar_LWe7" id="properties">Properties<a href="#properties" class="hash-link" aria-label="Direct link to Properties" title="Direct link to Properties">​</a></h4>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="configkey">configKey<a href="#configkey" class="hash-link" aria-label="Direct link to configKey" title="Direct link to configKey">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>configKey</strong>: keyof <code>ModulesConfig</code></p>
+</blockquote>
+<p>The key under which this module&#x27;s configuration is stored in modules.ModulesConfig.</p>
+<p>Kept separate from <a href="/moli-ad-tag/docs/modules/identitylink#name">name</a> so the display name can be free-form while the config lookup
+stays type-safe. Typing this as <code>keyof modules.ModulesConfig</code> turns a mismatched key into a
+compile error instead of a silent runtime miss.</p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from">Inherited from<a href="#inherited-from" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
+<p><code>IModule.configKey</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="description">description<a href="#description" class="hash-link" aria-label="Direct link to description" title="Direct link to description">​</a></h5>
 <blockquote>
 <p><code>readonly</code> <strong>description</strong>: <code>string</code></p>
 </blockquote>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from">Inherited from<a href="#inherited-from" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-1">Inherited from<a href="#inherited-from-1" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
 <p><code>IModule.description</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="moduletype">moduleType<a href="#moduletype" class="hash-link" aria-label="Direct link to moduleType" title="Direct link to moduleType">​</a></h5>
 <blockquote>
 <p><code>readonly</code> <strong>moduleType</strong>: <code>string</code></p>
 </blockquote>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-1">Inherited from<a href="#inherited-from-1" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-2">Inherited from<a href="#inherited-from-2" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
 <p><code>IModule.moduleType</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="name">name<a href="#name" class="hash-link" aria-label="Direct link to name" title="Direct link to name">​</a></h5>
 <blockquote>
 <p><code>readonly</code> <strong>name</strong>: <code>string</code></p>
 </blockquote>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-2">Inherited from<a href="#inherited-from-2" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
+<p>Free-form, human-readable display name used only in log/debug output.</p>
+<p>This is NOT used to look up the module&#x27;s configuration - see <a href="/moli-ad-tag/docs/modules/ad-reload#configkey">configKey</a>.</p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-3">Inherited from<a href="#inherited-from-3" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
 <p><code>IModule.name</code></p>
 <h4 class="anchor anchorWithStickyNavbar_LWe7" id="methods">Methods<a href="#methods" class="hash-link" aria-label="Direct link to Methods" title="Direct link to Methods">​</a></h4>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="config__">config__()<a href="#config__" class="hash-link" aria-label="Direct link to config__()" title="Direct link to config__()">​</a></h5>
@@ -62,7 +74,7 @@ users are identified cross-platform using a hash of their email address.</p>
 <p>If the module has some sort of configuration this can be fetched with this method</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns">Returns<a href="#returns" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
 <p><code>null</code> | <code>Object</code></p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-3">Inherited from<a href="#inherited-from-3" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-4">Inherited from<a href="#inherited-from-4" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
 <p><code>IModule.config__</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="configuresteps__">configureSteps__()<a href="#configuresteps__" class="hash-link" aria-label="Direct link to configureSteps__()" title="Direct link to configureSteps__()">​</a></h5>
 <blockquote>
@@ -71,7 +83,7 @@ users are identified cross-platform using a hash of their email address.</p>
 <p>Returns a list of steps that should be executed in the ad pipeline.</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-1">Returns<a href="#returns-1" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
 <p><code>ConfigureStep</code>[]</p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-4">Inherited from<a href="#inherited-from-4" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-5">Inherited from<a href="#inherited-from-5" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
 <p><code>IModule.configureSteps__</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="configure__">configure__()<a href="#configure__" class="hash-link" aria-label="Direct link to configure__()" title="Direct link to configure__()">​</a></h5>
 <blockquote>
@@ -83,7 +95,7 @@ Depending on the configuration the module may become active or inactive.</p>
 <p>• <strong>moduleConfig?</strong>: <code>ModulesConfig</code></p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-2">Returns<a href="#returns-2" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
 <p><code>void</code></p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-5">Inherited from<a href="#inherited-from-5" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-6">Inherited from<a href="#inherited-from-6" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
 <p><code>IModule.configure__</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="initsteps__">initSteps__()<a href="#initsteps__" class="hash-link" aria-label="Direct link to initSteps__()" title="Direct link to initSteps__()">​</a></h5>
 <blockquote>
@@ -92,7 +104,7 @@ Depending on the configuration the module may become active or inactive.</p>
 <p>Returns a list of steps that should be executed in the ad pipeline.</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-3">Returns<a href="#returns-3" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
 <p><code>InitStep</code>[]</p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-6">Inherited from<a href="#inherited-from-6" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-7">Inherited from<a href="#inherited-from-7" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
 <p><code>IModule.initSteps__</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="loadats">loadAts()<a href="#loadats" class="hash-link" aria-label="Direct link to loadAts()" title="Direct link to loadAts()">​</a></h5>
 <blockquote>
@@ -127,7 +139,7 @@ being requested.</p>
 <li><a href="https://docs.prebid.org/dev-docs/publisher-api-reference/requestBids.html" target="_blank" rel="noopener noreferrer">https://docs.prebid.org/dev-docs/publisher-api-reference/requestBids.html</a></li>
 <li><a href="https://ams.amazon.com/webpublisher/uam/docs/web-integration-documentation/integration-guide/javascript-guide/api-reference.html#apstagfetchbids" target="_blank" rel="noopener noreferrer">https://ams.amazon.com/webpublisher/uam/docs/web-integration-documentation/integration-guide/javascript-guide/api-reference.html#apstagfetchbids</a></li>
 </ul>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-7">Inherited from<a href="#inherited-from-7" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-8">Inherited from<a href="#inherited-from-8" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
 <p><code>IModule.prebidBidsBackHandler__</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="preparerequestadssteps__">prepareRequestAdsSteps__()<a href="#preparerequestadssteps__" class="hash-link" aria-label="Direct link to prepareRequestAdsSteps__()" title="Direct link to prepareRequestAdsSteps__()">​</a></h5>
 <blockquote>
@@ -136,7 +148,7 @@ being requested.</p>
 <p>Returns a list of steps that should be executed in the ad pipeline.</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-6">Returns<a href="#returns-6" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
 <p><code>PrepareRequestAdsStep</code>[]</p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-8">Inherited from<a href="#inherited-from-8" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-9">Inherited from<a href="#inherited-from-9" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
 <p><code>IModule.prepareRequestAdsSteps__</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="requestbidssteps__">requestBidsSteps__()?<a href="#requestbidssteps__" class="hash-link" aria-label="Direct link to requestBidsSteps__()?" title="Direct link to requestBidsSteps__()?">​</a></h5>
 <blockquote>
@@ -149,7 +161,7 @@ modules.</p>
 steps to the ad pipeline.</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-7">Returns<a href="#returns-7" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
 <p><code>RequestBidsStep</code>[]</p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-9">Inherited from<a href="#inherited-from-9" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="inherited-from-10">Inherited from<a href="#inherited-from-10" class="hash-link" aria-label="Direct link to Inherited from" title="Direct link to Inherited from">​</a></h6>
 <p><code>IModule.requestBidsSteps__</code></p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions">​</a></h2>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="createidentitylink">createIdentityLink()<a href="#createidentitylink" class="hash-link" aria-label="Direct link to createIdentityLink()" title="Direct link to createIdentityLink()">​</a></h3>
