@@ -99,6 +99,7 @@ export const createConfiant = (): IModule => {
 
   return {
     name,
+    configKey: 'confiant',
     description: 'ad fraud detection and protection module',
     moduleType: 'ad-fraud' as ModuleType,
     config__,

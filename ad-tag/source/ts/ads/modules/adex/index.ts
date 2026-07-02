@@ -265,6 +265,7 @@ export const createAdexModule = (): IAdexModule => {
 
   return {
     name,
+    configKey: 'adex',
     description: 'Moli DMP module for The Adex.',
     moduleType: 'dmp' as ModuleType,
     config__,

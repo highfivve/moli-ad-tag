@@ -31,3 +31,18 @@ Applies to two kinds of configuration:
   with `enabled: false` is the way to turn a feature off for its labels. An override cannot
   exist without a default — overriding a feature that has no base configuration is not
   supported.
+
+### Module
+
+A pluggable feature (`IModule`) with two distinct, independent identity strings — do not
+conflate them:
+
+- **`name`** — human-readable display identity, used only in log/debug output. Free-form,
+  may contain spaces (e.g. `"Blocklist URLs"`).
+- **`configKey`** — the exact key under which the module's configuration lives in
+  `ModulesConfig` (e.g. `blocklist`). Typed as `keyof modules.ModulesConfig`, so a mismatch
+  is a compile error, not a silent runtime miss. This is the only field used to look up a
+  module's configuration.
+
+`name` and `configKey` may differ (e.g. `name: "Blocklist URLs"`, `configKey: "blocklist"`) —
+that is expected, not a bug.

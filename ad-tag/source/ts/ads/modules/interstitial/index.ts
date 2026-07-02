@@ -26,6 +26,7 @@ export const createInterstitialModule = (): IModule => {
 
   return {
     name: 'interstitial-module',
+    configKey: 'interstitial',
     description: 'interstitial ad creatives',
     moduleType: 'creatives' as ModuleType,
     config__(): Object | null {

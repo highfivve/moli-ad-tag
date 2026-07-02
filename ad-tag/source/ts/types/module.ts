@@ -16,7 +16,22 @@ export type ModuleType =
   | string;
 
 export interface IModule {
+  /**
+   * Free-form, human-readable display name used only in log/debug output.
+   *
+   * This is NOT used to look up the module's configuration - see {@link configKey}.
+   */
   readonly name: string;
+
+  /**
+   * The key under which this module's configuration is stored in {@link modules.ModulesConfig}.
+   *
+   * Kept separate from {@link name} so the display name can be free-form while the config lookup
+   * stays type-safe. Typing this as `keyof modules.ModulesConfig` turns a mismatched key into a
+   * compile error instead of a silent runtime miss.
+   */
+  readonly configKey: keyof modules.ModulesConfig;
+
   readonly description: string;
   readonly moduleType: ModuleType;
 

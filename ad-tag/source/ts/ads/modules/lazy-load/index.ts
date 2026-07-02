@@ -304,6 +304,7 @@ export const createLazyLoad = (): IModule & LazyLoadModule => {
 
   return {
     name,
+    configKey: 'lazyload',
     description,
     moduleType,
     config__,

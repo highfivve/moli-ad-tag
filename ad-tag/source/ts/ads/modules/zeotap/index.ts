@@ -214,6 +214,7 @@ export const createZeotap = (): IModule => {
 
   return {
     name,
+    configKey: 'zeotap',
     description: 'Provides Zeotap functionality (data collection and identity plus) to Moli.',
     moduleType: 'identity' as ModuleType,
     config__,

@@ -56,6 +56,7 @@ describe('moli', () => {
     description: '',
     moduleType: 'cmp',
     name: '',
+    configKey: 'custom',
     config__(): Object | null {
       return null;
     },
@@ -293,7 +294,8 @@ describe('moli', () => {
     it('should add pipeline steps', async () => {
       const testModule = {
         ...fakeModule,
-        name: 'pubstack'
+        name: 'pubstack',
+        configKey: 'pubstack' as const
       };
       const configureSpy = sandbox.spy(testModule, 'configure__');
       const adTag = createMoliTag(jsDomWindow);
@@ -328,6 +330,7 @@ describe('moli', () => {
 
       adTag.registerModule({
         name: 'pubstack',
+        configKey: 'pubstack',
         moduleType: 'prebid',
         description: 'test-module',
         config__(): Object | null {
@@ -408,6 +411,7 @@ describe('moli', () => {
 
       adTag.registerModule({
         name: 'pubstack',
+        configKey: 'pubstack',
         moduleType: 'prebid',
         description: 'test-module',
         config__(): Object | null {
@@ -455,6 +459,46 @@ describe('moli', () => {
       expect(initStepSpy).to.have.been.called;
       expect(configureStepSpy).to.have.been.called;
       expect(prepareRequestAdsStepSpy).to.have.been.called;
+    });
+
+    it('should look up module config via configKey, not name (GD-10104)', async () => {
+      // Regression test: a module whose display `name` differs from its `configKey`. The config is
+      // stored under `configKey`, so the module-configure loop must key off `configKey`. Keying off
+      // `name` (the previous behaviour) leaves `base` undefined and silently skips configuration.
+      const adTag = createMoliTag(jsDomWindow);
+      const configureSpy = sandbox.spy();
+
+      adTag.registerModule({
+        // free-form display name that intentionally differs from the config key
+        name: 'the-pubstack-module',
+        configKey: 'pubstack',
+        moduleType: 'reporting',
+        description: 'test-module',
+        config__(): Object | null {
+          return null;
+        },
+        configure__: configureSpy,
+        initSteps__(): InitStep[] {
+          return [];
+        },
+        configureSteps__(): ConfigureStep[] {
+          return [];
+        },
+        prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+          return [];
+        }
+      });
+
+      const configWithModules: MoliConfig = {
+        ...defaultConfig,
+        modules: { pubstack: { enabled: true, tagId: 'xxxx' } },
+        requestAds: true
+      };
+      await adTag.configure(configWithModules);
+
+      // the module must have been configured with the config stored under its `configKey`
+      expect(configureSpy).calledOnce;
+      expect(configureSpy).calledOnceWithExactly(configWithModules.modules);
     });
   });
 
@@ -870,6 +914,7 @@ describe('moli', () => {
       const module: IModule = {
         ...fakeModule,
         name: 'pubstack',
+        configKey: 'pubstack',
         initSteps__: (): InitStep[] => [initStep]
       };
 
@@ -1870,6 +1915,7 @@ describe('moli', () => {
 
       adTag.registerModule({
         name: 'pubstack',
+        configKey: 'pubstack',
         moduleType: 'prebid',
         description: 'test-module',
         config__(): Object | null {
@@ -1950,6 +1996,7 @@ describe('moli', () => {
 
       adTag.registerModule({
         name: 'pubstack',
+        configKey: 'pubstack',
         moduleType: 'prebid',
         description: 'test-module',
         config__(): Object | null {
@@ -2006,6 +2053,7 @@ describe('moli', () => {
 
         adTag.registerModule({
           name: 'pubstack',
+          configKey: 'pubstack',
           moduleType: 'prebid',
           description: 'test-module',
           config__(): Object | null {
@@ -2045,6 +2093,7 @@ describe('moli', () => {
 
         adTag.registerModule({
           name: 'pubstack',
+          configKey: 'pubstack',
           moduleType: 'prebid',
           description: 'test-module',
           config__(): Object | null {
@@ -2086,6 +2135,7 @@ describe('moli', () => {
 
         adTag.registerModule({
           name: 'pubstack',
+          configKey: 'pubstack',
           moduleType: 'prebid',
           description: 'test-module',
           config__(): Object | null {
@@ -2129,6 +2179,7 @@ describe('moli', () => {
 
         adTag.registerModule({
           name: 'pubstack',
+          configKey: 'pubstack',
           moduleType: 'prebid',
           description: 'test-module',
           config__(): Object | null {
@@ -2173,6 +2224,7 @@ describe('moli', () => {
 
         adTag.registerModule({
           name: 'pubstack',
+          configKey: 'pubstack',
           moduleType: 'prebid',
           description: 'test-module',
           config__(): Object | null {
@@ -2214,6 +2266,7 @@ describe('moli', () => {
 
         adTag.registerModule({
           name: 'pubstack',
+          configKey: 'pubstack',
           moduleType: 'prebid',
           description: 'test-module',
           config__(): Object | null {
@@ -2264,6 +2317,7 @@ describe('moli', () => {
 
         adTag.registerModule({
           name: 'pubstack',
+          configKey: 'pubstack',
           moduleType: 'prebid',
           description: 'module-a',
           config__(): Object | null {
@@ -2283,6 +2337,7 @@ describe('moli', () => {
 
         adTag.registerModule({
           name: 'geoedge',
+          configKey: 'geoedge',
           moduleType: 'prebid',
           description: 'module-b',
           config__(): Object | null {
@@ -2302,6 +2357,7 @@ describe('moli', () => {
 
         adTag.registerModule({
           name: 'confiant',
+          configKey: 'confiant',
           moduleType: 'prebid',
           description: 'module-c',
           config__(): Object | null {
@@ -2360,6 +2416,7 @@ describe('moli', () => {
         const configureSpy = sandbox.spy();
         adTag.registerModule({
           name: 'pubstack',
+          configKey: 'pubstack',
           moduleType: 'prebid',
           description: 'test-module',
           config__(): Object | null {
@@ -2599,6 +2656,7 @@ describe('moli', () => {
         const prebidBidsBackHandler = sandbox.spy();
         adTag.registerModule({
           name: 'pubstack',
+          configKey: 'pubstack',
           moduleType: 'prebid',
           description: 'test-module',
           config__(): Object | null {

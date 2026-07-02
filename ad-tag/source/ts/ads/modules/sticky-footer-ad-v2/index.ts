@@ -97,6 +97,7 @@ export const createStickyFooterAdsV2 = (): IModule => {
 
   return {
     name,
+    configKey: 'stickyFooterAdV2',
     description: 'sticky footer ad creatives',
     moduleType: 'creatives' as ModuleType,
     config__,

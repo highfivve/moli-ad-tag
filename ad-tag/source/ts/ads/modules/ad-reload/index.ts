@@ -389,6 +389,7 @@ export const createAdReload = (): IAdReloadModule => {
 
   return {
     name,
+    configKey: 'adReload',
     description: 'Moli implementation of an ad reload module.',
     moduleType: 'ad-reload' as ModuleType,
     config__,
