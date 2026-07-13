@@ -219,10 +219,7 @@ export const YieldOptimization = (
           return;
         }
 
-        const adUnitPath = resolveAdUnitPath(
-          event.slot.getAdUnitPath(),
-          context.adUnitPathVariables__
-        );
+        const adUnitPath = event.slot.getAdUnitPath();
 
         if (uprResetState.isReset(adUnitPath)) {
           return;
