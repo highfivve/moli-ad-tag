@@ -3434,6 +3434,10 @@
             },
             "provider": {
               "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfigProvider"
+            },
+            "uprReset": {
+              "$ref": "#/definitions/modules.yield_optimization.UprResetConfig",
+              "description": "UPR Reset removes an ad unit path's floor price (`upr_id`) once it appears to be causing a no-fill or losing a real bid, so the slot fills at a lower price instead of going empty.\n\nOmit to disable UPR Reset entirely. When set, all slots are reset-eligible by default; use `excludeAdSlotDomIds` to opt specific slots out."
             }
           },
           "required": [
@@ -3523,6 +3527,10 @@
             },
             "provider": {
               "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfigProvider"
+            },
+            "uprReset": {
+              "$ref": "#/definitions/modules.yield_optimization.UprResetConfig",
+              "description": "UPR Reset removes an ad unit path's floor price (`upr_id`) once it appears to be causing a no-fill or losing a real bid, so the slot fills at a lower price instead of going empty.\n\nOmit to disable UPR Reset entirely. When set, all slots are reset-eligible by default; use `excludeAdSlotDomIds` to opt specific slots out."
             }
           },
           "required": [
@@ -3625,6 +3633,10 @@
             },
             "provider": {
               "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfigProvider"
+            },
+            "uprReset": {
+              "$ref": "#/definitions/modules.yield_optimization.UprResetConfig",
+              "description": "UPR Reset removes an ad unit path's floor price (`upr_id`) once it appears to be causing a no-fill or losing a real bid, so the slot fills at a lower price instead of going empty.\n\nOmit to disable UPR Reset entirely. When set, all slots are reset-eligible by default; use `excludeAdSlotDomIds` to opt specific slots out."
             }
           },
           "required": [
@@ -7557,6 +7569,10 @@
         },
         "provider": {
           "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfigProvider"
+        },
+        "uprReset": {
+          "$ref": "#/definitions/modules.yield_optimization.UprResetConfig",
+          "description": "UPR Reset removes an ad unit path's floor price (`upr_id`) once it appears to be causing a no-fill or losing a real bid, so the slot fills at a lower price instead of going empty.\n\nOmit to disable UPR Reset entirely. When set, all slots are reset-eligible by default; use `excludeAdSlotDomIds` to opt specific slots out."
         }
       },
       "required": [
@@ -7581,6 +7597,10 @@
         },
         "provider": {
           "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfigProvider"
+        },
+        "uprReset": {
+          "$ref": "#/definitions/modules.yield_optimization.UprResetConfig",
+          "description": "UPR Reset removes an ad unit path's floor price (`upr_id`) once it appears to be causing a no-fill or losing a real bid, so the slot fills at a lower price instead of going empty.\n\nOmit to disable UPR Reset entirely. When set, all slots are reset-eligible by default; use `excludeAdSlotDomIds` to opt specific slots out."
         }
       },
       "required": [
@@ -7613,12 +7633,37 @@
         },
         "provider": {
           "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfigProvider"
+        },
+        "uprReset": {
+          "$ref": "#/definitions/modules.yield_optimization.UprResetConfig",
+          "description": "UPR Reset removes an ad unit path's floor price (`upr_id`) once it appears to be causing a no-fill or losing a real bid, so the slot fills at a lower price instead of going empty.\n\nOmit to disable UPR Reset entirely. When set, all slots are reset-eligible by default; use `excludeAdSlotDomIds` to opt specific slots out."
         }
       },
       "required": [
         "config",
         "enabled",
         "provider"
+      ],
+      "type": "object"
+    },
+    "modules.yield_optimization.UprResetConfig": {
+      "additionalProperties": false,
+      "description": "Configuration for the UPR Reset feature of the yield-optimization module.",
+      "properties": {
+        "excludeAdSlotDomIds": {
+          "description": "Ad slots that should never have their floor price reset.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "fallbackPriceRuleId": {
+          "description": "Price Rule id sent as `upr_id` once an ad unit path's floor has been reset. If unset, `upr_id` is omitted entirely once reset.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "excludeAdSlotDomIds"
       ],
       "type": "object"
     },

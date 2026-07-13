@@ -46,3 +46,28 @@ conflate them:
 
 `name` and `configKey` may differ (e.g. `name: "Blocklist URLs"`, `configKey: "blocklist"`) —
 that is expected, not a bug.
+
+### Price Rule
+A floor-price candidate for an ad unit, fetched from the yield-optimization service. Has a
+`floorprice`, an identifying `priceRuleId`, and a `main` flag. GAM matches the `upr_id`
+targeting key sent with an ad request against the corresponding Unified Pricing Rule in GAM to
+enforce the floor.
+
+### Main Price Rule
+The Price Rule among a slot's fetched candidates whose value actually determines the `upr_id`
+sent with the ad request (its floor price, or a dynamically-recalculated price when dynamic
+floor pricing is enabled).
+
+### UPR Reset
+A yield-optimization module feature that removes the Main Price Rule's floor for an ad unit
+path when it appears to be causing a no-fill, so a lower/no-floor request can go out instead.
+Enabled by default for all slots; `excludeAdSlotDomIds` opts specific slots out. Once triggered
+for an ad unit path — via Empty Refresh — the floor stays reset for the rest of the page
+session, regardless of DOM id or SPA navigation. The floor is replaced with a configured
+fallback Price Rule if one is set, otherwise `upr_id` is omitted entirely from that ad unit
+path's requests from then on.
+
+### Empty Refresh
+The UPR Reset trigger that fires after an ad unit path's first ad request in a requestAds cycle
+comes back genuinely empty (no fill from GAM): `upr_id` is stripped and the slot is refreshed
+once.

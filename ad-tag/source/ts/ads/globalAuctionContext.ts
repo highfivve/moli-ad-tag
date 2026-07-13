@@ -32,8 +32,10 @@ export interface GlobalAuctionContext {
   /**
    *
    * @param slot The GPT ad slot to check
+   * @param options refresh options for the current pipeline run. If `force` is set, this always
+   *        returns `false`.
    */
-  isSlotThrottled(slot: googletag.IAdSlot): boolean;
+  isSlotThrottled(slot: googletag.IAdSlot, options?: MoliRuntime.RefreshAdSlotsOptions): boolean;
   isBidderFrequencyCappedOnSlot(slotId: string, bidder: string): boolean;
   getLastBidCpmsOfAdUnit(slotId: string): number[];
 
@@ -202,7 +204,10 @@ export const createGlobalAuctionContext = (
   });
 
   return {
-    isSlotThrottled(slot: googletag.IAdSlot): boolean {
+    isSlotThrottled(slot: googletag.IAdSlot, options?: MoliRuntime.RefreshAdSlotsOptions): boolean {
+      if (options?.force) {
+        return false;
+      }
       return !!(
         adRequestThrottling?.isThrottled(slot.getSlotElementId()) ||
         frequencyCapping?.isAdUnitCapped(slot)

@@ -234,6 +234,19 @@ describe('Global auction context', () => {
           sinon.match.func
         );
       });
+
+      it('should bypass throttling when force is set', () => {
+        const context = makeAuctionContext(auctionContextConfig);
+        const slot = googleAdSlotStub('/123/slot-1', 'slot-1');
+
+        const onSlotRequested = (googletagAddEventListenerSpy.args as any[]).find(
+          args => args[0] === 'slotRequested'
+        )?.[1] as (event: { slot: typeof slot }) => void;
+        onSlotRequested({ slot });
+
+        expect(context.isSlotThrottled(slot)).to.be.true;
+        expect(context.isSlotThrottled(slot, { force: true })).to.be.false;
+      });
     });
 
     describe('disabled', () => {

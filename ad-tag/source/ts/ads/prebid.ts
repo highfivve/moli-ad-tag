@@ -472,7 +472,7 @@ export const prebidRequestBids = (
         const slotsToRefresh = slots.filter(
           slot =>
             // keep slots that are not throttled
-            !context.auction__.isSlotThrottled(slot.adSlot) &&
+            !context.auction__.isSlotThrottled(slot.adSlot, context.options__?.options) &&
             // keep slots that are not and interstitial or interstitials that are not from GAM web interstitials
             (!isGamInterstitial(slot.adSlot, context.window__) ||
               context.auction__.interstitialChannel() !== 'gam')
