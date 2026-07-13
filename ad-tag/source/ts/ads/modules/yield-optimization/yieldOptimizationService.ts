@@ -5,6 +5,7 @@ import { googletag } from 'ad-tag/types/googletag';
 import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import { isYieldConfigDynamic } from 'ad-tag/ads/modules/yield-optimization/isYieldOptimizationConfigDynamic';
 import { calculateDynamicPriceRule } from 'ad-tag/ads/modules/yield-optimization/dynamicFloorPrice';
+import { UprResetState } from 'ad-tag/ads/modules/yield-optimization/uprResetState';
 
 /**
  * Extended representation which adds
@@ -37,7 +38,8 @@ export interface YieldOptimizationService {
     adServer: AdServer,
     logger: MoliRuntime.MoliLogger,
     yieldOptimizationConfig: modules.yield_optimization.YieldOptimizationConfig | null,
-    auctionContext?: GlobalAuctionContext
+    auctionContext?: GlobalAuctionContext,
+    uprResetState?: UprResetState
   ): Promise<PriceRule | undefined>;
 }
 export const createYieldOptimizationService = (
@@ -137,16 +139,44 @@ export const createYieldOptimizationService = (
     adServer: AdServer,
     logger: MoliRuntime.MoliLogger,
     yieldOptimizationConfig: modules.yield_optimization.YieldOptimizationConfig | null,
-    auctionContext?: GlobalAuctionContext
+    auctionContext?: GlobalAuctionContext,
+    uprResetState?: UprResetState
   ): Promise<PriceRule | undefined> => {
     const adUnitPath = resolveAdUnitPath(adSlot.getAdUnitPath(), adUnitPathVariables);
+
+    // UPR Reset: once an ad unit path is sticky-reset, never send its computed price rule's
+    // upr_id again - send the configured fallback instead, or omit upr_id entirely.
+    // See docs/adr/0003-upr-reset-on-empty-or-sub-floor-bid.md
+    const setUprId = (computedPriceRuleId: number): void => {
+      if (uprResetState?.isReset(adUnitPath)) {
+        const fallbackPriceRuleId = yieldOptimizationConfig?.uprReset?.fallbackPriceRuleId;
+        if (fallbackPriceRuleId !== undefined) {
+          adSlot.setTargeting('upr_id', fallbackPriceRuleId.toFixed(0));
+        } else {
+          adSlot.setConfig({ targeting: { upr_id: null } });
+        }
+      } else {
+        adSlot.setTargeting('upr_id', computedPriceRuleId.toFixed(0));
+      }
+    };
+
+    // reset ad unit paths never report as the main price rule - `upr_id` no longer reflects it
+    // (fallback or omitted), so leaving `upr_main: true` would skew reporting.
+    const setUprMain = (): void => {
+      if (uprResetState?.isReset(adUnitPath)) {
+        adSlot.setConfig({ targeting: { upr_main: null } });
+      } else {
+        adSlot.setTargeting('upr_main', 'true');
+      }
+    };
+
     return adUnitPricingRuleResponse.then(config => {
       const rule = config.rules[adUnitPath];
       if (adServer === 'gam') {
         if (rule) {
           adSlot.setTargeting('upr_model', rule.model || 'static');
           if (rule.main) {
-            adSlot.setTargeting('upr_main', 'true');
+            setUprMain();
             const lastBidCpmsOnPosition: number[] | undefined =
               auctionContext?.getLastBidCpmsOfAdUnit(adSlot.getSlotElementId());
             if (
@@ -169,17 +199,17 @@ export const createYieldOptimizationService = (
                 'YieldOptimizationService',
                 `set dynamic price rule id ${newRule.priceRuleId} for ${adUnitPath} based on previous bid cpms on same position. Stategy is '${strategy}'. Main traffic share ${rule.main}. Cpm is ${newRule.floorprice}.`
               );
-              adSlot.setTargeting('upr_id', newRule.priceRuleId.toFixed(0));
+              setUprId(newRule.priceRuleId);
               return newRule;
             } else {
-              adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
+              setUprId(rule.priceRuleId);
             }
           } else {
             logger.debug(
               'YieldOptimizationService',
               `set price rule id ${rule.priceRuleId} for ${adUnitPath}. Main traffic share ${rule.main}. cpm is ${rule.floorprice}`
             );
-            adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
+            setUprId(rule.priceRuleId);
           }
         } else if (isEnabled) {
           logger.warn('YieldOptimizationService', `No price rule found for ${adUnitPath}`);
