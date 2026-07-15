@@ -492,6 +492,20 @@ export namespace MoliRuntime {
     readonly sizesOverride?: googleAdManager.SlotSize[];
 
     /**
+     * If set to true, this refresh is forced through ad request throttling and frequency-cap
+     * checks (`adRequestThrottling`, `frequencyCap`) that would otherwise silently skip
+     * refreshing this slot.
+     *
+     * Use this for a deliberate, one-off corrective refresh where silently dropping the request
+     * would defeat the purpose of the call, e.g. the yield-optimization module's UPR Reset
+     * feature refreshing a slot once after removing its floor price.
+     *
+     * @default false
+     * @see docs/adr/0003-upr-reset-on-empty-or-sub-floor-bid.md
+     */
+    readonly force?: boolean;
+
+    /**
      * If set to true, the ad slot will be refreshed after `moli.triggerDelay` is called.
      */
     readonly delay?: {

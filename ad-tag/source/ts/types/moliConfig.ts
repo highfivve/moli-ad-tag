@@ -2738,6 +2738,35 @@ export namespace modules {
 
     export type IYieldOptimizationConfig = IModuleConfig & {
       readonly provider: YieldOptimizationConfigProvider;
+
+      /**
+       * UPR Reset removes an ad unit path's floor price (`upr_id`) once it appears to be causing
+       * a no-fill or losing a real bid, so the slot fills at a lower price instead of going empty.
+       *
+       * Omit to disable UPR Reset entirely. When set, all slots are reset-eligible by default;
+       * use `excludeAdSlotDomIds` to opt specific slots out.
+       *
+       * @see docs/adr/0003-upr-reset-on-empty-or-sub-floor-bid.md
+       */
+      readonly uprReset?: UprResetConfig;
+    };
+
+    /**
+     * Configuration for the UPR Reset feature of the yield-optimization module.
+     *
+     * @see docs/adr/0003-upr-reset-on-empty-or-sub-floor-bid.md
+     */
+    export type UprResetConfig = {
+      /**
+       * Ad slots that should never have their floor price reset.
+       */
+      readonly excludeAdSlotDomIds: string[];
+
+      /**
+       * Price Rule id sent as `upr_id` once an ad unit path's floor has been reset. If unset,
+       * `upr_id` is omitted entirely once reset.
+       */
+      readonly fallbackPriceRuleId?: number;
     };
 
     /**

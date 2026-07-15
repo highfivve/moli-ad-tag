@@ -592,7 +592,7 @@ export const gptRequestAds =
           break;
         case 'production':
           const slotsToRefresh = slots.filter(
-            ({ adSlot }) => !context.auction__.isSlotThrottled(adSlot)
+            ({ adSlot }) => !context.auction__.isSlotThrottled(adSlot, context.options__?.options)
           );
           if (slotsToRefresh.length === 0) {
             break;

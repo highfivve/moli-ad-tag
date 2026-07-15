@@ -62,6 +62,7 @@ import {
   createYieldOptimizationService,
   YieldOptimizationService
 } from './yieldOptimizationService';
+import { createUprResetState, UprResetState } from './uprResetState';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { IModule, ModuleType } from 'ad-tag/types/module';
 import { modules } from 'ad-tag/types/moliConfig';
@@ -70,11 +71,13 @@ import {
   ConfigureStep,
   HIGH_PRIORITY,
   InitStep,
+  mkConfigureStepOnce,
   mkInitStep,
   mkPrepareRequestAdsStep,
   PrepareRequestAdsStep
 } from 'ad-tag/ads/adPipeline';
 import { uniquePrimitiveFilter } from 'ad-tag/util/arrayUtils';
+import { resolveAdUnitPath } from 'ad-tag/ads/adUnitPath';
 
 /**
  * == Yield Optimization ==
@@ -94,7 +97,16 @@ export const YieldOptimization = (
 
   let yieldModuleConfig: modules.yield_optimization.YieldOptimizationConfig | null = null;
 
+  /**
+   * Sticky UPR Reset state for the page session, marked by the Empty Refresh trigger (below)
+   * and consulted by `setTargeting` on every cycle.
+   *
+   * @see docs/adr/0003-upr-reset-on-empty-or-sub-floor-bid.md
+   */
+  const uprResetState: UprResetState = createUprResetState();
+
   const _initSteps: InitStep[] = [];
+  const _configureSteps: ConfigureStep[] = [];
   const _prepareRequestAdsSteps: PrepareRequestAdsStep[] = [];
 
   const config__ = (): Object | null => yieldModuleConfig;
@@ -109,12 +121,17 @@ export const YieldOptimization = (
 
       _initSteps.push(yieldOptimizationInit(yieldOptimizationService));
       _prepareRequestAdsSteps.push(yieldOptimizationPrepareRequestAds(yieldOptimizationService));
+
+      const uprReset = yieldModuleConfig.uprReset;
+      if (uprReset) {
+        _configureSteps.push(uprResetEmptyRefreshListener(uprReset));
+      }
     }
   };
 
   const initSteps__ = (): InitStep[] => _initSteps;
 
-  const configureSteps__ = (): ConfigureStep[] => [];
+  const configureSteps__ = (): ConfigureStep[] => _configureSteps;
 
   const prepareRequestAdsSteps__ = (): PrepareRequestAdsStep[] => _prepareRequestAdsSteps;
 
@@ -153,7 +170,8 @@ export const YieldOptimization = (
               adServer,
               context.logger__,
               yieldModuleConfig,
-              context.auction__
+              context.auction__,
+              uprResetState
             )
             .then(priceRule => (slot.priceRule = priceRule));
         });
@@ -166,6 +184,75 @@ export const YieldOptimization = (
           });
       }
     );
+
+  /**
+   * UPR Reset's Empty Refresh trigger: the module's own `slotRenderEnded` listener, independent
+   * of the ad-reload module. If an ad unit path's first ad request in a cycle comes back
+   * genuinely empty, its floor is stripped (sticky, for the rest of the page session) and the
+   * slot is refreshed once via `moli.refreshAdSlot`.
+   *
+   * Registered once for the page session. Suppressed for ad unit paths already reset - no retry
+   * beyond that one refresh.
+   *
+   * @see docs/adr/0003-upr-reset-on-empty-or-sub-floor-bid.md
+   */
+  const uprResetEmptyRefreshListener = (
+    uprReset: modules.yield_optimization.UprResetConfig
+  ): ConfigureStep =>
+    mkConfigureStepOnce('yield-optimization-upr-reset-empty-refresh', context => {
+      const loadedBehaviourByDomId = new Map(
+        context.config__.slots.map(slot => [slot.domId, slot.behaviour.loaded] as const)
+      );
+
+      context.window__.googletag.pubads().addEventListener('slotRenderEnded', event => {
+        if (!event.isEmpty) {
+          return;
+        }
+
+        const slotDomId = event.slot.getSlotElementId();
+        if (uprReset.excludeAdSlotDomIds.indexOf(slotDomId) > -1) {
+          return;
+        }
+
+        const loaded = loadedBehaviourByDomId.get(slotDomId);
+        if (loaded === 'infinite') {
+          return;
+        }
+
+        const adUnitPath = event.slot.getAdUnitPath();
+
+        if (uprResetState.isReset(adUnitPath)) {
+          return;
+        }
+
+        uprResetState.markReset(adUnitPath);
+        context.logger__.debug(
+          'YieldOptimizationService',
+          `UPR Reset (Empty Refresh): ${adUnitPath} came back empty, floor removed${
+            uprReset.fallbackPriceRuleId
+              ? `, fallback price rule ${uprReset.fallbackPriceRuleId} applied`
+              : ''
+          }. Refreshing ${slotDomId} once.`
+        );
+
+        context.window__.moli
+          .refreshAdSlot(slotDomId, {
+            ...(loaded && { loaded }),
+            // this is a deliberate, one-off corrective refresh - a throttled/frequency-capped
+            // no-op here would silently defeat the "no retry" guarantee of Empty Refresh
+            force: true
+          })
+          .catch(error =>
+            context.logger__.error(
+              'YieldOptimizationService',
+              `UPR Reset: refreshing ${slotDomId} failed`,
+              error
+            )
+          );
+      });
+
+      return Promise.resolve();
+    });
 
   return {
     name,
