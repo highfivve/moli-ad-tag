@@ -61,10 +61,13 @@ export const ConsentConfig: React.FC = () => {
 
   // componentDidMount - initialize consent data
   React.useEffect(() => {
+    let listenerId: number | undefined | null;
+
     // update consent status
     if (window.__tcfapi) {
       // Update on changes
       window.__tcfapi('addEventListener', 2, event => {
+        listenerId = event.listenerId;
         const tcModel = event.gdprApplies ? TCString.decode(event.tcString) : undefined;
         setConsentState(prevState => ({
           ...prevState,
@@ -91,7 +94,13 @@ export const ConsentConfig: React.FC = () => {
         messages: [errorMessage, ...prevState.messages]
       }));
     }
-  });
+
+    return () => {
+      if (window.__tcfapi && listenerId != null) {
+        window.__tcfapi('removeEventListener', 2, () => undefined, listenerId);
+      }
+    };
+  }, []);
 
   const cmpVendorTag = (): React.ReactElement => {
     if (consentState.tcModel) {
@@ -149,7 +158,7 @@ export const ConsentConfig: React.FC = () => {
       </div>
     );
   };
-  const isCmpFunctionAvailable = () => window.__tcfapi || typeof window.__tcfapi === 'function';
+  const isCmpFunctionAvailable = () => typeof window.__tcfapi === 'function';
 
   const consentData = (): React.ReactElement | undefined => {
     if (isCmpFunctionAvailable()) {
