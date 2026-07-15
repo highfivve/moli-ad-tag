@@ -220,7 +220,11 @@ export default {
           info: '#7da6d7',
           success: '#42cbc9',
           warning: '#e8d06a',
-          error: '#f88383'
+          error: '#f88383',
+          // Improve card contrast in dark mode
+          'base-100': '#1f1f2e',
+          'base-200': '#2d2d3d',
+          'base-300': '#3a3a4d'
         }
       }
     ],
