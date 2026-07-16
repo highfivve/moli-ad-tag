@@ -1,7 +1,9 @@
 import { googletag } from 'ad-tag/types/googletag';
+import { welect } from 'ad-tag/types/welect';
 import { AdUnitPathVariables, resolveAdUnitPath } from 'ad-tag/ads/adUnitPath';
 import { auction } from 'ad-tag/types/moliConfig';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { AssetLoadMethod, IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
 /**
  * The outcome of a single channel attempt within the rewarded ad waterfall.
@@ -48,11 +50,46 @@ export interface RewardedAdContext {
 
 export const createRewardedAdContext = (
   config: auction.RewardedAdConfig,
-  window__: Window & googletag.IGoogleTagWindow,
-  logger: MoliRuntime.MoliLogger
+  window__: Window & googletag.IGoogleTagWindow & welect.WelectWindow,
+  logger: MoliRuntime.MoliLogger,
+  assetLoaderService: IAssetLoaderService
 ): RewardedAdContext => {
   let gamAdUnitPath = config.gam?.adUnitPath;
   let inFlight = false;
+
+  /**
+   * The Welect SDK bundle is lazy-loaded on first actual use, not eagerly on pipeline init.
+   * The promise is cached so subsequent attempts reuse the already loaded bundle. A failed
+   * load clears the cache, so a later `rewardedAd()` call retries the download.
+   */
+  let welectBundle: Promise<welect.Welect> | undefined;
+
+  const loadWelectSdk = (welectConfig: auction.RewardedAdWelectConfig): Promise<welect.Welect> => {
+    // the publisher may have preloaded the welect bundle - never load it a second time
+    const preloadedApi = window__.Welect;
+    if (preloadedApi) {
+      return Promise.resolve(preloadedApi);
+    }
+    welectBundle =
+      welectBundle ??
+      assetLoaderService
+        .loadScript({
+          name: 'welect',
+          assetUrl: welectConfig.bundleUrl,
+          loadMethod: AssetLoadMethod.TAG
+        })
+        .then(() => {
+          const welectApi = window__.Welect;
+          return welectApi
+            ? Promise.resolve(welectApi)
+            : Promise.reject(new Error('welect bundle loaded, but window.Welect is not defined'));
+        })
+        .catch(error => {
+          welectBundle = undefined;
+          return Promise.reject(error);
+        });
+    return welectBundle;
+  };
 
   /**
    * Attempt to fill the rewarded ad through Google Ad Manager Rewarded Ads for Web.
@@ -166,15 +203,135 @@ export const createRewardedAdContext = (
       });
     });
 
+  /**
+   * Check if the user already holds a valid Welect token, i.e. already earned the reward in
+   * this session. Bounded by `timeoutMs` - a hanging bundle download must not stall the
+   * whole waterfall, so on timeout or a failed load the preflight reports no valid token
+   * and the waterfall proceeds.
+   */
+  const hasValidWelectToken = (welectConfig: auction.RewardedAdWelectConfig): Promise<boolean> =>
+    new Promise<boolean>(resolve => {
+      let settled = false;
+      const settle = (validToken: boolean): void => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        window__.clearTimeout(timeoutId);
+        resolve(validToken);
+      };
+      const timeoutId = window__.setTimeout(() => {
+        logger.debug('rewardedAd', `welect token preflight timed out after ${config.timeoutMs}ms`);
+        settle(false);
+      }, config.timeoutMs);
+
+      loadWelectSdk(welectConfig)
+        .then(welectApi => {
+          const checkToken = welectApi.checkToken;
+          if (!checkToken) {
+            logger.error('rewardedAd', 'welect bundle does not provide checkToken');
+            settle(false);
+            return;
+          }
+          checkToken({
+            onValid: () => settle(true),
+            onInvalid: () => settle(false)
+          });
+        })
+        .catch(error => {
+          logger.error('rewardedAd', 'welect token preflight failed', error);
+          settle(false);
+        });
+    });
+
+  /**
+   * Attempt to fill the rewarded ad through the Welect Ad Chooser.
+   *
+   * - the `timeoutMs` budget covers the bundle download and the `checkAvailability` call.
+   *   Once the session runs, the user controls how long it takes, so the timeout no
+   *   longer applies (same semantics as the gam channel after `rewardedSlotReady`)
+   * - `onUnavailable` and a failed bundle load are no-fill - the waterfall falls through
+   * - `runSession`: `onSuccess` grants the static configured payload, `onAbort` cancels
+   */
+  const attemptWelect = (welectConfig: auction.RewardedAdWelectConfig): Promise<ChannelAttempt> =>
+    new Promise<ChannelAttempt>(resolve => {
+      let settled = false;
+      const settle = (attempt: ChannelAttempt): void => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        window__.clearTimeout(timeoutId);
+        resolve(attempt);
+      };
+      const timeoutId = window__.setTimeout(() => {
+        logger.debug(
+          'rewardedAd',
+          `welect attempt timed out after ${config.timeoutMs}ms without an availability result`
+        );
+        settle({ outcome: 'no-fill' });
+      }, config.timeoutMs);
+
+      loadWelectSdk(welectConfig)
+        .then(welectApi => {
+          if (settled) {
+            // the attempt already timed out while the bundle was loading
+            return;
+          }
+          const checkAvailability = welectApi.checkAvailability;
+          const runSession = welectApi.runSession;
+          if (!checkAvailability || !runSession) {
+            // all SDK methods are optional - a bundle without them cannot serve an ad
+            logger.error(
+              'rewardedAd',
+              'welect bundle does not provide checkAvailability/runSession'
+            );
+            settle({ outcome: 'no-fill' });
+            return;
+          }
+          checkAvailability({
+            onAvailable: () => {
+              if (settled) {
+                // the attempt already timed out - do not open the ad chooser anymore
+                return;
+              }
+              // the session is available. From here on the user controls how long the
+              // session takes, so the timeout no longer applies
+              window__.clearTimeout(timeoutId);
+              logger.debug('rewardedAd', 'welect session available');
+              runSession({
+                onSuccess: () => {
+                  logger.debug('rewardedAd', 'welect granted reward', welectConfig.payload);
+                  settle({ outcome: 'granted', payload: welectConfig.payload });
+                },
+                onAbort: () => {
+                  logger.debug('rewardedAd', 'welect session aborted');
+                  settle({ outcome: 'canceled' });
+                }
+              });
+            },
+            onUnavailable: () => {
+              logger.debug('rewardedAd', 'welect attempt has no fill');
+              settle({ outcome: 'no-fill' });
+            }
+          });
+        })
+        .catch(error => {
+          logger.error('rewardedAd', 'failed to load the welect bundle', error);
+          settle({ outcome: 'no-fill' });
+        });
+    });
+
   const attemptChannel = (channel: auction.RewardedAdChannel): Promise<ChannelAttempt> => {
+    // a channel without its configuration block is skipped ("not configured" is a
+    // business outcome, not an error)
     switch (channel) {
       case 'gam':
-        // a channel without its configuration block is skipped ("not configured" is a
-        // business outcome, not an error)
         return config.gam ? attemptGam(config.gam) : Promise.resolve({ outcome: 'no-fill' });
       case 'welect':
-        // not implemented yet - falls through the waterfall
-        return Promise.resolve({ outcome: 'no-fill' });
+        return config.welect
+          ? attemptWelect(config.welect)
+          : Promise.resolve({ outcome: 'no-fill' });
     }
   };
 
@@ -187,6 +344,20 @@ export const createRewardedAdContext = (
     }
     inFlight = true;
     try {
+      // welect token preflight: a valid existing token short-circuits the whole waterfall to
+      // granted with the configured static payload, no ad shown. This avoids re-annoying
+      // users that already earned the reward in this session.
+      const welectConfig = config.welect;
+      if (
+        welectConfig &&
+        config.priority.includes('welect') &&
+        welectConfig.checkToken !== false &&
+        (await hasValidWelectToken(welectConfig))
+      ) {
+        logger.debug('rewardedAd', 'valid welect token - granting without an ad');
+        return { state: 'granted', channel: 'welect', payload: welectConfig.payload };
+      }
+
       for (const channel of config.priority) {
         const attempt = await attemptChannel(channel);
         switch (attempt.outcome) {

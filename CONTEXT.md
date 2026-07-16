@@ -71,6 +71,13 @@ business outcome, including failure to fill, resolves the promise — the `error
 expected conditions like a concurrent call, not exceptions. The promise only rejects on
 unexpected technical exceptions, e.g. a crash in an underlying channel integration.
 
+### Welect Token Preflight
+An optional check (`checkToken`, default on) that runs before the Rewarded Ad Waterfall when
+the `welect` channel is prioritized: a valid existing Welect token — proof the user already
+completed a Welect session — short-circuits the whole waterfall to `granted` with the channel's
+configured static Reward Payload, without showing an ad on any channel. This avoids re-annoying
+users that already earned the reward in this session.
+
 ### Reward Payload
 The `{ amount: number; type: string }` describing what the user was granted. Mandatory on every
 `granted` result, regardless of channel — the `gam` channel supplies it dynamically via its

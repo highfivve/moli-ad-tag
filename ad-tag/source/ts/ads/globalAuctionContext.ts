@@ -13,6 +13,8 @@ import { createRewardedAdContext } from 'ad-tag/ads/auctions/rewardedAdContext';
 import { createTrackWinningBidder } from 'ad-tag/ads/auctions/trackWinningBidder';
 import { LabelCondition } from 'ad-tag/ads/labelConfigService';
 import { resolveOverridableConfig } from 'ad-tag/ads/configOverrides';
+import { createAssetLoaderService, IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { welect } from 'ad-tag/types/welect';
 
 /**
  * ## Global Auction Context
@@ -77,11 +79,13 @@ export const createGlobalAuctionContext = (
   window: Window &
     prebidjs.IPrebidjsWindow &
     googletag.IGoogleTagWindow &
+    welect.WelectWindow &
     Pick<typeof globalThis, 'Date'>,
   logger: MoliRuntime.MoliLogger,
   eventService: EventService,
   config: auction.GlobalAuctionContextConfig = {},
-  isLabelConditionMet: (condition: LabelCondition) => boolean = () => false
+  isLabelConditionMet: (condition: LabelCondition) => boolean = () => false,
+  assetLoaderService: IAssetLoaderService = createAssetLoaderService(window)
 ): GlobalAuctionContext => {
   // resolve label-conditioned config overrides for every first-level feature (first match wins,
   // full replace). runs once when the Global Auction Context is built; SPA navigations call
@@ -140,7 +144,7 @@ export const createGlobalAuctionContext = (
     : undefined;
 
   const rewardedAd = rewardedAdConfig?.enabled
-    ? createRewardedAdContext(rewardedAdConfig, window, logger)
+    ? createRewardedAdContext(rewardedAdConfig, window, logger, assetLoaderService)
     : undefined;
 
   // Ensure pbjs and googletag are initialized

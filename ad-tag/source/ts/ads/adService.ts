@@ -273,7 +273,8 @@ export class AdService {
       this.logger,
       this.eventService,
       config.globalAuctionContext,
-      isLabelConditionMet
+      isLabelConditionMet,
+      this.assetService
     );
     this.globalAuctionContext = globalAuctionContext;
     configure.push(globalAuctionContext.configureStep());
