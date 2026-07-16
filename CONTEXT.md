@@ -46,3 +46,34 @@ conflate them:
 
 `name` and `configKey` may differ (e.g. `name: "Blocklist URLs"`, `configKey: "blocklist"`) —
 that is expected, not a bug.
+
+### Rewarded Ad
+A full-screen ad format the publisher explicitly requests via the `rewardedAd()` runtime API on
+a user action, in exchange for granting the user a reward on completion.
+
+### Rewarded Ad Channel
+One of the concrete partner integrations capable of serving a Rewarded Ad: `gam` (Google Ad
+Manager Rewarded Ads for Web) or `welect` (Welect Ad Chooser). Unlike Interstitial Channel's
+generic `c` bucket, each Rewarded Ad Channel names one specific partner integration.
+
+### Rewarded Ad Waterfall
+Within a single `rewardedAd()` call, moli attempts each configured Rewarded Ad Channel in
+priority order, falling through to the next channel immediately if the current one has no fill.
+The call resolves once a channel grants the reward, the user cancels, or every channel is
+exhausted.
+_Avoid_: priority rotation — that is the Interstitial Channel's session-persisted, cross-page-view
+behavior; a Rewarded Ad Waterfall resolves entirely within one call and does not persist state
+across calls.
+
+### Rewarded Ad Result
+The resolved value of `rewardedAd()`: `granted`, `canceled`, `empty`, or `error`. Every
+business outcome, including failure to fill, resolves the promise — the `error` states model
+expected conditions like a concurrent call, not exceptions. The promise only rejects on
+unexpected technical exceptions, e.g. a crash in an underlying channel integration.
+
+### Reward Payload
+The `{ amount: number; type: string }` describing what the user was granted. Mandatory on every
+`granted` result, regardless of channel — the `gam` channel supplies it dynamically via its
+`rewardedSlotGranted` event; the `welect` channel has no such event, so its payload is a static
+value fixed in that channel's configuration. Either way, the publisher always receives the same
+payload shape.

@@ -13,6 +13,7 @@ import { EventService } from '../ads/eventService';
 import {
   AdSlot,
   AdUnitPathVariables,
+  auction,
   behaviour,
   Environment,
   googleAdManager,
@@ -29,6 +30,35 @@ import {
  */
 export namespace MoliRuntime {
   export type MoliCommand = (moli: MoliTag) => void;
+
+  /**
+   * The reason a `rewardedAd()` call resolved with an `error` result.
+   *
+   * - `already-in-progress`: another `rewardedAd()` call is still in flight. Only one rewarded
+   *   ad can be requested at a time.
+   * - `ad-tag-error`: the ad tag is in the `error` state, so no rewarded ad can be requested.
+   */
+  export type RewardedAdErrorReason = 'already-in-progress' | 'ad-tag-error';
+
+  /**
+   * The resolved value of a `moli.rewardedAd()` call. Every business outcome - including
+   * failure to fill - resolves with one of these values. The promise only rejects on
+   * unexpected technical exceptions, e.g. a crash in an underlying channel integration.
+   *
+   * - `granted`: the user completed the rewarded ad and was granted the `payload`
+   * - `canceled`: the user closed the rewarded ad before a reward was granted
+   * - `empty`: no channel could fill the request or the feature is not configured
+   * - `error`: the call could not be performed. See [[RewardedAdErrorReason]]
+   */
+  export type RewardedAdResult =
+    | {
+        readonly state: 'granted';
+        readonly channel: auction.RewardedAdChannel;
+        readonly payload: auction.RewardPayload;
+      }
+    | { readonly state: 'canceled'; readonly channel: auction.RewardedAdChannel }
+    | { readonly state: 'empty' }
+    | { readonly state: 'error'; readonly reason: RewardedAdErrorReason };
 
   /**
    * # Moli Ad Tag
@@ -263,6 +293,46 @@ export namespace MoliRuntime {
      * @param options - optional options to override the default refreshing behaviour
      */
     refreshBucket(bucket: string, options?: RefreshAdSlotsOptions): Promise<'queued' | 'refreshed'>;
+
+    /**
+     * Request a rewarded ad on explicit user action, e.g. a button click. The returned promise
+     * settles once the reward flow completes - no callbacks, no manual DOM wiring.
+     *
+     * Behind the scenes, moli runs a rewarded ad waterfall: within this single call each
+     * channel configured in `globalAuctionContext.rewardedAd.priority` is attempted in order,
+     * falling through to the next channel immediately on no-fill.
+     *
+     * Every business outcome, including no-fill, resolves the promise:
+     *
+     * - `granted`: the user completed the ad. `payload` describes the reward.
+     * - `canceled`: the user closed the ad before a reward was granted.
+     * - `empty`: no channel filled the request or the feature is not configured.
+     * - `error`: the call could not be performed, e.g. another call is still in flight
+     *   (`already-in-progress`) or the ad tag is in the `error` state (`ad-tag-error`).
+     *
+     * The promise only rejects on unexpected technical exceptions, e.g. a crash in an
+     * underlying channel integration - these are real errors, not business outcomes.
+     *
+     * Calls made before the ad tag reaches the `finished` / `spa-finished` state are queued
+     * and resolve once that state is reached. This guarantees that consent (CMP) has been
+     * resolved before any rewarded ad script fires.
+     *
+     * @example
+     * ```javascript
+     * document.getElementById('unlock-article').addEventListener('click', () => {
+     *   window.moli.que.push(function (moliAdTag) {
+     *     moliAdTag.rewardedAd().then(result => {
+     *       if (result.state === 'granted') {
+     *         unlockArticle(result.payload);
+     *       }
+     *     });
+     *   });
+     * });
+     * ```
+     *
+     * @returns a promise that resolves with the outcome of the rewarded ad request
+     */
+    rewardedAd(): Promise<RewardedAdResult>;
 
     /**
      * Resumes all ad pipelines that have been delayed through a `refreshAdSlots()` call with a

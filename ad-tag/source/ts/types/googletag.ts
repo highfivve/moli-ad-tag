@@ -89,6 +89,45 @@ export namespace googletag {
     ): T;
 
     /**
+     * This event is fired when a rewarded ad is ready to be displayed. The publisher is
+     * responsible for presenting the user an option to view the ad before displaying it
+     * by calling `makeRewardedVisible()` on the event.
+     *
+     * @param eventType
+     * @param listener
+     * @see https://developers.google.com/publisher-tag/reference#googletag.events.RewardedSlotReadyEvent
+     */
+    addEventListener(
+      eventType: 'rewardedSlotReady',
+      listener: (event: events.IRewardedSlotReadyEvent) => void
+    ): T;
+
+    /**
+     * This event is fired when a reward is granted for viewing a rewarded ad.
+     *
+     * @param eventType
+     * @param listener
+     * @see https://developers.google.com/publisher-tag/reference#googletag.events.RewardedSlotGrantedEvent
+     */
+    addEventListener(
+      eventType: 'rewardedSlotGranted',
+      listener: (event: events.IRewardedSlotGrantedEvent) => void
+    ): T;
+
+    /**
+     * This event is fired when a rewarded ad slot is closed by the user. It may fire
+     * either before or after a reward has been granted.
+     *
+     * @param eventType
+     * @param listener
+     * @see https://developers.google.com/publisher-tag/reference#googletag.events.RewardedSlotClosedEvent
+     */
+    addEventListener(
+      eventType: 'rewardedSlotClosed',
+      listener: (event: events.IRewardedSlotClosedEvent) => void
+    ): T;
+
+    /**
      * @see https://developers.google.com/publisher-tag/reference#googletag.Service_removeEventListener
      * @return Whether existing event listener was removed.
      */
@@ -140,6 +179,33 @@ export namespace googletag {
     removeEventListener(
       eventType: 'slotVisibilityChanged',
       listener: (event: events.ISlotVisibilityChangedEvent) => void
+    ): boolean;
+
+    /**
+     * @see https://developers.google.com/publisher-tag/reference#googletag.Service_removeEventListener
+     * @return Whether existing event listener was removed.
+     */
+    removeEventListener(
+      eventType: 'rewardedSlotReady',
+      listener: (event: events.IRewardedSlotReadyEvent) => void
+    ): boolean;
+
+    /**
+     * @see https://developers.google.com/publisher-tag/reference#googletag.Service_removeEventListener
+     * @return Whether existing event listener was removed.
+     */
+    removeEventListener(
+      eventType: 'rewardedSlotGranted',
+      listener: (event: events.IRewardedSlotGrantedEvent) => void
+    ): boolean;
+
+    /**
+     * @see https://developers.google.com/publisher-tag/reference#googletag.Service_removeEventListener
+     * @return Whether existing event listener was removed.
+     */
+    removeEventListener(
+      eventType: 'rewardedSlotClosed',
+      listener: (event: events.IRewardedSlotClosedEvent) => void
     ): boolean;
 
     /**
@@ -340,6 +406,58 @@ export namespace googletag {
 
     export interface ISlotVisibilityChangedEvent extends Event {
       inViewPercentage: number;
+      serviceName: string;
+      slot: IAdSlot;
+    }
+
+    /**
+     * Information about the reward that is granted when a rewarded ad is viewed.
+     *
+     * @see https://developers.google.com/publisher-tag/reference#googletag.RewardedPayload
+     */
+    export interface IRewardedPayload {
+      /** the number of items included in the reward */
+      amount: number;
+
+      /** the type of item included in the reward (e.g. "coin") */
+      type: string;
+    }
+
+    /**
+     * This event is fired when a rewarded ad is ready to be displayed.
+     *
+     * @see https://developers.google.com/publisher-tag/reference#googletag.events.RewardedSlotReadyEvent
+     */
+    export interface IRewardedSlotReadyEvent extends Event {
+      serviceName: string;
+      slot: IAdSlot;
+
+      /**
+       * Displays the rewarded ad. This method should not be called until the user has
+       * consented to view the ad.
+       */
+      makeRewardedVisible(): void;
+    }
+
+    /**
+     * This event is fired when a reward is granted for viewing a rewarded ad.
+     *
+     * @see https://developers.google.com/publisher-tag/reference#googletag.events.RewardedSlotGrantedEvent
+     */
+    export interface IRewardedSlotGrantedEvent extends Event {
+      serviceName: string;
+      slot: IAdSlot;
+
+      /** an object containing information about the reward that was granted */
+      payload: IRewardedPayload | null;
+    }
+
+    /**
+     * This event is fired when a rewarded ad slot is closed by the user.
+     *
+     * @see https://developers.google.com/publisher-tag/reference#googletag.events.RewardedSlotClosedEvent
+     */
+    export interface IRewardedSlotClosedEvent extends Event {
       serviceName: string;
       slot: IAdSlot;
     }

@@ -9,6 +9,7 @@ import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { EventService } from './eventService';
 import { ConfigureStep, mkConfigureStep } from './adPipeline';
 import { createInterstitialContext } from 'ad-tag/ads/auctions/interstitialContext';
+import { createRewardedAdContext } from 'ad-tag/ads/auctions/rewardedAdContext';
 import { createTrackWinningBidder } from 'ad-tag/ads/auctions/trackWinningBidder';
 import { LabelCondition } from 'ad-tag/ads/labelConfigService';
 import { resolveOverridableConfig } from 'ad-tag/ads/configOverrides';
@@ -50,6 +51,15 @@ export interface GlobalAuctionContext {
   isBidderFrequencyCappedOnSlot(slotId: string, bidder: prebidjs.BidderCode): boolean;
 
   interstitialChannel(): auction.InterstitialChannel | null | undefined;
+
+  /**
+   * Run the rewarded ad waterfall configured through `globalAuctionContext.rewardedAd`.
+   * Resolves with `{ state: 'empty' }` if the feature is not configured or disabled.
+   *
+   * Every business outcome resolves. The promise only rejects on unexpected technical
+   * exceptions.
+   */
+  rewardedAd(): Promise<MoliRuntime.RewardedAdResult>;
 
   /**
    * Check if the minimum number of ad requests/page impressions has been reached.
@@ -105,6 +115,7 @@ export const createGlobalAuctionContext = (
   const frequencyCapConfig = resolveFeature(config.frequencyCap, 'frequencyCap');
   const previousBidCpmsConfig = resolveFeature(config.previousBidCpms, 'previousBidCpms');
   const interstitialConfig = resolveFeature(config.interstitial, 'interstitial');
+  const rewardedAdConfig = resolveFeature(config.rewardedAd, 'rewardedAd');
 
   const trackWinningBidder = trackWinningBidderConfig?.enabled
     ? createTrackWinningBidder()
@@ -126,6 +137,10 @@ export const createGlobalAuctionContext = (
 
   const interstitial = interstitialConfig?.enabled
     ? createInterstitialContext(interstitialConfig, window, window.Date.now, logger)
+    : undefined;
+
+  const rewardedAd = rewardedAdConfig?.enabled
+    ? createRewardedAdContext(rewardedAdConfig, window, logger)
     : undefined;
 
   // Ensure pbjs and googletag are initialized
@@ -198,6 +213,7 @@ export const createGlobalAuctionContext = (
   const configureStep = mkConfigureStep('GlobalAuctionContext', context => {
     frequencyCapping?.updateAdUnitPaths(context.adUnitPathVariables__);
     interstitial?.updateAdUnitPaths(context.adUnitPathVariables__);
+    rewardedAd?.updateAdUnitPaths(context.adUnitPathVariables__);
     return Promise.resolve();
   });
 
@@ -222,6 +238,10 @@ export const createGlobalAuctionContext = (
     },
     interstitialChannel: (): auction.InterstitialChannel | null | undefined => {
       return interstitial?.interstitialChannel();
+    },
+    rewardedAd: (): Promise<MoliRuntime.RewardedAdResult> => {
+      // not configured or disabled is a business outcome, not an error
+      return rewardedAd?.requestRewardedAd() ?? Promise.resolve({ state: 'empty' });
     },
     hasMinimumRequestAds(minRequestAds: number): boolean {
       if (!frequencyCapping) {

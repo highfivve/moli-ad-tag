@@ -1200,6 +1200,105 @@
       ],
       "type": "object"
     },
+    "Overridable<auction.RewardedAdConfig>": {
+      "additionalProperties": false,
+      "description": "## Label-conditioned config overrides\n\nWraps a configuration `C` so a publisher can provide a default configuration plus an ordered list of label-conditioned `overrides`. At the first ad request the active labels select the **first matching** override, whose `config` **fully replaces** the default (no field-by-field merge). If no override matches, the default is used.\n\nThis wrapper is shared by two concepts: module configs (`modules.ModulesConfig`) and the first-level features of the Global Auction Context (`auction.GlobalAuctionContextConfig`).\n\nThe override selector (`labelAll` / `labelAny` / `labelNone`) picks *which* config. For modules it is orthogonal to the module activation gate (`labelCondition`); auction features have no separate activation gate, so an override `config` with `enabled: false` is the only way to disable a feature for its labels.\n\nOverride selection runs once, at configure / initialize time. SPA navigations do not re-resolve it; the configuration is fixed for the page lifetime. Implementations never see `overrides` — they receive an already-resolved configuration.\n\nThe override `config` is the bare config `C`, which has no `overrides` field, so nesting overrides is structurally impossible.",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "gam": {
+          "$ref": "#/definitions/auction.RewardedAdGamConfig",
+          "description": "Configuration for the `gam` channel. Required if `priority` contains `gam`."
+        },
+        "overrides": {
+          "description": "Ordered list of label-conditioned configuration overrides. The first entry whose label condition matches the active labels fully replaces the default configuration. If none match, the default configuration is used.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "config": {
+                    "$ref": "#/definitions/auction.RewardedAdConfig"
+                  },
+                  "labelAll": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "config",
+                  "labelAll"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "config": {
+                    "$ref": "#/definitions/auction.RewardedAdConfig"
+                  },
+                  "labelAny": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "config",
+                  "labelAny"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "config": {
+                    "$ref": "#/definitions/auction.RewardedAdConfig"
+                  },
+                  "labelNone": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "config",
+                  "labelNone"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        "priority": {
+          "description": "The channels that are allowed to serve a rewarded ad and the order in which they are attempted within a single `rewardedAd()` call.\n\nIf the priority is empty, `rewardedAd()` resolves with `{ state: 'empty' }`.",
+          "items": {
+            "$ref": "#/definitions/auction.RewardedAdChannel"
+          },
+          "type": "array"
+        },
+        "timeoutMs": {
+          "description": "Per-channel attempt budget in milliseconds - not a total budget for the whole waterfall.\n\nFor the `gam` channel this is the time to wait for the `rewardedSlotReady` event before the slot is destroyed and the attempt is treated as no-fill.",
+          "type": "number"
+        },
+        "welect": {
+          "$ref": "#/definitions/auction.RewardedAdWelectConfig",
+          "description": "Configuration for the `welect` channel. Required if `priority` contains `welect`."
+        }
+      },
+      "required": [
+        "enabled",
+        "priority",
+        "timeoutMs"
+      ],
+      "type": "object"
+    },
     "Overridable<auction.TrackWinningBidderConfig>": {
       "additionalProperties": false,
       "description": "## Label-conditioned config overrides\n\nWraps a configuration `C` so a publisher can provide a default configuration plus an ordered list of label-conditioned `overrides`. At the first ad request the active labels select the **first matching** override, whose `config` **fully replaces** the default (no field-by-field merge). If no override matches, the default is used.\n\nThis wrapper is shared by two concepts: module configs (`modules.ModulesConfig`) and the first-level features of the Global Auction Context (`auction.GlobalAuctionContextConfig`).\n\nThe override selector (`labelAll` / `labelAny` / `labelNone`) picks *which* config. For modules it is orthogonal to the module activation gate (`labelCondition`); auction features have no separate activation gate, so an override `config` with `enabled: false` is the only way to disable a feature for its labels.\n\nOverride selection runs once, at configure / initialize time. SPA navigations do not re-resolve it; the configuration is fixed for the page lifetime. Implementations never see `overrides` — they receive an already-resolved configuration.\n\nThe override `config` is the bare config `C`, which has no `overrides` field, so nesting overrides is structurally impossible.",
@@ -4087,6 +4186,10 @@
           "$ref": "#/definitions/Overridable%3Cauction.PreviousBidCpmsConfig%3E",
           "description": "Save previous prebid bid cpms on this position"
         },
+        "rewardedAd": {
+          "$ref": "#/definitions/Overridable%3Cauction.RewardedAdConfig%3E",
+          "description": "Configuration for the `moli.rewardedAd()` runtime API.\n\n- Set which channels (gam rewarded ads for web or welect) may serve a rewarded ad\n- Configure waterfall scenarios for the rewarded ad format \"gam > welect\" or \"welect > gam\""
+        },
         "trackWinningBidder": {
           "$ref": "#/definitions/Overridable%3Cauction.TrackWinningBidderConfig%3E",
           "description": "Enable tracking the latest winning bidder per ad unit from the prebid `bidWon` event."
@@ -4242,6 +4345,105 @@
       },
       "required": [
         "enabled"
+      ],
+      "type": "object"
+    },
+    "auction.RewardPayload": {
+      "additionalProperties": false,
+      "description": "Describes what the user is granted when a rewarded ad has been completed.\n\nThe `gam` channel supplies this dynamically via the `rewardedSlotGranted` event. The `welect` channel has no such event, so its payload is a static value fixed in the channel configuration. Either way, the publisher always receives the same payload shape.",
+      "properties": {
+        "amount": {
+          "description": "the number of items included in the reward",
+          "type": "number"
+        },
+        "type": {
+          "description": "the type of item included in the reward (e.g. \"coin\")",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "type"
+      ],
+      "type": "object"
+    },
+    "auction.RewardedAdChannel": {
+      "description": "## Rewarded Ad channels\n\nA channel is one of the concrete partner integrations capable of serving a rewarded ad.\n\n- `gam`: Google Ad Manager Rewarded Ads for Web\n- `welect`: Welect Ad Chooser",
+      "enum": [
+        "gam",
+        "welect"
+      ],
+      "type": "string"
+    },
+    "auction.RewardedAdConfig": {
+      "additionalProperties": false,
+      "description": "## Rewarded Ad Config\n\nConfigures the `moli.rewardedAd()` runtime API. Within a single `rewardedAd()` call, moli attempts each configured channel in `priority` order, falling through to the next channel immediately if the current one has no fill (rewarded ad waterfall). The call resolves once a channel grants the reward, the user cancels, or every channel is exhausted.\n\nIf the feature is disabled, `priority` is empty or a prioritized channel is missing its configuration block, `rewardedAd()` resolves with `{ state: 'empty' }`.",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "gam": {
+          "$ref": "#/definitions/auction.RewardedAdGamConfig",
+          "description": "Configuration for the `gam` channel. Required if `priority` contains `gam`."
+        },
+        "priority": {
+          "description": "The channels that are allowed to serve a rewarded ad and the order in which they are attempted within a single `rewardedAd()` call.\n\nIf the priority is empty, `rewardedAd()` resolves with `{ state: 'empty' }`.",
+          "items": {
+            "$ref": "#/definitions/auction.RewardedAdChannel"
+          },
+          "type": "array"
+        },
+        "timeoutMs": {
+          "description": "Per-channel attempt budget in milliseconds - not a total budget for the whole waterfall.\n\nFor the `gam` channel this is the time to wait for the `rewardedSlotReady` event before the slot is destroyed and the attempt is treated as no-fill.",
+          "type": "number"
+        },
+        "welect": {
+          "$ref": "#/definitions/auction.RewardedAdWelectConfig",
+          "description": "Configuration for the `welect` channel. Required if `priority` contains `welect`."
+        }
+      },
+      "required": [
+        "enabled",
+        "priority",
+        "timeoutMs"
+      ],
+      "type": "object"
+    },
+    "auction.RewardedAdGamConfig": {
+      "additionalProperties": false,
+      "description": "Configuration for the `gam` rewarded ad channel (Google Ad Manager Rewarded Ads for Web).",
+      "properties": {
+        "adUnitPath": {
+          "description": "The ad unit path for the rewarded ad slot. May contain ad unit path variables.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "adUnitPath"
+      ],
+      "type": "object"
+    },
+    "auction.RewardedAdWelectConfig": {
+      "additionalProperties": false,
+      "description": "Configuration for the `welect` rewarded ad channel (Welect Ad Chooser).",
+      "properties": {
+        "bundleUrl": {
+          "description": "The partner specific Welect SDK bundle URL, e.g. `https://static.welect.de/p/bundles/<a-bundle-id>.js`",
+          "type": "string"
+        },
+        "checkToken": {
+          "default": true,
+          "description": "If enabled, a valid existing Welect token short-circuits to `granted` with the configured payload without showing an ad. This avoids re-annoying users that already earned the reward in this session.",
+          "type": "boolean"
+        },
+        "payload": {
+          "$ref": "#/definitions/auction.RewardPayload",
+          "description": "The static reward payload returned on a successful Welect session. Welect does not provide a dynamic payload, so this value is used for every `granted` result."
+        }
+      },
+      "required": [
+        "bundleUrl",
+        "payload"
       ],
       "type": "object"
     },
