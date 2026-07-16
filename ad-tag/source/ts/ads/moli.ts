@@ -871,6 +871,46 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     }
   }
 
+  function rewardedAd(): Promise<MoliRuntime.RewardedAdResult> {
+    switch (state.state) {
+      // the rewarded ad waterfall requires the main ad pipeline to have run (ADR-0003),
+      // which guarantees that consent (CMP) has been resolved before any rewarded script
+      // fires. Calls made earlier are queued and resolve once the pipeline has finished.
+      case 'configurable':
+      case 'configured':
+      case 'requestAds':
+      case 'spa-requestAds': {
+        return new Promise<MoliRuntime.RewardedAdResult>(resolve => {
+          // the hook arrays are shared across requestAds() cycles in single page apps,
+          // so the hook must only run once
+          let queued = true;
+          state.runtimeConfig.hooks.afterRequestAds.push(afterState => {
+            if (!queued) {
+              return;
+            }
+            queued = false;
+            if (afterState === 'error') {
+              resolve({ state: 'error', reason: 'ad-tag-error' });
+            } else {
+              adService.rewardedAd().then(resolve);
+            }
+          });
+        });
+      }
+      case 'finished':
+      case 'spa-finished': {
+        return adService.rewardedAd();
+      }
+      case 'error': {
+        getLogger(state.runtimeConfig, window).error(
+          'MoliGlobal',
+          `rewardedAd is not allowed in state ${state.state}`
+        );
+        return Promise.resolve({ state: 'error', reason: 'ad-tag-error' });
+      }
+    }
+  }
+
   function triggerDelay(): void {
     window.dispatchEvent(new CustomEvent('h5v.trigger-delay'));
     return;
@@ -1050,6 +1090,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     refreshAdSlot: refreshAdSlot,
     refreshBucket: refreshBucket,
     refreshInfiniteAdSlot: refreshInfiniteAdSlot,
+    rewardedAd: rewardedAd,
     triggerDelay: triggerDelay,
     getState: getState,
     openConsole: openConsole,

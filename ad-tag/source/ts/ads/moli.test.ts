@@ -1502,6 +1502,99 @@ describe('moli', () => {
     });
   });
 
+  describe('rewardedAd', () => {
+    it('should queue the call and resolve once the finished state is reached', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+
+      // called in configurable state - must be queued
+      const result = adTag.rewardedAd();
+
+      await adTag.configure(defaultConfig);
+      await adTag.requestAds();
+      expect(adTag.getState()).to.be.eq('finished');
+
+      // no rewardedAd config -> the queued call resolves with empty once finished
+      expect(await result).to.deep.equal({ state: 'empty' });
+    });
+
+    it('should resolve immediately in the finished state', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+      await adTag.configure(defaultConfig);
+      await adTag.requestAds();
+      expect(adTag.getState()).to.be.eq('finished');
+
+      const result = await adTag.rewardedAd();
+      expect(result).to.deep.equal({ state: 'empty' });
+    });
+
+    it('should resolve a dynamic gam ad unit path through resolveAdUnitPath', async () => {
+      const defineOutOfPageSlotSpy = sandbox.spy(jsDomWindow.googletag, 'defineOutOfPageSlot');
+      const adTag = createMoliTag(jsDomWindow);
+      await adTag.configure({
+        ...defaultConfig,
+        globalAuctionContext: {
+          rewardedAd: {
+            enabled: true,
+            priority: ['gam'],
+            // the googletag stub never fires any rewarded event, so the attempt resolves
+            // empty through the timeout - keep it short
+            timeoutMs: 10,
+            gam: { adUnitPath: '/123/content_1/{device}' }
+          }
+        }
+      });
+      await adTag.requestAds();
+      expect(adTag.getState()).to.be.eq('finished');
+
+      const result = await adTag.rewardedAd();
+      expect(result).to.deep.equal({ state: 'empty' });
+
+      expect(defineOutOfPageSlotSpy).to.have.been.calledOnce;
+      // no labelSizeConfig -> the device label defaults to mobile
+      expect(defineOutOfPageSlotSpy.firstCall.args[0]).to.be.eq('/123/content_1/mobile');
+    });
+
+    it('should resolve queued calls with an error result if requestAds() fails', async () => {
+      jsDomWindow.googletag = {
+        ...createGoogletagStub(),
+        pubadsReady: undefined,
+        cmd: {
+          push(_: Function): void {
+            throw Error('trigger an error!');
+          }
+        }
+      };
+      const adTag = createMoliTag(jsDomWindow);
+
+      const result = adTag.rewardedAd();
+
+      await adTag.configure(defaultConfig);
+      await adTag.requestAds();
+      expect(adTag.getState()).to.be.eq('error');
+
+      expect(await result).to.deep.equal({ state: 'error', reason: 'ad-tag-error' });
+    });
+
+    it('should resolve with an error result in the error state', async () => {
+      jsDomWindow.googletag = {
+        ...createGoogletagStub(),
+        pubadsReady: undefined,
+        cmd: {
+          push(_: Function): void {
+            throw Error('trigger an error!');
+          }
+        }
+      };
+      const adTag = createMoliTag(jsDomWindow);
+      await adTag.configure(defaultConfig);
+      await adTag.requestAds();
+      expect(adTag.getState()).to.be.eq('error');
+
+      const result = await adTag.rewardedAd();
+      expect(result).to.deep.equal({ state: 'error', reason: 'ad-tag-error' });
+    });
+  });
+
   describe('environment override', () => {
     const expectEnvironment = (adTag: MoliTag, environment: Environment | undefined) => {
       const config = adTag.getRuntimeConfig();

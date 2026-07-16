@@ -731,6 +731,124 @@ export namespace auction {
     readonly enabled: boolean;
   }
 
+  /**
+   * ## Rewarded Ad channels
+   *
+   * A channel is one of the concrete partner integrations capable of serving a rewarded ad.
+   *
+   * - `gam`: Google Ad Manager Rewarded Ads for Web
+   * - `welect`: Welect Ad Chooser
+   */
+  export type RewardedAdChannel = 'gam' | 'welect';
+
+  /**
+   * Describes what the user is granted when a rewarded ad has been completed.
+   *
+   * The `gam` channel supplies this dynamically via the `rewardedSlotGranted` event. The
+   * `welect` channel has no such event, so its payload is a static value fixed in the
+   * channel configuration. Either way, the publisher always receives the same payload shape.
+   */
+  export interface RewardPayload {
+    /** the number of items included in the reward */
+    readonly amount: number;
+
+    /** the type of item included in the reward (e.g. "coin") */
+    readonly type: string;
+  }
+
+  /**
+   * Configuration for the `gam` rewarded ad channel (Google Ad Manager Rewarded Ads for Web).
+   */
+  export interface RewardedAdGamConfig {
+    /**
+     * The ad unit path for the rewarded ad slot. May contain ad unit path variables.
+     */
+    readonly adUnitPath: string;
+  }
+
+  /**
+   * Configuration for the `welect` rewarded ad channel (Welect Ad Chooser).
+   */
+  export interface RewardedAdWelectConfig {
+    /**
+     * The partner specific Welect SDK bundle URL, e.g.
+     * `https://static.welect.de/p/bundles/<a-bundle-id>.js`
+     */
+    readonly bundleUrl: string;
+
+    /**
+     * The static reward payload returned on a successful Welect session. Welect does not
+     * provide a dynamic payload, so this value is used for every `granted` result.
+     */
+    readonly payload: RewardPayload;
+
+    /**
+     * If enabled, a valid existing Welect token short-circuits to `granted` with the
+     * configured payload without showing an ad. This avoids re-annoying users that already
+     * earned the reward in this session.
+     *
+     * @default true
+     */
+    readonly checkToken?: boolean;
+  }
+
+  /**
+   * ## Rewarded Ad Config
+   *
+   * Configures the `moli.rewardedAd()` runtime API. Within a single `rewardedAd()` call, moli
+   * attempts each configured channel in `priority` order, falling through to the next channel
+   * immediately if the current one has no fill (rewarded ad waterfall). The call resolves once
+   * a channel grants the reward, the user cancels, or every channel is exhausted.
+   *
+   * If the feature is disabled, `priority` is empty or a prioritized channel is missing its
+   * configuration block, `rewardedAd()` resolves with `{ state: 'empty' }`.
+   *
+   * @example
+   * ```js
+   * globalAuctionContext: {
+   *   rewardedAd: {
+   *     enabled: true,
+   *     priority: ['gam', 'welect'],
+   *     timeoutMs: 5000,
+   *     gam: { adUnitPath: '/1234/publisher/rewarded' },
+   *     welect: {
+   *       bundleUrl: 'https://static.welect.de/p/bundles/example.js',
+   *       payload: { amount: 1, type: 'article' }
+   *     }
+   *   }
+   * }
+   * ```
+   */
+  export interface RewardedAdConfig {
+    readonly enabled: boolean;
+
+    /**
+     * The channels that are allowed to serve a rewarded ad and the order in which they are
+     * attempted within a single `rewardedAd()` call.
+     *
+     * If the priority is empty, `rewardedAd()` resolves with `{ state: 'empty' }`.
+     */
+    readonly priority: RewardedAdChannel[];
+
+    /**
+     * Per-channel attempt budget in milliseconds - not a total budget for the whole waterfall.
+     *
+     * For the `gam` channel this is the time to wait for the `rewardedSlotReady` event before
+     * the slot is destroyed and the attempt is treated as no-fill.
+     */
+    readonly timeoutMs: number;
+
+    /**
+     * Configuration for the `gam` channel. Required if `priority` contains `gam`.
+     */
+    readonly gam?: RewardedAdGamConfig;
+
+    /**
+     * Configuration for the `welect` channel. Required if `priority` contains `welect`.
+     */
+    readonly welect?: RewardedAdWelectConfig;
+  }
+
   export interface GlobalAuctionContextConfig {
     /**
      * Disable bidders that lack auction participation
@@ -766,6 +884,14 @@ export namespace auction {
      * Enable tracking the latest winning bidder per ad unit from the prebid `bidWon` event.
      */
     readonly trackWinningBidder?: Overridable<TrackWinningBidderConfig>;
+
+    /**
+     * Configuration for the `moli.rewardedAd()` runtime API.
+     *
+     * - Set which channels (gam rewarded ads for web or welect) may serve a rewarded ad
+     * - Configure waterfall scenarios for the rewarded ad format "gam > welect" or "welect > gam"
+     */
+    readonly rewardedAd?: Overridable<RewardedAdConfig>;
   }
 }
 
