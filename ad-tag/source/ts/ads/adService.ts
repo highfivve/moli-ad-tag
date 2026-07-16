@@ -41,7 +41,7 @@ import { flatten, isNotNull } from '../util/arrayUtils';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
-import { createGlobalAuctionContext } from './globalAuctionContext';
+import { createGlobalAuctionContext, GlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, behaviour, bucket, Device, Environment, MoliConfig } from '../types/moliConfig';
 import { getDeviceLabel, LabelCondition } from 'ad-tag/ads/labelConfigService';
 import { EventService } from 'ad-tag/ads/eventService';
@@ -136,6 +136,16 @@ export class AdService {
   private requestAdsCalls: number = 0;
 
   /**
+   * The global auction context of the current ad pipeline. Replaced with the fully
+   * configured context in the `initialize` call.
+   */
+  private globalAuctionContext: GlobalAuctionContext = createGlobalAuctionContext(
+    this.window as AdServiceWindow,
+    getDefaultLogger(),
+    this.eventService
+  );
+
+  /**
    * TODO add an API to push steps into the pipeline via the Moli API
    *      this will allow us to configure arbitrary things via modules
    *      in the ad request lifecycle
@@ -151,11 +161,7 @@ export class AdService {
     },
     getDefaultLogger(),
     this.window as AdServiceWindow,
-    createGlobalAuctionContext(
-      this.window as AdServiceWindow,
-      getDefaultLogger(),
-      this.eventService
-    )
+    this.globalAuctionContext
   );
 
   private static getEnvironment(config: MoliRuntime.MoliRuntimeConfig): Environment {
@@ -179,11 +185,16 @@ export class AdService {
     // initialize the logger with a default one
     this.logger = new ProxyLogger(getDefaultLogger());
     if (adPipelineConfig) {
+      this.globalAuctionContext = createGlobalAuctionContext(
+        window as AdServiceWindow,
+        this.logger,
+        this.eventService
+      );
       this.adPipeline = new AdPipeline(
         adPipelineConfig,
         this.logger,
         window as AdServiceWindow,
-        createGlobalAuctionContext(window as AdServiceWindow, this.logger, this.eventService)
+        this.globalAuctionContext
       );
     }
   }
@@ -262,8 +273,10 @@ export class AdService {
       this.logger,
       this.eventService,
       config.globalAuctionContext,
-      isLabelConditionMet
+      isLabelConditionMet,
+      this.assetService
     );
+    this.globalAuctionContext = globalAuctionContext;
     configure.push(globalAuctionContext.configureStep());
 
     // add module steps to pipeline
@@ -498,6 +511,17 @@ export class AdService {
       { bucketName: bucket, options: options }
     );
   }
+
+  /**
+   * Run the rewarded ad waterfall configured through `globalAuctionContext.rewardedAd`.
+   * Resolves with `{ state: 'empty' }` if the feature is not configured.
+   *
+   * Every business outcome resolves. The promise only rejects on unexpected technical
+   * exceptions.
+   */
+  public rewardedAd = (): Promise<MoliRuntime.RewardedAdResult> => {
+    return this.globalAuctionContext.rewardedAd();
+  };
 
   /**
    * Returns the underlying ad pipeline.

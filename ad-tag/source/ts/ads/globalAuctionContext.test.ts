@@ -433,4 +433,70 @@ describe('Global auction context', () => {
       expect(googletagAddEventListenerSpy).to.have.not.been.called;
     });
   });
+
+  describe('rewarded ad', () => {
+    it('should resolve empty if the feature is not configured', async () => {
+      const context = makeAuctionContext();
+      const result = await context.rewardedAd();
+      expect(result).to.deep.equal({ state: 'empty' });
+    });
+
+    it('should resolve empty if the feature is disabled', async () => {
+      const context = makeAuctionContext({
+        rewardedAd: {
+          enabled: false,
+          priority: ['gam'],
+          timeoutMs: 5000,
+          gam: { adUnitPath: '/123/rewarded' }
+        }
+      });
+      const result = await context.rewardedAd();
+      expect(result).to.deep.equal({ state: 'empty' });
+    });
+
+    it('should delegate to the rewarded ad context if the feature is enabled', async () => {
+      // returning null slots resolves the gam attempt with no-fill, so the call settles
+      // deterministically while still proving the context was invoked
+      const defineOutOfPageSlotStub = sandbox
+        .stub(jsDomWindow.googletag, 'defineOutOfPageSlot')
+        .returns(null);
+      const context = makeAuctionContext({
+        rewardedAd: {
+          enabled: true,
+          priority: ['gam'],
+          timeoutMs: 5000,
+          gam: { adUnitPath: '/123/rewarded' }
+        }
+      });
+      const result = await context.rewardedAd();
+      expect(result).to.deep.equal({ state: 'empty' });
+      expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly(
+        '/123/rewarded',
+        jsDomWindow.googletag.enums.OutOfPageFormat.REWARDED
+      );
+      defineOutOfPageSlotStub.restore();
+    });
+
+    it('disables the rewarded ad via an enabled:false override', async () => {
+      const context = makeAuctionContextWithLabels(
+        {
+          rewardedAd: {
+            enabled: true,
+            priority: ['gam'],
+            timeoutMs: 5000,
+            gam: { adUnitPath: '/123/rewarded' },
+            overrides: [
+              {
+                labelAny: ['no-rewarded'],
+                config: { enabled: false, priority: ['gam'], timeoutMs: 5000 }
+              }
+            ]
+          }
+        },
+        'no-rewarded'
+      );
+      const result = await context.rewardedAd();
+      expect(result).to.deep.equal({ state: 'empty' });
+    });
+  });
 });

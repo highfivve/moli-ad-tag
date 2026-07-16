@@ -9,9 +9,12 @@ import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { EventService } from './eventService';
 import { ConfigureStep, mkConfigureStep } from './adPipeline';
 import { createInterstitialContext } from 'ad-tag/ads/auctions/interstitialContext';
+import { createRewardedAdContext } from 'ad-tag/ads/auctions/rewardedAdContext';
 import { createTrackWinningBidder } from 'ad-tag/ads/auctions/trackWinningBidder';
 import { LabelCondition } from 'ad-tag/ads/labelConfigService';
 import { resolveOverridableConfig } from 'ad-tag/ads/configOverrides';
+import { createAssetLoaderService, IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { welect } from 'ad-tag/types/welect';
 
 /**
  * ## Global Auction Context
@@ -52,6 +55,15 @@ export interface GlobalAuctionContext {
   interstitialChannel(): auction.InterstitialChannel | null | undefined;
 
   /**
+   * Run the rewarded ad waterfall configured through `globalAuctionContext.rewardedAd`.
+   * Resolves with `{ state: 'empty' }` if the feature is not configured or disabled.
+   *
+   * Every business outcome resolves. The promise only rejects on unexpected technical
+   * exceptions.
+   */
+  rewardedAd(): Promise<MoliRuntime.RewardedAdResult>;
+
+  /**
    * Check if the minimum number of ad requests/page impressions has been reached.
    * We treat requestAds() calls and page impressions as equivalent.
    * @param minRequestAds The minimum number of requestAds calls required
@@ -67,11 +79,13 @@ export const createGlobalAuctionContext = (
   window: Window &
     prebidjs.IPrebidjsWindow &
     googletag.IGoogleTagWindow &
+    welect.WelectWindow &
     Pick<typeof globalThis, 'Date'>,
   logger: MoliRuntime.MoliLogger,
   eventService: EventService,
   config: auction.GlobalAuctionContextConfig = {},
-  isLabelConditionMet: (condition: LabelCondition) => boolean = () => false
+  isLabelConditionMet: (condition: LabelCondition) => boolean = () => false,
+  assetLoaderService: IAssetLoaderService = createAssetLoaderService(window)
 ): GlobalAuctionContext => {
   // resolve label-conditioned config overrides for every first-level feature (first match wins,
   // full replace). runs once when the Global Auction Context is built; SPA navigations call
@@ -105,6 +119,7 @@ export const createGlobalAuctionContext = (
   const frequencyCapConfig = resolveFeature(config.frequencyCap, 'frequencyCap');
   const previousBidCpmsConfig = resolveFeature(config.previousBidCpms, 'previousBidCpms');
   const interstitialConfig = resolveFeature(config.interstitial, 'interstitial');
+  const rewardedAdConfig = resolveFeature(config.rewardedAd, 'rewardedAd');
 
   const trackWinningBidder = trackWinningBidderConfig?.enabled
     ? createTrackWinningBidder()
@@ -126,6 +141,10 @@ export const createGlobalAuctionContext = (
 
   const interstitial = interstitialConfig?.enabled
     ? createInterstitialContext(interstitialConfig, window, window.Date.now, logger)
+    : undefined;
+
+  const rewardedAd = rewardedAdConfig?.enabled
+    ? createRewardedAdContext(rewardedAdConfig, window, logger, assetLoaderService)
     : undefined;
 
   // Ensure pbjs and googletag are initialized
@@ -198,6 +217,7 @@ export const createGlobalAuctionContext = (
   const configureStep = mkConfigureStep('GlobalAuctionContext', context => {
     frequencyCapping?.updateAdUnitPaths(context.adUnitPathVariables__);
     interstitial?.updateAdUnitPaths(context.adUnitPathVariables__);
+    rewardedAd?.updateAdUnitPaths(context.adUnitPathVariables__);
     return Promise.resolve();
   });
 
@@ -222,6 +242,10 @@ export const createGlobalAuctionContext = (
     },
     interstitialChannel: (): auction.InterstitialChannel | null | undefined => {
       return interstitial?.interstitialChannel();
+    },
+    rewardedAd: (): Promise<MoliRuntime.RewardedAdResult> => {
+      // not configured or disabled is a business outcome, not an error
+      return rewardedAd?.requestRewardedAd() ?? Promise.resolve({ state: 'empty' });
     },
     hasMinimumRequestAds(minRequestAds: number): boolean {
       if (!frequencyCapping) {

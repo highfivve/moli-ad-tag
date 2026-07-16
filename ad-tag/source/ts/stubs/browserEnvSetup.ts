@@ -3,6 +3,7 @@ import { googletag } from 'ad-tag/types/googletag';
 import { apstag } from 'ad-tag/types/apstag';
 import { prebidjs } from 'ad-tag/types/prebidjs';
 import { tcfapi } from 'ad-tag/types/tcfapi';
+import { welect } from 'ad-tag/types/welect';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 
 export type CreateDomOptions = {
@@ -40,6 +41,7 @@ export const createDomAndWindow = () => {
       apstag.WindowA9 &
       prebidjs.IPrebidjsWindow &
       tcfapi.TCFApiWindow &
+      welect.WelectWindow &
       MoliRuntime.MoliWindow &
       Pick<typeof globalThis, 'Date' | 'console'>
   };
