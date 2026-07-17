@@ -18,11 +18,11 @@ jobs:
 
       # Setup node
       - name: Node setup
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           cache: 'npm'
           cache-dependency-path: 'website/package-lock.json'
-          node-version: 18
+          node-version: 26
 
       ## type declarations need to be present for docs to work properly
       - name: setup project
