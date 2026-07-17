@@ -169,8 +169,7 @@ const AdReloadModule: React.FC<{ config: modules.adreload.AdReloadModuleConfig }
 
 const BlocklistModule: React.FC<{
   config:
-    | modules.blocklist.BlocklistUrlsBlockingConfig
-    | modules.blocklist.BlocklistUrlsKeyValueConfig;
+    modules.blocklist.BlocklistUrlsBlockingConfig | modules.blocklist.BlocklistUrlsKeyValueConfig;
 }> = ({ config }) => (
   <>
     <Row label="Mode">
@@ -721,8 +720,7 @@ type ModuleConfigCardProps = {
  */
 const ModuleConfigCard: React.FC<ModuleConfigCardProps> = ({ name, config }) => {
   const ModuleComponent = moduleComponents[name as keyof modules.ModulesConfig] as
-    | React.FC<{ config: modules.IModuleConfig }>
-    | undefined;
+    React.FC<{ config: modules.IModuleConfig }> | undefined;
 
   return (
     <div className="d-collapse d-collapse-arrow mb-2 rounded-md bg-base-200">

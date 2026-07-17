@@ -341,12 +341,9 @@ export const gptDefineSlots =
       const filterSupportedSizes = sizeConfigService.filterSupportedSizes;
 
       // filter slots that shouldn't be displayed
-      if (
-        !(
-          sizeConfigService.filterSlot(moliSlot) &&
-          context.labelConfigService__.filterSlot(moliSlot)
-        )
-      ) {
+      if (!(
+        sizeConfigService.filterSlot(moliSlot) && context.labelConfigService__.filterSlot(moliSlot)
+      )) {
         return Promise.resolve(null);
       }
 
