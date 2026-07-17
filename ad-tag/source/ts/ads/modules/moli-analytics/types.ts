@@ -116,10 +116,7 @@ export namespace Events {
 }
 
 export type Event =
-  | Events.Prebid.AuctionEnd
-  | Events.Prebid.BidWon
-  | Events.GPT.SlotRenderEnded
-  | Events.Page.View;
+  Events.Prebid.AuctionEnd | Events.Prebid.BidWon | Events.GPT.SlotRenderEnded | Events.Page.View;
 
 export type EventContext = {
   publisher: string;

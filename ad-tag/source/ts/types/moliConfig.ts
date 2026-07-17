@@ -1577,8 +1577,7 @@ export namespace modules {
      * Each entry is per position and can be used to override the default viewability behavior.
      */
     export type ViewabilityOverrideEntry =
-      | ViewabilityOverrideEntryCss
-      | ViewabilityOverrideEntryDisabled;
+      ViewabilityOverrideEntryCss | ViewabilityOverrideEntryDisabled;
 
     /**
      * Viewability is measured by gpt visibility events or a separate IntersectionObserver.
@@ -2858,9 +2857,7 @@ export namespace modules {
      * Available options to configure yield optimization
      */
     export type YieldOptimizationConfig =
-      | NoYieldOptimizationConfig
-      | StaticYieldOptimizationConfig
-      | DynamicYieldOptimizationConfig;
+      NoYieldOptimizationConfig | StaticYieldOptimizationConfig | DynamicYieldOptimizationConfig;
 
     export type IYieldOptimizationConfig = IModuleConfig & {
       readonly provider: YieldOptimizationConfigProvider;

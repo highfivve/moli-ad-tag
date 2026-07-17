@@ -786,9 +786,7 @@ export namespace MoliRuntime {
     }
 
     export interface IConfigurable
-      extends IState,
-        WithRuntimeConfiguration,
-        WithModulesConfigurable {
+      extends IState, WithRuntimeConfiguration, WithModulesConfigurable {
       readonly state: 'configurable';
 
       /**
@@ -809,10 +807,7 @@ export namespace MoliRuntime {
      * The ad configuration has been set
      */
     export interface IConfigured
-      extends IState,
-        WithRuntimeConfiguration,
-        WithConfiguration,
-        WithModulesConfigurable {
+      extends IState, WithRuntimeConfiguration, WithConfiguration, WithModulesConfigurable {
       readonly state: 'configured';
     }
 
@@ -823,10 +818,7 @@ export namespace MoliRuntime {
      * and moli is initialized once it's configured.
      */
     export interface IRequestAds
-      extends IState,
-        WithRuntimeConfiguration,
-        WithConfiguration,
-        WithModules {
+      extends IState, WithRuntimeConfiguration, WithConfiguration, WithModules {
       readonly state: 'requestAds';
     }
 
@@ -834,10 +826,7 @@ export namespace MoliRuntime {
      * Publisher enabled the single page application mode.
      */
     export interface ISinglePageApp
-      extends IState,
-        WithRuntimeConfiguration,
-        WithConfiguration,
-        WithModules {
+      extends IState, WithRuntimeConfiguration, WithConfiguration, WithModules {
       readonly state: 'spa-finished' | 'spa-requestAds';
 
       /**
@@ -865,10 +854,7 @@ export namespace MoliRuntime {
      * Moli has finished loading.
      */
     export interface IFinished
-      extends IState,
-        WithRuntimeConfiguration,
-        WithConfiguration,
-        WithModules {
+      extends IState, WithRuntimeConfiguration, WithConfiguration, WithModules {
       readonly state: 'finished';
     }
 
@@ -876,10 +862,7 @@ export namespace MoliRuntime {
      * Moli has finished loading.
      */
     export interface IError
-      extends IState,
-        WithRuntimeConfiguration,
-        WithModules,
-        WithConfiguration {
+      extends IState, WithRuntimeConfiguration, WithModules, WithConfiguration {
       readonly state: 'error';
 
       /**
@@ -892,12 +875,7 @@ export namespace MoliRuntime {
      * All valid states
      */
     export type IStateMachine =
-      | IConfigurable
-      | IConfigured
-      | ISinglePageApp
-      | IRequestAds
-      | IFinished
-      | IError;
+      IConfigurable | IConfigured | ISinglePageApp | IRequestAds | IFinished | IError;
 
     export type AfterRequestAdsStates = Extract<
       state.States,
@@ -1047,8 +1025,7 @@ export namespace MoliRuntime {
      * - from a function which takes a `PrebidListenerContext`
      */
     export type PrebidListenerProvider =
-      | PrebidListener
-      | ((context: PrebidListenerContext) => PrebidListener);
+      PrebidListener | ((context: PrebidListenerContext) => PrebidListener);
 
     /**
      * Object with additional listeners to customize the prebid behaviour.

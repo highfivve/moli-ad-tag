@@ -52,8 +52,7 @@ export const toAdexMapType = (
 export const toAdexStringOrNumberType = (
   keyValueMap: googleAdManager.KeyValueMap,
   mappingDefinition:
-    | modules.adex.MappingDefinitionToAdexString
-    | modules.adex.MappingDefinitionToAdexNumber,
+    modules.adex.MappingDefinitionToAdexString | modules.adex.MappingDefinitionToAdexNumber,
   logger: MoliRuntime.MoliLogger
 ): modules.adex.AdexKeyValuePair | undefined => {
   const value = extractStringOrNumber(
@@ -157,8 +156,7 @@ const convertToAdexListValue = (
   if (value === undefined) {
     // if the value is falsy, use the default as fallback.
     return logAndUseDefaultValue(mappingDefinition, logger) as
-      | modules.adex.AdexListObject
-      | undefined;
+      modules.adex.AdexListObject | undefined;
   }
 
   // if the value is truthy, ...

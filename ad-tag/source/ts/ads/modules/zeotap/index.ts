@@ -92,7 +92,7 @@ export const createZeotap = (): IModule => {
       ? new Map(
           Object.keys(keyValues)
             .map(key => [key, keyValues[key]] as [string, string | Array<string> | undefined])
-            .filter(([, value]) => !!value)
+            .filter((entry): entry is [string, string | Array<string>] => !!entry[1])
         )
       : new Map();
   };
