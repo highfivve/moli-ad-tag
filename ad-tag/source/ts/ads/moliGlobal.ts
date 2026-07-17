@@ -16,7 +16,7 @@ import { createMoliTag } from './moli';
 export const initAdTag = (window: Window): MoliRuntime.MoliTag => {
   const moliWindow = window as MoliRuntime.MoliWindow;
   const queueCommands = moliWindow.moli
-    ? [...(moliWindow.moli.que as MoliRuntime.MoliCommand[])] || []
+    ? [...(moliWindow.moli.que as MoliRuntime.MoliCommand[])]
     : [];
 
   const moli: MoliRuntime.MoliTag = createMoliTag(window);
