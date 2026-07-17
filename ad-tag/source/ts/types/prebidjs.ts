@@ -623,12 +623,7 @@ export namespace prebidjs {
    */
   export namespace priceGranularity {
     export type PriceGranularityConfig =
-      | 'low'
-      | 'medium'
-      | 'high'
-      | 'auto'
-      | 'dense'
-      | ICustomPriceGranularityConfig;
+      'low' | 'medium' | 'high' | 'auto' | 'dense' | ICustomPriceGranularityConfig;
 
     /**
      * This configuration defines the price bucket granularity setting that will be used for the hb_pb keyword.
@@ -1101,8 +1096,10 @@ export namespace prebidjs {
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#unified-id
      */
-    export interface IUnifiedIdProvider
-      extends IParameterizedUserIdProvider<IUnifiedIdProviderParams, 'unifiedId'> {}
+    export interface IUnifiedIdProvider extends IParameterizedUserIdProvider<
+      IUnifiedIdProviderParams,
+      'unifiedId'
+    > {}
 
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#criteo-id-for-exchanges
@@ -1124,8 +1121,10 @@ export namespace prebidjs {
     /**
      * @see https://console.id5.io/docs/public/prebid
      */
-    export interface IDigitTrustProvider
-      extends IParameterizedUserIdProvider<IDigitTrustProviderParams, 'digitrust'> {}
+    export interface IDigitTrustProvider extends IParameterizedUserIdProvider<
+      IDigitTrustProviderParams,
+      'digitrust'
+    > {}
 
     /**
      * Container of all module params.
@@ -1151,8 +1150,10 @@ export namespace prebidjs {
      * no leakage of data, no leakage of insights, durability for the future using secure encryption methods, and no user tracking across publishers.
      * @See https://docs.prebid.org/dev-docs/modules/userid-submodules/pair.html
      */
-    export interface IPairIdProvider
-      extends IParameterizedUserIdProvider<IPairIdParams, 'pairId'> {}
+    export interface IPairIdProvider extends IParameterizedUserIdProvider<
+      IPairIdParams,
+      'pairId'
+    > {}
 
     export interface IID5ProviderParams {
       /**
@@ -1178,8 +1179,10 @@ export namespace prebidjs {
      *
      * @see http://prebid.org/dev-docs/modules/userId.html#id5-universal-id
      */
-    export interface IID5Provider
-      extends IParameterizedUserIdProvider<IID5ProviderParams, 'id5Id'> {}
+    export interface IID5Provider extends IParameterizedUserIdProvider<
+      IID5ProviderParams,
+      'id5Id'
+    > {}
 
     export interface IIdentityLinkProviderParams {
       /**
@@ -1201,8 +1204,10 @@ export namespace prebidjs {
      *
      * @see https://docs.prebid.org/dev-docs/modules/userId.html#identitylink
      */
-    export interface IIdentityLinkProvider
-      extends IParameterizedUserIdProvider<IIdentityLinkProviderParams, 'identityLink'> {}
+    export interface IIdentityLinkProvider extends IParameterizedUserIdProvider<
+      IIdentityLinkProviderParams,
+      'identityLink'
+    > {}
 
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#pubcommon-id
@@ -1244,8 +1249,10 @@ export namespace prebidjs {
     /**
      * @see https://docs.prebid.org/dev-docs/modules/userid-submodules/taboola.html
      */
-    export interface ITaboolaIdProvider
-      extends IParameterizedUserIdProvider<ITaboolaIdProviderParams, 'taboolaId'> {}
+    export interface ITaboolaIdProvider extends IParameterizedUserIdProvider<
+      ITaboolaIdProviderParams,
+      'taboolaId'
+    > {}
 
     /**
      * Prebid 9+ utiq id provider type. The Prebid 8 module was not typed to avoid confusion and
@@ -1254,16 +1261,20 @@ export namespace prebidjs {
      * @see https://docs.prebid.org/dev-docs/modules/userid-submodules/utiq.html
      * @see https://docs.utiq.com/docs/programmatic-integration
      */
-    export interface IUtiqIdProvider
-      extends IParameterizedUserIdProvider<IUtiqIdProviderParams, 'utiqId'> {}
+    export interface IUtiqIdProvider extends IParameterizedUserIdProvider<
+      IUtiqIdProviderParams,
+      'utiqId'
+    > {}
     /**
      * MTP stands for MarTechPass.
      *
      * @see https://docs.prebid.org/dev-docs/modules/userid-submodules/utiqMtp.html
      * @see https://docs.utiq.com/docs/programmatic-integration
      */
-    export interface IUtiqMtpIdProvider
-      extends IParameterizedUserIdProvider<IUtiqMtpIdProviderParams, 'utiqMtpId'> {}
+    export interface IUtiqMtpIdProvider extends IParameterizedUserIdProvider<
+      IUtiqMtpIdProviderParams,
+      'utiqMtpId'
+    > {}
 
     /**
      * ID+, powered by zeotap, enables the marketing ecosystem to overcome challenges posed by the demise of identifiers
@@ -1382,8 +1393,10 @@ export namespace prebidjs {
       readonly customFunc?: () => any;
     }
 
-    export interface ISharedIdProvider
-      extends IParameterizedUserIdProvider<ISharedIdParams | undefined, 'sharedId'> {}
+    export interface ISharedIdProvider extends IParameterizedUserIdProvider<
+      ISharedIdParams | undefined,
+      'sharedId'
+    > {}
 
     export interface ISharedIdParams {
       /**
@@ -2111,8 +2124,7 @@ export namespace prebidjs {
       };
     }
 
-    export interface IGenericAnalyticsAdapter
-      extends IAnalyticsAdapter<IGenericAnalyticsAdapterOptions> {
+    export interface IGenericAnalyticsAdapter extends IAnalyticsAdapter<IGenericAnalyticsAdapterOptions> {
       readonly provider: 'generic';
     }
 
@@ -2147,8 +2159,7 @@ export namespace prebidjs {
     /**
      * @see https://docs.prebid.org/dev-docs/analytics/adagio.html
      */
-    export interface IAdagioAnalyticsAdapter
-      extends IAnalyticsAdapter<IAdagioAnalyticsAdapterOptions> {
+    export interface IAdagioAnalyticsAdapter extends IAnalyticsAdapter<IAdagioAnalyticsAdapterOptions> {
       readonly provider: 'adagio';
     }
 
@@ -2188,8 +2199,7 @@ export namespace prebidjs {
       readonly sampling?: number;
     }
 
-    export interface IGoogleAnalyticsAdapter
-      extends IAnalyticsAdapter<IGoogleAnalyticsAdapterOptions> {
+    export interface IGoogleAnalyticsAdapter extends IAnalyticsAdapter<IGoogleAnalyticsAdapterOptions> {
       readonly provider: 'ga';
     }
   }
@@ -2596,7 +2606,8 @@ export namespace prebidjs {
    * @see https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig
    */
   export interface IPrebidJsConfig
-    extends IImproveDigitalConfig,
+    extends
+      IImproveDigitalConfig,
       IRubiconConfig,
       IIndexExchangeConfig,
       IAdagioConfig,
@@ -2670,24 +2681,7 @@ export namespace prebidjs {
      * ```
      */
     readonly maxRequestsPerOrigin?:
-      | 1
-      | 2
-      | 3
-      | 4
-      | 5
-      | 6
-      | 7
-      | 8
-      | 9
-      | 10
-      | 11
-      | 12
-      | 13
-      | 14
-      | 15
-      | 16
-      | 17
-      | 18;
+      1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18;
 
     /**
      * Prebid.js will loop upward through nested iframes to find the top-most referrer. This setting limits how many
@@ -2703,24 +2697,7 @@ export namespace prebidjs {
      * @default `10`
      */
     readonly maxNestedIframes?:
-      | 1
-      | 2
-      | 3
-      | 4
-      | 5
-      | 6
-      | 7
-      | 8
-      | 9
-      | 10
-      | 11
-      | 12
-      | 13
-      | 14
-      | 15
-      | 16
-      | 17
-      | 18;
+      1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18;
 
     /**
      * After this method is called, Prebid.js will generate bid keywords for all bids, instead of the default behavior
@@ -3101,12 +3078,7 @@ export namespace prebidjs {
     }
 
     export type MimeType =
-      | 'video/mp4'
-      | 'video/webm'
-      | 'video/flv'
-      | 'video/H264'
-      | 'video/ogg'
-      | 'video/MPV';
+      'video/mp4' | 'video/webm' | 'video/flv' | 'video/H264' | 'video/ogg' | 'video/MPV';
   }
 
   /**
@@ -4677,8 +4649,10 @@ export namespace prebidjs {
   /**
    * ImproveDigital bid object.
    */
-  export interface IImproveDigitalBid
-    extends IBidObject<typeof ImproveDigital, IImproveDigitalParams> {}
+  export interface IImproveDigitalBid extends IBidObject<
+    typeof ImproveDigital,
+    IImproveDigitalParams
+  > {}
 
   /**
    * IndexExchange bid parameters.
@@ -4718,8 +4692,10 @@ export namespace prebidjs {
   /**
    * IndexExchange bid object.
    */
-  export interface IIndexExchangeBid
-    extends IBidObject<typeof IndexExchange, IIndexExchangeParams> {}
+  export interface IIndexExchangeBid extends IBidObject<
+    typeof IndexExchange,
+    IIndexExchangeParams
+  > {}
 
   // ----- Invibes ----- //
 
@@ -4765,8 +4741,10 @@ export namespace prebidjs {
    * @see https://github.com/prebid/Prebid.js/pull/9470
    * @see https://docs.prebid.org/dev-docs/adunit-reference.html#stored-imp
    */
-  export interface IPrebidServerBid
-    extends Omit<IBidObject<any, IPrebidServerBidParams>, 'bidder'> {
+  export interface IPrebidServerBid extends Omit<
+    IBidObject<any, IPrebidServerBidParams>,
+    'bidder'
+  > {
     /** bidder is not used and can be left out */
     readonly bidder?: never;
     readonly module: 'pbsBidAdapter';
@@ -4975,8 +4953,10 @@ export namespace prebidjs {
   /**
    * NanoInteractive bid object.
    */
-  export interface INanoInteractiveBid
-    extends IBidObject<typeof NanoInteractive, INanoInteractiveParams> {}
+  export interface INanoInteractiveBid extends IBidObject<
+    typeof NanoInteractive,
+    INanoInteractiveParams
+  > {}
 
   /**
    * Required one of the two parameters placement_id or group_id.
@@ -5000,8 +4980,10 @@ export namespace prebidjs {
   /**
    * @see https://docs.prebid.org/dev-docs/bidders/nextMillennium.html
    */
-  export interface INextMillenniumBid
-    extends IBidObject<typeof NextMillennium, INextMillenniumParams> {}
+  export interface INextMillenniumBid extends IBidObject<
+    typeof NextMillennium,
+    INextMillenniumParams
+  > {}
 
   /**
    * @see https://docs.prebid.org/dev-docs/bidders/ogury.html
@@ -5302,11 +5284,10 @@ export namespace prebidjs {
   /**
    * Smart bid object
    */
-  export interface ISmartAdServerBid
-    extends IBidObject<
-      typeof SmartAdServer | typeof Equativ,
-      ISmartAdServerParams | ISmartAdServerPrebidServerParams
-    > {}
+  export interface ISmartAdServerBid extends IBidObject<
+    typeof SmartAdServer | typeof Equativ,
+    ISmartAdServerParams | ISmartAdServerPrebidServerParams
+  > {}
 
   // ----- Smartx (smartclip) ----- //
 
@@ -5647,8 +5628,10 @@ export namespace prebidjs {
     readonly url?: string;
   }
 
-  export interface ISeedingAllianceBid
-    extends IBidObject<typeof SeedingAlliance, ISeedingAllianceParams> {}
+  export interface ISeedingAllianceBid extends IBidObject<
+    typeof SeedingAlliance,
+    ISeedingAllianceParams
+  > {}
 
   /**
    * @see https://docs.prebid.org/dev-docs/bidders/seedtag

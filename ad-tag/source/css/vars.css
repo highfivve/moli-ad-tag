@@ -48,8 +48,8 @@
 /** sticky header ad - plate styling */
 :root {
   --h5v-header-ad-border: 1px solid rgb(243, 244, 246);
-  --h5v-header-ad-shadow: 0 0 #0000, 0 0 #0000, 0 4px 6px -1px rgb(0 0 0 / 0.1),
-    0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --h5v-header-ad-shadow:
+    0 0 #0000, 0 0 #0000, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
 :root {

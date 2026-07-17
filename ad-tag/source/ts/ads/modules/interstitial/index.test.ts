@@ -320,9 +320,13 @@ describe('Interstitial module', () => {
         const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
         jsDomWindow.googletag.pubads().getSlots = () => [slot];
 
-        await initInterstitialModule(jsDomWindow, 'production', noopLogger, interstitialDomId, [
-          111
-        ]);
+        await initInterstitialModule(
+          jsDomWindow,
+          'production',
+          noopLogger,
+          interstitialDomId,
+          [111]
+        );
 
         const allowedEvent: googletag.events.ISlotRenderEndedEvent = {
           slot,

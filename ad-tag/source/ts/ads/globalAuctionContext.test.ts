@@ -87,8 +87,7 @@ describe('Global auction context', () => {
     it('should overwrite the cached winning bidder when a newer bid wins on the same slot', () => {
       const context = makeAuctionContext({ trackWinningBidder: { enabled: true } });
       const bidWonHandler = pbjsOnEventSpy.args.find(args => args[0] === 'bidWon')?.[1] as
-        | ((bid: prebidjs.BidResponse) => void)
-        | undefined;
+        ((bid: prebidjs.BidResponse) => void) | undefined;
 
       expect(bidWonHandler).to.exist;
 
@@ -114,8 +113,7 @@ describe('Global auction context', () => {
       });
 
       const bidWonHandler = pbjsOnEventSpy.args.find(args => args[0] === 'bidWon')?.[1] as
-        | ((bid: prebidjs.BidResponse) => void)
-        | undefined;
+        ((bid: prebidjs.BidResponse) => void) | undefined;
 
       expect(pbjsOnEventSpy).to.have.been.calledOnceWithExactly('bidWon', sinon.match.func);
       expect(bidWonHandler).to.exist;

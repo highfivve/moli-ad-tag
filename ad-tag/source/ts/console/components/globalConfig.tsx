@@ -576,8 +576,8 @@ export class GlobalConfig
                   <TagLabel>allowAuctionWithoutConsent</TagLabel>
                   <Tag>
                     {(
-                      !!config.prebid.config.consentManagement.gdpr?.allowAuctionWithoutConsent ??
-                      'true'
+                      config.prebid.config.consentManagement.gdpr?.allowAuctionWithoutConsent ??
+                      true
                     ).toString()}
                   </Tag>
                 </TagContainer>
