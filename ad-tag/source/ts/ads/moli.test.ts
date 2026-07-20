@@ -28,9 +28,7 @@ import {
   mkConfigureStep,
   mkInitStep,
   mkPrepareRequestAdsStep,
-  mkRequestBidsStep,
-  PrepareRequestAdsStep,
-  RequestBidsStep
+  PrepareRequestAdsStep
 } from './adPipeline';
 import * as spaModule from 'ad-tag/ads/spa';
 
@@ -242,6 +240,126 @@ describe('moli', () => {
             );
           }
         );
+    });
+
+    it('should return to spa-finished after a same-page rejection so requestAds can succeed after navigation', async () => {
+      dom.reconfigure({
+        url: 'https://localhost/page-one'
+      });
+      const adTag = createMoliTag(jsDomWindow);
+      await adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
+
+      const initialState = await adTag.requestAds();
+      expect(initialState.state).to.be.eq('spa-finished');
+
+      try {
+        await adTag.requestAds();
+        expect.fail();
+      } catch (error: any) {
+        expect(error.toString()).to.be.equal(
+          'You are trying to refresh ads on the same page, which is not allowed. Using href for validation.'
+        );
+      }
+
+      expect(adTag.getState()).to.be.eq('spa-finished');
+
+      dom.reconfigure({
+        url: 'https://localhost/page-two'
+      });
+
+      const stateAfterNavigation = await adTag.requestAds();
+      expect(stateAfterNavigation.state).to.be.eq('spa-finished');
+      const spaState: ISinglePageApp = stateAfterNavigation as ISinglePageApp;
+      expect(spaState.config).to.be.ok;
+    });
+
+    it('should preserve next-page targeting across a same-page requestAds rejection', async () => {
+      dom.reconfigure({
+        url: 'https://localhost/page-one'
+      });
+      const adTag = createMoliTag(jsDomWindow);
+      await adTag.configure({
+        ...defaultConfig,
+        spa: { enabled: true, validateLocation: 'href' },
+        targeting: {
+          keyValues: { keyFromAdConfig: 'value' },
+          labels: []
+        }
+      });
+
+      await adTag.requestAds();
+
+      adTag.setTargeting('nextPageKey', 'next-page-value');
+
+      try {
+        await adTag.requestAds();
+        expect.fail();
+      } catch (error: any) {
+        expect(error.toString()).to.be.equal(
+          'You are trying to refresh ads on the same page, which is not allowed. Using href for validation.'
+        );
+      }
+
+      expect(adTag.getState()).to.be.eq('spa-finished');
+      expect(adTag.getPageTargeting().keyValues).to.not.have.property(
+        'nextPageKey',
+        'next-page-value'
+      );
+
+      dom.reconfigure({
+        url: 'https://localhost/page-two'
+      });
+
+      await adTag.requestAds();
+
+      expect(adTag.getPageTargeting().keyValues).to.include({
+        keyFromAdConfig: 'value',
+        nextPageKey: 'next-page-value'
+      });
+    });
+
+    it('should drop queued refresh slots after a same-page requestAds rejection', async () => {
+      dom.reconfigure({
+        url: 'https://localhost/page-one'
+      });
+
+      const slots: AdSlot[] = [{ ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }];
+      const adTag = createMoliTag(jsDomWindow);
+      const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
+
+      await adTag.configure({
+        ...defaultConfig,
+        slots,
+        spa: { enabled: true, validateLocation: 'href' }
+      });
+      await adTag.requestAds();
+
+      const rejectedRequestAds = adTag.requestAds();
+      const refreshResponse = await adTag.refreshAdSlot(slots[0].domId);
+      expect(refreshResponse).to.be.eq('queued');
+
+      try {
+        await rejectedRequestAds;
+        expect.fail();
+      } catch (error: any) {
+        expect(error.toString()).to.be.equal(
+          'You are trying to refresh ads on the same page, which is not allowed. Using href for validation.'
+        );
+      }
+
+      expect(adTag.getState()).to.be.eq('spa-finished');
+      // queued refresh slots from the failed request are dropped because they are page-specific
+      expect(adTag.getRuntimeConfig().refreshSlots).to.be.empty;
+
+      refreshSpy.resetHistory();
+      dom.reconfigure({
+        url: 'https://localhost/page-two'
+      });
+
+      await adTag.requestAds();
+
+      // the old slot IDs from page-1 should not be refreshed on page-2 (they don't exist there)
+      expect(refreshSpy).to.not.have.been.called;
     });
   });
 

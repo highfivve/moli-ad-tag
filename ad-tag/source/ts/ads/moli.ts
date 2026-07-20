@@ -629,6 +629,20 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             // here to allow different key-values for multiple pages
             const validation = config.spa?.validateLocation ?? 'href';
             if (!allowRequestAds(validation, href, window.location)) {
+              state = {
+                state: 'spa-finished',
+                config: config,
+                initialized,
+                modules,
+                href: window.location.href,
+                // the current page did not change, so restore the last successful page state
+                // drop queued refresh slots from this page since they are page-specific and stale
+                runtimeConfig: currentState.runtimeConfig,
+                // preserve only targeting intended for the next valid page
+                nextRuntimeConfig: newEmptyRuntimeConfig(state.runtimeConfig, {
+                  keepTargeting: true
+                })
+              };
               return Promise.reject(
                 `You are trying to refresh ads on the same page, which is not allowed. Using ${validation} for validation.`
               );
