@@ -103,12 +103,11 @@ export const createRewardedAdContext = (
   const attemptGam = (gamConfig: auction.RewardedAdGamConfig): Promise<ChannelAttempt> =>
     new Promise<ChannelAttempt>(resolve => {
       window__.googletag.cmd.push(() => {
-        const googletagRef = window__.googletag;
-        const pubads = googletagRef.pubads();
+        const pubads = window__.googletag.pubads();
         const adUnitPath = gamAdUnitPath ?? gamConfig.adUnitPath;
-        const slot = googletagRef.defineOutOfPageSlot(
+        const slot = window__.googletag.defineOutOfPageSlot(
           adUnitPath,
-          googletagRef.enums.OutOfPageFormat.REWARDED
+          window__.googletag.enums.OutOfPageFormat.REWARDED
         );
 
         if (!slot) {
@@ -116,11 +115,12 @@ export const createRewardedAdContext = (
           resolve({ outcome: 'no-fill' });
           return;
         }
+        slot.addService(window__.googletag.pubads());
 
         let settled = false;
         let timeoutId: number | undefined;
 
-        const destroySlot = (): void => googletagRef.destroySlots([slot]);
+        const destroySlot = (): void => window__.googletag.destroySlots([slot]);
 
         const removeListeners = (): void => {
           pubads.removeEventListener('slotRenderEnded', onSlotRenderEnded);
@@ -139,7 +139,7 @@ export const createRewardedAdContext = (
         };
 
         const onSlotRenderEnded = (event: googletag.events.ISlotRenderEndedEvent): void => {
-          if (event.slot !== slot) {
+          if (event.slot.getAdUnitPath() !== slot.getAdUnitPath()) {
             return;
           }
           // fast no-fill short-circuit - no need to wait for the timeout
@@ -152,7 +152,7 @@ export const createRewardedAdContext = (
         };
 
         const onRewardedSlotReady = (event: googletag.events.IRewardedSlotReadyEvent): void => {
-          if (event.slot !== slot) {
+          if (event.slot.getAdUnitPath() !== slot.getAdUnitPath()) {
             return;
           }
           // the ad is ready. From here on the user controls how long the ad is visible,
@@ -163,7 +163,7 @@ export const createRewardedAdContext = (
         };
 
         const onRewardedSlotGranted = (event: googletag.events.IRewardedSlotGrantedEvent): void => {
-          if (event.slot !== slot) {
+          if (event.slot.getAdUnitPath() !== slot.getAdUnitPath()) {
             return;
           }
           const payload: auction.RewardPayload = event.payload ?? defaultRewardPayload;
@@ -174,7 +174,7 @@ export const createRewardedAdContext = (
         };
 
         const onRewardedSlotClosed = (event: googletag.events.IRewardedSlotClosedEvent): void => {
-          if (event.slot !== slot) {
+          if (event.slot.getAdUnitPath() !== slot.getAdUnitPath()) {
             return;
           }
           logger.debug('rewardedAd', 'gam rewarded slot closed');
@@ -198,8 +198,8 @@ export const createRewardedAdContext = (
           settle({ outcome: 'no-fill' });
         }, config.timeoutMs);
 
-        slot.addService(pubads);
-        googletagRef.display(slot);
+        window__.googletag.display(slot);
+        window__.googletag.pubads().refresh([slot]);
       });
     });
 
