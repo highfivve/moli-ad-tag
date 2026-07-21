@@ -28,6 +28,7 @@ describe('RewardedAdContext', () => {
   let defineOutOfPageSlotStub: Sinon.SinonStub;
   let destroySlotsSpy: Sinon.SinonSpy;
   let displaySpy: Sinon.SinonSpy;
+  let refreshSpy: Sinon.SinonSpy;
   let timeouts: Array<{ callback: () => void; delay: number; id: number }>;
   let timeoutCallback: (() => void) | undefined;
   let timeoutDelay: number | undefined;
@@ -100,6 +101,7 @@ describe('RewardedAdContext', () => {
       .returns(slot);
     destroySlotsSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
     displaySpy = sandbox.spy(jsDomWindow.googletag, 'display');
+    refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
     sandbox.stub(jsDomWindow, 'setTimeout').callsFake(((callback: () => void, delay: number) => {
       const id = 42 + timeouts.length;
@@ -176,6 +178,7 @@ describe('RewardedAdContext', () => {
         jsDomWindow.googletag.enums.OutOfPageFormat.REWARDED
       );
       expect(displaySpy).to.have.been.calledOnceWithExactly(slot);
+      expect(refreshSpy).to.have.been.calledOnceWithExactly([slot]);
       expect(timeoutDelay).to.equal(timeoutMs);
 
       emit('rewardedSlotGranted', { slot, payload: { amount: 1, type: 'coin' } });
