@@ -5,11 +5,7 @@ const [ _node, _script ,cmd ] = process.argv;
 
 // target browsers for esbuild output
 const target = [
-  'es2020',
-  'chrome58',
-  'firefox57',
-  'safari11',
-  'edge18'
+  'es2020'
 ];
 
 const context = await esbuild.context({
