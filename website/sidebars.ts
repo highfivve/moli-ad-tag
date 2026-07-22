@@ -33,7 +33,8 @@ const sidebars: SidebarsConfig = {
         'features/passback',
         'features/hooks',
         'features/ad-unit-path-variables',
-        'features/events'
+        'features/events',
+        'features/rewarded-ad'
       ],
       collapsed: false
     },
