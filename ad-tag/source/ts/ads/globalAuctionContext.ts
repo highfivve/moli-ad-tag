@@ -9,6 +9,7 @@ import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { EventService } from './eventService';
 import { ConfigureStep, mkConfigureStep } from './adPipeline';
 import { createInterstitialContext } from 'ad-tag/ads/auctions/interstitialContext';
+import { createAnchorContext } from 'ad-tag/ads/auctions/anchorContext';
 import { createRewardedAdContext } from 'ad-tag/ads/auctions/rewardedAdContext';
 import { createTrackWinningBidder } from 'ad-tag/ads/auctions/trackWinningBidder';
 import { LabelCondition } from 'ad-tag/ads/labelConfigService';
@@ -53,6 +54,14 @@ export interface GlobalAuctionContext {
   isBidderFrequencyCappedOnSlot(slotId: string, bidder: prebidjs.BidderCode): boolean;
 
   interstitialChannel(): auction.InterstitialChannel | null | undefined;
+
+  /**
+   * @param domId the domId of the bottom anchor slot (`mobile_stickyad` or `floorad`), used to
+   *        disambiguate which of the two independent bottom anchor waterfalls to read from.
+   */
+  anchorBottomChannel(domId: string): auction.AnchorChannel | null | undefined;
+
+  anchorTopChannel(): auction.AnchorChannel | null | undefined;
 
   /**
    * Run the rewarded ad waterfall configured through `globalAuctionContext.rewardedAd`.
@@ -119,6 +128,12 @@ export const createGlobalAuctionContext = (
   const frequencyCapConfig = resolveFeature(config.frequencyCap, 'frequencyCap');
   const previousBidCpmsConfig = resolveFeature(config.previousBidCpms, 'previousBidCpms');
   const interstitialConfig = resolveFeature(config.interstitial, 'interstitial');
+  const anchorBottomMobileConfig = resolveFeature(config.anchorBottomMobile, 'anchorBottomMobile');
+  const anchorBottomDesktopConfig = resolveFeature(
+    config.anchorBottomDesktop,
+    'anchorBottomDesktop'
+  );
+  const anchorTopConfig = resolveFeature(config.anchorTop, 'anchorTop');
   const rewardedAdConfig = resolveFeature(config.rewardedAd, 'rewardedAd');
 
   const trackWinningBidder = trackWinningBidderConfig?.enabled
@@ -143,6 +158,24 @@ export const createGlobalAuctionContext = (
     ? createInterstitialContext(interstitialConfig, window, window.Date.now, logger)
     : undefined;
 
+  const anchorEnabled =
+    !!anchorBottomMobileConfig?.enabled ||
+    !!anchorBottomDesktopConfig?.enabled ||
+    !!anchorTopConfig?.enabled;
+
+  const anchor = anchorEnabled
+    ? createAnchorContext(
+        {
+          bottomMobile: anchorBottomMobileConfig?.enabled ? anchorBottomMobileConfig : undefined,
+          bottomDesktop: anchorBottomDesktopConfig?.enabled ? anchorBottomDesktopConfig : undefined,
+          top: anchorTopConfig?.enabled ? anchorTopConfig : undefined
+        },
+        window,
+        window.Date.now,
+        logger
+      )
+    : undefined;
+
   const rewardedAd = rewardedAdConfig?.enabled
     ? createRewardedAdContext(rewardedAdConfig, window, logger, assetLoaderService)
     : undefined;
@@ -157,12 +190,14 @@ export const createGlobalAuctionContext = (
     biddersDisablingConfig?.enabled ||
     previousBidCpmsConfig?.enabled ||
     frequencyCapConfig?.enabled ||
-    interstitialConfig?.enabled
+    interstitialConfig?.enabled ||
+    anchorEnabled
   ) {
     window.pbjs.que.push(() => {
       window.pbjs.onEvent('auctionEnd', auction => {
         biddersDisabling?.onAuctionEnd(auction);
         interstitial?.onAuctionEnd(auction);
+        anchor?.onAuctionEnd(auction);
         if (previousBidCpmsConfig?.enabled && auction.bidsReceived) {
           previousBidCpms?.onAuctionEnd(auction.bidsReceived);
         }
@@ -202,11 +237,12 @@ export const createGlobalAuctionContext = (
     });
   }
 
-  if (frequencyCapConfig?.enabled || interstitialConfig?.enabled) {
+  if (frequencyCapConfig?.enabled || interstitialConfig?.enabled || anchorEnabled) {
     window.googletag.cmd.push(() => {
       window.googletag.pubads().addEventListener('slotRenderEnded', event => {
         frequencyCapping?.onSlotRenderEnded(event);
         interstitial?.onSlotRenderEnded(event);
+        anchor?.onSlotRenderEnded(event);
       });
       window.googletag.pubads().addEventListener('impressionViewable', event => {
         frequencyCapping?.onImpressionViewable(event);
@@ -217,6 +253,7 @@ export const createGlobalAuctionContext = (
   const configureStep = mkConfigureStep('GlobalAuctionContext', context => {
     frequencyCapping?.updateAdUnitPaths(context.adUnitPathVariables__);
     interstitial?.updateAdUnitPaths(context.adUnitPathVariables__);
+    anchor?.updateAdUnitPaths(context.adUnitPathVariables__);
     rewardedAd?.updateAdUnitPaths(context.adUnitPathVariables__);
     return Promise.resolve();
   });
@@ -242,6 +279,12 @@ export const createGlobalAuctionContext = (
     },
     interstitialChannel: (): auction.InterstitialChannel | null | undefined => {
       return interstitial?.interstitialChannel();
+    },
+    anchorBottomChannel: (domId: string): auction.AnchorChannel | null | undefined => {
+      return anchor?.anchorBottomChannel(domId);
+    },
+    anchorTopChannel: (): auction.AnchorChannel | null | undefined => {
+      return anchor?.anchorTopChannel();
     },
     rewardedAd: (): Promise<MoliRuntime.RewardedAdResult> => {
       // not configured or disabled is a business outcome, not an error

@@ -334,6 +334,71 @@ describe('Global auction context', () => {
     });
   });
 
+  describe('anchor ad', () => {
+    const anchorConfig = (
+      domId: string,
+      priority: auction.AnchorChannel[]
+    ): auction.AnchorConfig => ({
+      enabled: true,
+      adUnitPath: `/12345/${domId}`,
+      domId,
+      priority
+    });
+
+    it('should not create any event listener if no anchor config is set', () => {
+      makeAuctionContext();
+      expect(pbjsOnEventSpy).to.have.not.been.called;
+      expect(googletagAddEventListenerSpy).to.have.not.been.called;
+    });
+
+    it('should return undefined channels if disabled', () => {
+      const context = makeAuctionContext({
+        anchorBottomMobile: { ...anchorConfig('mobile_stickyad', ['c', 'gam']), enabled: false }
+      });
+      expect(context.anchorBottomChannel('mobile_stickyad')).to.be.undefined;
+    });
+
+    it('should add auctionEnd and slotRenderEnded listeners if any anchor instance is enabled', () => {
+      makeAuctionContext({ anchorTop: anchorConfig('header', ['gam', 'c']) });
+      expect(pbjsOnEventSpy).to.have.been.calledOnceWithExactly('auctionEnd', sinon.match.func);
+      expect(googletagAddEventListenerSpy).to.have.been.calledWithExactly(
+        'slotRenderEnded',
+        sinon.match.func
+      );
+    });
+
+    it('should disambiguate bottom-mobile and bottom-desktop by domId', () => {
+      const context = makeAuctionContext({
+        anchorBottomMobile: anchorConfig('mobile_stickyad', ['c', 'gam']),
+        anchorBottomDesktop: anchorConfig('floorad', ['gam', 'c'])
+      });
+      expect(context.anchorBottomChannel('mobile_stickyad')).to.be.eq('c');
+      expect(context.anchorBottomChannel('floorad')).to.be.eq('gam');
+    });
+
+    it('should keep top anchor independent from the bottom instances', () => {
+      const context = makeAuctionContext({
+        anchorBottomMobile: anchorConfig('mobile_stickyad', ['c', 'gam']),
+        anchorTop: anchorConfig('header', ['gam', 'c'])
+      });
+      expect(context.anchorTopChannel()).to.be.eq('gam');
+      expect(context.anchorBottomChannel('mobile_stickyad')).to.be.eq('c');
+    });
+
+    it('should shift priority on an empty auctionEnd for the bottom-mobile domId', () => {
+      const context = makeAuctionContext({
+        anchorBottomMobile: anchorConfig('mobile_stickyad', ['c', 'gam'])
+      });
+      const auctionEndHandler = pbjsOnEventSpy.args.find(args => args[0] === 'auctionEnd')?.[1] as
+        ((auction: prebidjs.event.AuctionObject) => void) | undefined;
+      auctionEndHandler?.({
+        bidsReceived: [] as prebidjs.BidResponse[],
+        adUnitCodes: ['mobile_stickyad']
+      } as prebidjs.event.AuctionObject);
+      expect(context.anchorBottomChannel('mobile_stickyad')).to.be.eq('gam');
+    });
+  });
+
   describe('label-conditioned feature overrides', () => {
     it('uses the feature default when no override matches', () => {
       // previousBidCpms enabled by default; override only applies on the "no-cpms" label

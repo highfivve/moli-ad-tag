@@ -84,3 +84,20 @@ The `{ amount: number; type: string }` describing what the user was granted. Man
 `rewardedSlotGranted` event; the `welect` channel has no such event, so its payload is a static
 value fixed in that channel's configuration. Either way, the publisher always receives the same
 payload shape.
+
+### Anchor Channel
+One of the two integrations capable of serving a top or bottom Anchor Ad: `gam` (rendered
+via GAM's `defineOutOfPageSlot` with `TOP_ANCHOR`/`BOTTOM_ANCHOR`) or `c` (rendered via our
+custom sticky header/footer container with prebid demand). Structurally identical to
+Interstitial Channel, but governed by a different rotation policy — see Anchor Waterfall.
+_Avoid_: conflating with "collapsible anchor ad" — collapsibility is a GAM-UI/line-item
+setting applied to the `gam` channel's rendered creative, not a distinct channel or format.
+
+### Anchor Waterfall
+Per anchor position — top, bottom-mobile, bottom-desktop are three independent instances,
+each with its own session-persisted priority state — moli attempts the current Anchor
+Channel and only rotates priority to the back when it returns an empty ad response (GAM) or
+no bid (custom/prebid). The winning channel is kept as long as it keeps delivering.
+_Avoid_: Interstitial Channel's rotation policy, which shifts on *every* attempt including a
+successful GAM render — that exists to work around a GAM-side frequency cap hard-wired to
+the Web Interstitial format specifically, which does not apply to anchor formats.

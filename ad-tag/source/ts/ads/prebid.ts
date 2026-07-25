@@ -27,6 +27,7 @@ import { AdServer, AdSlot, headerbidding, schain } from '../types/moliConfig';
 import { packageJson } from 'ad-tag/gen/packageJson';
 import { prebidOutstreamRenderer } from 'ad-tag/ads/prebid-outstream';
 import { isGamInterstitial } from 'ad-tag/ads/auctions/interstitialContext';
+import { isGamAnchor } from 'ad-tag/ads/auctions/anchorContext';
 import { criteoEnrichWithFpd } from 'ad-tag/ads/criteo';
 import { enrichId5WithFpd } from 'ad-tag/ads/id5';
 
@@ -451,6 +452,26 @@ export const prebidPrepareRequestAds = (
       })
   );
 
+/**
+ * Check if the anchor waterfall's channel for this slot is currently `gam` - i.e. prebid demand
+ * should not be requested for it this cycle, mirroring the `isGamInterstitial` exclusion above.
+ * Only `anchor-bottom`/`anchor-top` positions have an anchor waterfall; every other position
+ * returns false.
+ */
+const isGamAnchorChannel = (
+  { moliSlot }: MoliRuntime.SlotDefinition,
+  context: AdPipelineContext
+): boolean => {
+  switch (moliSlot.position) {
+    case 'anchor-bottom':
+      return context.auction__.anchorBottomChannel(moliSlot.domId) === 'gam';
+    case 'anchor-top':
+      return context.auction__.anchorTopChannel() === 'gam';
+    default:
+      return false;
+  }
+};
+
 export const prebidRequestBids = (
   prebidConfig: headerbidding.PrebidConfig,
   adServer: AdServer
@@ -475,7 +496,11 @@ export const prebidRequestBids = (
             !context.auction__.isSlotThrottled(slot.adSlot) &&
             // keep slots that are not and interstitial or interstitials that are not from GAM web interstitials
             (!isGamInterstitial(slot.adSlot, context.window__) ||
-              context.auction__.interstitialChannel() !== 'gam')
+              context.auction__.interstitialChannel() !== 'gam') &&
+            // keep slots that are not a GAM anchor, or anchors whose waterfall channel isn't gam -
+            // prevents a shadow prebid auction from shifting the anchor waterfall away from a
+            // gam channel that is actually delivering (see ADR 0004)
+            (!isGamAnchor(slot.adSlot, context.window__) || !isGamAnchorChannel(slot, context))
         );
 
         const requestObject: prebidjs.IRequestObj = prebidConfig.ephemeralAdUnits

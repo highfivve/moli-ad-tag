@@ -813,6 +813,107 @@
       ],
       "type": "object"
     },
+    "Overridable<auction.AnchorConfig>": {
+      "additionalProperties": false,
+      "description": "## Label-conditioned config overrides\n\nWraps a configuration `C` so a publisher can provide a default configuration plus an ordered list of label-conditioned `overrides`. At the first ad request the active labels select the **first matching** override, whose `config` **fully replaces** the default (no field-by-field merge). If no override matches, the default is used.\n\nThis wrapper is shared by two concepts: module configs (`modules.ModulesConfig`) and the first-level features of the Global Auction Context (`auction.GlobalAuctionContextConfig`).\n\nThe override selector (`labelAll` / `labelAny` / `labelNone`) picks *which* config. For modules it is orthogonal to the module activation gate (`labelCondition`); auction features have no separate activation gate, so an override `config` with `enabled: false` is the only way to disable a feature for its labels.\n\nOverride selection runs once, at configure / initialize time. SPA navigations do not re-resolve it; the configuration is fixed for the page lifetime. Implementations never see `overrides` — they receive an already-resolved configuration.\n\nThe override `config` is the bare config `C`, which has no `overrides` field, so nesting overrides is structurally impossible.",
+      "properties": {
+        "adUnitPath": {
+          "description": "The ad unit path for the anchor ad slot. May contain ad unit path variables.",
+          "type": "string"
+        },
+        "domId": {
+          "description": "The DOM ID of the anchor ad slot.",
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "overrides": {
+          "description": "Ordered list of label-conditioned configuration overrides. The first entry whose label condition matches the active labels fully replaces the default configuration. If none match, the default configuration is used.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "config": {
+                    "$ref": "#/definitions/auction.AnchorConfig"
+                  },
+                  "labelAll": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "config",
+                  "labelAll"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "config": {
+                    "$ref": "#/definitions/auction.AnchorConfig"
+                  },
+                  "labelAny": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "config",
+                  "labelAny"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "config": {
+                    "$ref": "#/definitions/auction.AnchorConfig"
+                  },
+                  "labelNone": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "config",
+                  "labelNone"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        "priority": {
+          "description": "The channels that are allowed to be used for this anchor ad and in which order they should be requested.\n\nDuplicate channels are not allowed. After the first appearance of a channel, all subsequent appearances are ignored.\n\nIf the priority is empty, this anchor ad will not be requested at all.",
+          "items": {
+            "$ref": "#/definitions/auction.AnchorChannel"
+          },
+          "type": "array"
+        },
+        "ttlStorage": {
+          "default": "is 30 minutes",
+          "description": "Time-to-live in milliseconds for the anchor state stored in session storage.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "adUnitPath",
+        "domId",
+        "enabled",
+        "priority"
+      ],
+      "type": "object"
+    },
     "Overridable<auction.BidderDisablingConfig>": {
       "additionalProperties": false,
       "description": "## Label-conditioned config overrides\n\nWraps a configuration `C` so a publisher can provide a default configuration plus an ordered list of label-conditioned `overrides`. At the first ad request the active labels select the **first matching** override, whose `config` **fully replaces** the default (no field-by-field merge). If no override matches, the default is used.\n\nThis wrapper is shared by two concepts: module configs (`modules.ModulesConfig`) and the first-level features of the Global Auction Context (`auction.GlobalAuctionContextConfig`).\n\nThe override selector (`labelAll` / `labelAny` / `labelNone`) picks *which* config. For modules it is orthogonal to the module activation gate (`labelCondition`); auction features have no separate activation gate, so an override `config` with `enabled: false` is the only way to disable a feature for its labels.\n\nOverride selection runs once, at configure / initialize time. SPA navigations do not re-resolve it; the configuration is fixed for the page lifetime. Implementations never see `overrides` — they receive an already-resolved configuration.\n\nThe override `config` is the bare config `C`, which has no `overrides` field, so nesting overrides is structurally impossible.",
@@ -3966,6 +4067,50 @@
       ],
       "type": "object"
     },
+    "auction.AnchorChannel": {
+      "description": "## Anchor channels\n\nA channel is the type of integration, which a top or bottom anchor ad will be rendered through. Structurally identical to  {@link  InterstitialChannel } .\n\n- `gam`: The anchor ad is rendered through GAM's `defineOutOfPageSlot` with   `TOP_ANCHOR`/`BOTTOM_ANCHOR`. Collapsibility is a GAM-UI/line-item setting applied to   this channel's creative - not a distinct channel or format value.\n- `c`: The anchor ad is rendered through our custom sticky header/footer container with   prebid demand.",
+      "enum": [
+        "gam",
+        "c"
+      ],
+      "type": "string"
+    },
+    "auction.AnchorConfig": {
+      "additionalProperties": false,
+      "description": "## Anchor Config\n\nConfigures one independent anchor waterfall instance - top, bottom-mobile, and bottom-desktop each get their own `AnchorConfig` and their own session-persisted priority state. Shaped like  {@link  InterstitialConfig } , but the rotation policy only shifts priority on an empty ad response (`gam`) or no bid (`c`) - the winning channel is kept as long as it keeps delivering. This differs from the interstitial waterfall, which rotates on every attempt to work around a GAM-hardwired frequency cap that anchor formats don't have.",
+      "properties": {
+        "adUnitPath": {
+          "description": "The ad unit path for the anchor ad slot. May contain ad unit path variables.",
+          "type": "string"
+        },
+        "domId": {
+          "description": "The DOM ID of the anchor ad slot.",
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "priority": {
+          "description": "The channels that are allowed to be used for this anchor ad and in which order they should be requested.\n\nDuplicate channels are not allowed. After the first appearance of a channel, all subsequent appearances are ignored.\n\nIf the priority is empty, this anchor ad will not be requested at all.",
+          "items": {
+            "$ref": "#/definitions/auction.AnchorChannel"
+          },
+          "type": "array"
+        },
+        "ttlStorage": {
+          "default": "is 30 minutes",
+          "description": "Time-to-live in milliseconds for the anchor state stored in session storage.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "enabled",
+        "adUnitPath",
+        "domId",
+        "priority"
+      ],
+      "type": "object"
+    },
     "auction.BidderDelayConfig": {
       "additionalProperties": false,
       "description": "How many requestAds calls are needed before the configured ad slot can be requested",
@@ -4169,6 +4314,18 @@
         "adRequestThrottling": {
           "$ref": "#/definitions/Overridable%3Cauction.AdRequestThrottlingConfig%3E",
           "description": "Throttle ad requests for a slot to avoid flooding the ad server. This is a general safeguard and should always be active. Mostly single page apps benefit from this, if a dev misuses `React.useEffect` or similar implementations that constantly re-render and thus trigger ad requests."
+        },
+        "anchorBottomDesktop": {
+          "$ref": "#/definitions/Overridable%3Cauction.AnchorConfig%3E",
+          "description": "Anchor waterfall for the bottom anchor position on desktop (`floorad`). Independent priority state from `anchorBottomMobile` and `anchorTop`."
+        },
+        "anchorBottomMobile": {
+          "$ref": "#/definitions/Overridable%3Cauction.AnchorConfig%3E",
+          "description": "Anchor waterfall for the bottom anchor position on mobile (`mobile_stickyad`). Independent priority state from `anchorBottomDesktop` and `anchorTop`."
+        },
+        "anchorTop": {
+          "$ref": "#/definitions/Overridable%3Cauction.AnchorConfig%3E",
+          "description": "Anchor waterfall for the top anchor position (header). Independent priority state from `anchorBottomMobile` and `anchorBottomDesktop`."
         },
         "biddersDisabling": {
           "$ref": "#/definitions/Overridable%3Cauction.BidderDisablingConfig%3E",
@@ -5055,14 +5212,16 @@
       "type": "object"
     },
     "gpt.Position": {
-      "description": "Configure the ad slot position\n\n- `in-page` is the standard display ad\n- 'interstitial' combines the out-of-page-interstitial with prebid demand. It's a custom extension.\n- `out-of-page` uses the `defineOutOfPageSlot` API\n- `out-of-page-interstitial` - `googletag.enums.OutOfPageFormat.INTERSTITIAL`\n- `out-of-page-top-anchor` - `googletag.enums.OutOfPageFormat.TOP_ANCHOR`\n- `out-of-page-bottom-anchor` - `googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR`",
+      "description": "Configure the ad slot position\n\n- `in-page` is the standard display ad\n- 'interstitial' combines the out-of-page-interstitial with prebid demand. It's a custom extension.\n- `out-of-page` uses the `defineOutOfPageSlot` API\n- `out-of-page-interstitial` - `googletag.enums.OutOfPageFormat.INTERSTITIAL`\n- `out-of-page-top-anchor` - `googletag.enums.OutOfPageFormat.TOP_ANCHOR`\n- `out-of-page-bottom-anchor` - `googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR`\n- `anchor-bottom` / `anchor-top` combine the out-of-page top/bottom anchor with prebid   demand, analogous to `interstitial` vs `out-of-page-interstitial`. Which channel is used   is decided by the anchor waterfall (see `auction.AnchorConfig`).",
       "enum": [
         "in-page",
         "interstitial",
         "out-of-page",
         "out-of-page-interstitial",
         "out-of-page-top-anchor",
-        "out-of-page-bottom-anchor"
+        "out-of-page-bottom-anchor",
+        "anchor-bottom",
+        "anchor-top"
       ],
       "type": "string"
     },

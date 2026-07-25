@@ -725,6 +725,63 @@ export namespace auction {
   }
 
   /**
+   * ## Anchor channels
+   *
+   * A channel is the type of integration, which a top or bottom anchor ad will be rendered
+   * through. Structurally identical to {@link InterstitialChannel}.
+   *
+   * - `gam`: The anchor ad is rendered through GAM's `defineOutOfPageSlot` with
+   *   `TOP_ANCHOR`/`BOTTOM_ANCHOR`. Collapsibility is a GAM-UI/line-item setting applied to
+   *   this channel's creative - not a distinct channel or format value.
+   * - `c`: The anchor ad is rendered through our custom sticky header/footer container with
+   *   prebid demand.
+   */
+  export type AnchorChannel = 'gam' | 'c';
+
+  /**
+   * ## Anchor Config
+   *
+   * Configures one independent anchor waterfall instance - top, bottom-mobile, and
+   * bottom-desktop each get their own `AnchorConfig` and their own session-persisted priority
+   * state. Shaped like {@link InterstitialConfig}, but the rotation policy only shifts
+   * priority on an empty ad response (`gam`) or no bid (`c`) - the winning channel is kept
+   * as long as it keeps delivering. This differs from the interstitial waterfall, which
+   * rotates on every attempt to work around a GAM-hardwired frequency cap that anchor formats
+   * don't have.
+   */
+  export interface AnchorConfig {
+    readonly enabled: boolean;
+
+    /**
+     * The ad unit path for the anchor ad slot. May contain ad unit path variables.
+     */
+    readonly adUnitPath: string;
+
+    /**
+     * The DOM ID of the anchor ad slot.
+     */
+    readonly domId: string;
+
+    /**
+     * The channels that are allowed to be used for this anchor ad and in which order they
+     * should be requested.
+     *
+     * Duplicate channels are not allowed. After the first appearance of a channel, all
+     * subsequent appearances are ignored.
+     *
+     * If the priority is empty, this anchor ad will not be requested at all.
+     */
+    readonly priority: AnchorChannel[];
+
+    /**
+     * Time-to-live in milliseconds for the anchor state stored in session storage.
+     *
+     * @default is 30 minutes
+     */
+    readonly ttlStorage?: number;
+  }
+
+  /**
    * Track the latest winning bidder per ad unit based on the prebid `bidWon` event.
    */
   export interface TrackWinningBidderConfig {
@@ -879,6 +936,24 @@ export namespace auction {
      * - Configure waterfall scenarios for the interstitial ad format "gam > custom" or "custom > gam"
      */
     readonly interstitial?: Overridable<InterstitialConfig>;
+
+    /**
+     * Anchor waterfall for the bottom anchor position on mobile (`mobile_stickyad`).
+     * Independent priority state from `anchorBottomDesktop` and `anchorTop`.
+     */
+    readonly anchorBottomMobile?: Overridable<AnchorConfig>;
+
+    /**
+     * Anchor waterfall for the bottom anchor position on desktop (`floorad`).
+     * Independent priority state from `anchorBottomMobile` and `anchorTop`.
+     */
+    readonly anchorBottomDesktop?: Overridable<AnchorConfig>;
+
+    /**
+     * Anchor waterfall for the top anchor position (header).
+     * Independent priority state from `anchorBottomMobile` and `anchorBottomDesktop`.
+     */
+    readonly anchorTop?: Overridable<AnchorConfig>;
 
     /**
      * Enable tracking the latest winning bidder per ad unit from the prebid `bidWon` event.
@@ -1048,6 +1123,9 @@ export namespace gpt {
    * - `out-of-page-interstitial` - `googletag.enums.OutOfPageFormat.INTERSTITIAL`
    * - `out-of-page-top-anchor` - `googletag.enums.OutOfPageFormat.TOP_ANCHOR`
    * - `out-of-page-bottom-anchor` - `googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR`
+   * - `anchor-bottom` / `anchor-top` combine the out-of-page top/bottom anchor with prebid
+   *   demand, analogous to `interstitial` vs `out-of-page-interstitial`. Which channel is used
+   *   is decided by the anchor waterfall (see `auction.AnchorConfig`).
    *
    * @see [Display anchor ad](https://developers.google.com/publisher-tag/samples/display-anchor-ad)
    * @see [OutOfPageFormat](https://developers.google.com/publisher-tag/reference#googletag.enums.OutOfPageFormat)
@@ -1059,7 +1137,9 @@ export namespace gpt {
     | 'out-of-page'
     | 'out-of-page-interstitial'
     | 'out-of-page-top-anchor'
-    | 'out-of-page-bottom-anchor';
+    | 'out-of-page-bottom-anchor'
+    | 'anchor-bottom'
+    | 'anchor-top';
 
   /**
    * ## Gpt ad slot configuration

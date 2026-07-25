@@ -28,7 +28,12 @@ import { createAssetLoaderService } from '../util/assetLoaderService';
 import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import { AdSlot, Environment, gpt, MoliConfig } from '../types/moliConfig';
-import { formatKey, CUSTOM_INTERSTITIAL_FORMAT } from 'ad-tag/ads/keyValues';
+import {
+  formatKey,
+  CUSTOM_INTERSTITIAL_FORMAT,
+  CUSTOM_ANCHOR_BOTTOM_FORMAT,
+  CUSTOM_ANCHOR_TOP_FORMAT
+} from 'ad-tag/ads/keyValues';
 
 // setup sinon-chai
 use(sinonChai);
@@ -896,6 +901,105 @@ describe('google ad manager', () => {
         expect(defineOutOfPageSlotStub).to.have.been.calledOnce;
         expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly('/123/dom-id/mobile', 3);
         expect(slotDefinitions).to.have.length(0);
+      });
+
+      it('should define anchor-bottom as an in-page slot when the channel is "c"', async () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+        getElementByIdStub.returns({} as HTMLElement);
+
+        const anchorBottomSlot: AdSlot = {
+          ...adSlot,
+          position: 'anchor-bottom'
+        };
+
+        const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
+        const setTargetingSpy = sandbox.spy(adSlotStub, 'setTargeting');
+        const defineSlotStub = sandbox.stub(dom.window.googletag, 'defineSlot').returns(adSlotStub);
+        const context = adPipelineContext();
+        sandbox.stub(context.auction__, 'anchorBottomChannel').returns('c');
+
+        const slotDefinitions = await step(context, [anchorBottomSlot]);
+        expect(defineSlotStub).to.have.been.calledOnceWithExactly(
+          '/123/dom-id/mobile',
+          adSlot.sizes,
+          adSlot.domId
+        );
+        expect(setTargetingSpy).to.have.been.calledWith(formatKey, CUSTOM_ANCHOR_BOTTOM_FORMAT);
+        expect(slotDefinitions).to.have.length(1);
+      });
+
+      it('should define anchor-bottom as a GAM out-of-page bottom anchor when the channel is "gam"', async () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const anchorBottomSlot: AdSlot = {
+          ...adSlot,
+          position: 'anchor-bottom'
+        };
+
+        const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
+        const setTargetingSpy = sandbox.spy(adSlotStub, 'setTargeting');
+        const defineOutOfPageSlotStub = sandbox
+          .stub(dom.window.googletag, 'defineOutOfPageSlot')
+          .returns(adSlotStub);
+        const context = adPipelineContext();
+        sandbox.stub(context.auction__, 'anchorBottomChannel').returns('gam');
+
+        const slotDefinitions = await step(context, [anchorBottomSlot]);
+        expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly('/123/dom-id/mobile', 3);
+        expect(setTargetingSpy).to.have.been.calledWith(
+          formatKey,
+          jsDomWindow.googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR.toString()
+        );
+        expect(slotDefinitions).to.have.length(1);
+      });
+
+      it('should define anchor-top as an in-page slot when the channel is "c"', async () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+        getElementByIdStub.returns({} as HTMLElement);
+
+        const anchorTopSlot: AdSlot = {
+          ...adSlot,
+          position: 'anchor-top'
+        };
+
+        const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
+        const setTargetingSpy = sandbox.spy(adSlotStub, 'setTargeting');
+        sandbox.stub(dom.window.googletag, 'defineSlot').returns(adSlotStub);
+        const context = adPipelineContext();
+        sandbox.stub(context.auction__, 'anchorTopChannel').returns('c');
+
+        const slotDefinitions = await step(context, [anchorTopSlot]);
+        expect(setTargetingSpy).to.have.been.calledWith(formatKey, CUSTOM_ANCHOR_TOP_FORMAT);
+        expect(slotDefinitions).to.have.length(1);
+      });
+
+      it('should define anchor-top as a GAM out-of-page top anchor when the channel is "gam"', async () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const anchorTopSlot: AdSlot = {
+          ...adSlot,
+          position: 'anchor-top'
+        };
+
+        const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
+        const setTargetingSpy = sandbox.spy(adSlotStub, 'setTargeting');
+        const defineOutOfPageSlotStub = sandbox
+          .stub(dom.window.googletag, 'defineOutOfPageSlot')
+          .returns(adSlotStub);
+        const context = adPipelineContext();
+        sandbox.stub(context.auction__, 'anchorTopChannel').returns('gam');
+
+        const slotDefinitions = await step(context, [anchorTopSlot]);
+        expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly('/123/dom-id/mobile', 2);
+        expect(setTargetingSpy).to.have.been.calledWith(
+          formatKey,
+          jsDomWindow.googletag.enums.OutOfPageFormat.TOP_ANCHOR.toString()
+        );
+        expect(slotDefinitions).to.have.length(1);
       });
 
       it('should define a slot only once', async () => {
