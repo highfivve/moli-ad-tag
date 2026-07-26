@@ -1,5 +1,5 @@
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
-import { AdSlot } from 'ad-tag/types/moliConfig';
+import { AdSlot, auction } from 'ad-tag/types/moliConfig';
 import { googletag } from 'ad-tag/types/googletag';
 import { isAdvertiserIncluded } from 'ad-tag/ads/isAdvertiserIncluded';
 
@@ -14,6 +14,7 @@ export const adRenderResult = (
   ctx: AdPipelineContext,
   headerSlot: AdSlot,
   disallowedAdvertiserIds: number[],
+  channel: auction.AnchorChannel | undefined | null,
   minVisibleDuration: number
 ) =>
   new Promise<RenderEventResult>(resolve => {
@@ -28,8 +29,11 @@ export const adRenderResult = (
         return;
       }
 
-      // very similar to the footer sticky ads implementation. Can be merged once GD-8007 is on its way
-      if (isAdvertiserIncluded(event, disallowedAdvertiserIds)) {
+      if (channel === 'gam') {
+        // GAM already serves this position as an out-of-page anchor - hide the custom container
+        resolve('disallowed');
+        // very similar to the footer sticky ads implementation. Can be merged once GD-8007 is on its way
+      } else if (isAdvertiserIncluded(event, disallowedAdvertiserIds)) {
         resolve('disallowed');
       } else if (event.isEmpty) {
         resolve('empty');

@@ -77,12 +77,14 @@ export const createStickyFooterAdsV2 = (): IModule => {
             }
 
             if (footerAdSlot) {
+              const channel = ctx.auction__.anchorBottomChannel(footerAdSlot.moliSlot.domId);
               initAdSticky(
                 ctx.window__,
                 ctx.env__,
                 ctx.logger__,
                 footerAdSlot.moliSlot.domId,
                 config.disallowedAdvertiserIds,
+                channel,
                 config.closingButtonText
               );
             }

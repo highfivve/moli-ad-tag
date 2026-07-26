@@ -93,6 +93,11 @@ Interstitial Channel, but governed by a different rotation policy — see Anchor
 _Avoid_: conflating with "collapsible anchor ad" — collapsibility is a GAM-UI/line-item
 setting applied to the `gam` channel's rendered creative, not a distinct channel or format.
 
+When `gam` is the active channel for a position, the `c` channel's own container (sticky
+header for top, sticky footer for bottom) must stay hidden for that position, since GAM is
+already serving that anchor slot out-of-page. The container treats an active `gam` channel
+the same way it treats a disallowed advertiser on its own render: as a reason to hide.
+
 ### Anchor Waterfall
 Per anchor position — top, bottom-mobile, bottom-desktop are three independent instances,
 each with its own session-persisted priority state — moli attempts the current Anchor
