@@ -17,7 +17,7 @@ import {
 } from './prebid';
 import { createLabelConfigService } from './labelConfigService';
 import { createPbjsStub, moliPrebidTestConfig, pbjsTestConfig } from '../stubs/prebidjsStubs';
-import { googleAdSlotStub } from '../stubs/googletagStubs';
+import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
 import { tcData } from '../stubs/consentStubs';
 import { dummySchainConfig } from '../stubs/schainStubs';
 import { createGlobalAuctionContext } from './globalAuctionContext';
@@ -25,6 +25,7 @@ import { AdSlot, Environment, headerbidding, MoliConfig } from '../types/moliCon
 import { createAssetLoaderService } from '../util/assetLoaderService';
 import { packageJson } from 'ad-tag/gen/packageJson';
 import { createEventService } from 'ad-tag/ads/eventService';
+import { formatKey } from 'ad-tag/ads/keyValues';
 import video = prebidjs.video;
 
 // setup sinon-chai
@@ -1264,6 +1265,49 @@ describe('prebid', () => {
       );
       expect(requestBidsSpy).to.have.been.calledWith(
         Sinon.match.has('bidsBackHandler', Sinon.match.func)
+      );
+    });
+
+    it('should not request bids for an anchor-bottom slot rendered as a GAM anchor while its channel is gam', async () => {
+      jsDomWindow.googletag = createGoogletagStub();
+      const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
+      const step = prebidRequestBids(moliPrebidTestConfig, 'gam');
+
+      const baseSlotDef = createSlotDefinitions(domId1, { adUnit: adUnit1 });
+      const slotDef: MoliRuntime.SlotDefinition = {
+        ...baseSlotDef,
+        moliSlot: { ...baseSlotDef.moliSlot, position: 'anchor-bottom' }
+      };
+      // '3' = googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR (see ad-tag/source/ts/ads/keyValues.ts)
+      slotDef.adSlot.setTargeting(formatKey, '3');
+
+      const ctx = adPipelineContext();
+      sandbox.stub(ctx.auction__, 'anchorBottomChannel').returns('gam');
+
+      await step(ctx, [slotDef]);
+      expect(requestBidsSpy).to.have.not.been.called;
+    });
+
+    it('should request bids for an anchor-bottom slot rendered as a GAM anchor if its channel is no longer gam', async () => {
+      jsDomWindow.googletag = createGoogletagStub();
+      const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
+      const step = prebidRequestBids(moliPrebidTestConfig, 'gam');
+
+      const baseSlotDef = createSlotDefinitions(domId1, { adUnit: adUnit1 });
+      const slotDef: MoliRuntime.SlotDefinition = {
+        ...baseSlotDef,
+        moliSlot: { ...baseSlotDef.moliSlot, position: 'anchor-bottom' }
+      };
+      // '3' = googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR (see ad-tag/source/ts/ads/keyValues.ts)
+      slotDef.adSlot.setTargeting(formatKey, '3');
+
+      const ctx = adPipelineContext();
+      sandbox.stub(ctx.auction__, 'anchorBottomChannel').returns('c');
+
+      await step(ctx, [slotDef]);
+      expect(requestBidsSpy).to.have.been.calledOnce;
+      expect(requestBidsSpy).to.have.been.calledWith(
+        Sinon.match.has('adUnitCodes', Sinon.match.array.deepEquals([domId1]))
       );
     });
 
