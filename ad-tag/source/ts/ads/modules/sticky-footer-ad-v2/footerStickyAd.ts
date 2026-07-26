@@ -1,6 +1,6 @@
 import { googletag } from 'ad-tag/types/googletag';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
-import { Environment } from 'ad-tag/types/moliConfig';
+import { auction, Environment } from 'ad-tag/types/moliConfig';
 import { isAdvertiserIncluded } from 'ad-tag/ads/isAdvertiserIncluded';
 
 const adStickyContainerDataRef = '[data-ref=h5v-sticky-ad]';
@@ -26,6 +26,7 @@ type RenderEventResult = 'empty' | 'disallowed' | 'standard';
 const stickyRenderedEvent = (
   mobileStickyDomId: string,
   disallowedAdvertiserIds: number[],
+  channel: auction.AnchorChannel | undefined | null,
   window: Window & googletag.IGoogleTagWindow
 ): Promise<RenderEventResult> =>
   new Promise(resolve => {
@@ -34,7 +35,10 @@ const stickyRenderedEvent = (
         return;
       }
 
-      if (event.isEmpty) {
+      // GAM already serves this position as an out-of-page anchor - hide the custom container
+      if (channel === 'gam') {
+        resolve('disallowed');
+      } else if (event.isEmpty) {
         resolve('empty');
       } else if (isAdvertiserIncluded(event, disallowedAdvertiserIds)) {
         resolve('disallowed');
@@ -90,6 +94,7 @@ export const initAdSticky = (
   log: MoliRuntime.MoliLogger,
   footerStickyDomId: string,
   disallowedAdvertiserIds: number[],
+  channel: auction.AnchorChannel | undefined | null,
   closingButtonText?: string
 ): void => {
   const stickyAd = 'sticky-ad';
@@ -169,7 +174,7 @@ export const initAdSticky = (
         // wait for the results
 
         const stickyOnLoadEventPromise = stickyOnLoadEvent(footerStickyDomId, window);
-        return stickyRenderedEvent(footerStickyDomId, disallowedAdvertiserIds, window)
+        return stickyRenderedEvent(footerStickyDomId, disallowedAdvertiserIds, channel, window)
           .then(result =>
             result === 'empty' || result === 'disallowed'
               ? Promise.resolve(result)
@@ -185,7 +190,7 @@ export const initAdSticky = (
       if (footerStickyDomId) {
         const stickyOnLoadEventPromise = stickyOnLoadEvent(footerStickyDomId, window);
 
-        stickyRenderedEvent(footerStickyDomId, disallowedAdvertiserIds, window)
+        stickyRenderedEvent(footerStickyDomId, disallowedAdvertiserIds, channel, window)
           .then(result =>
             result === 'empty' || result === 'disallowed'
               ? Promise.resolve(result)

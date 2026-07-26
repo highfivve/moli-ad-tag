@@ -171,10 +171,12 @@ export const createStickyHeaderAd = (): IModule => {
                 : null;
 
               if (target) {
+                const channel = ctx.auction__.anchorTopChannel();
                 const adRenderResultPromise = adRenderResult(
                   ctx,
                   headerSlot.moliSlot,
                   config.disallowedAdvertiserIds,
+                  channel,
                   minVisibleDuration
                 );
 

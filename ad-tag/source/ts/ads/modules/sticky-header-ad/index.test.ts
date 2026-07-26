@@ -3,6 +3,7 @@ import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import { createStickyHeaderAd } from './index';
+import * as renderResultModule from './renderResult';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import {
   emptyConfig,
@@ -22,6 +23,7 @@ use(sinonChai);
 describe('sticky header ad module', () => {
   const sandbox = Sinon.createSandbox();
   let { jsDomWindow } = createDomAndWindow();
+  const adRenderResultSpy = sandbox.spy(renderResultModule, 'adRenderResult');
 
   const adPipelineContext = (config: MoliConfig): AdPipelineContext => {
     return {
@@ -239,6 +241,50 @@ describe('sticky header ad module', () => {
         expect(observer.observe).to.have.been.calledOnceWithExactly(target);
         await Promise.resolve();
         expect(container.classList.contains(fadeOutClassName)).to.be.true;
+      } finally {
+        (globalThis as any).IntersectionObserver = originalIntersectionObserver;
+      }
+    });
+
+    it('should resolve anchorTopChannel once per cycle and pass it to adRenderResult', async () => {
+      const container = jsDomWindow.document.createElement('div');
+      container.setAttribute('data-ref', 'header-ad');
+      jsDomWindow.document.body.appendChild(container);
+
+      const target = jsDomWindow.document.createElement('div');
+      target.className = 'trigger';
+      jsDomWindow.document.body.appendChild(target);
+
+      const observer = {
+        observe: sandbox.stub(),
+        disconnect: sandbox.stub(),
+        unobserve: sandbox.stub(),
+        takeRecords: sandbox.stub().returns([]),
+        root: null,
+        rootMargin: '0px',
+        thresholds: []
+      } as any as IntersectionObserver;
+
+      const intersectionObserverConstructor = sandbox.spy(function () {
+        return observer;
+      });
+      const originalIntersectionObserver = (globalThis as any).IntersectionObserver;
+      (jsDomWindow as any).IntersectionObserver = intersectionObserverConstructor;
+      (globalThis as any).IntersectionObserver = intersectionObserverConstructor;
+
+      try {
+        const module = createStickyHeaderAdModule(headerAdDomId, [111]);
+        const headerSlot = createAdSlotConfig(headerAdDomId, 'desktop');
+        const ctx = adPipelineContext(moliConfig([headerSlot]));
+        const channelStub = sandbox.stub(ctx.auction__, 'anchorTopChannel').returns('gam');
+
+        const step = module.prepareRequestAdsSteps__()[0];
+        await step(ctx, [headerSlot]);
+
+        expect(channelStub).to.have.been.calledOnce;
+        expect(adRenderResultSpy).to.have.been.calledOnce;
+        expect(adRenderResultSpy.firstCall.args[2]).to.deep.equal([111]);
+        expect(adRenderResultSpy.firstCall.args[3]).to.equal('gam');
       } finally {
         (globalThis as any).IntersectionObserver = originalIntersectionObserver;
       }
