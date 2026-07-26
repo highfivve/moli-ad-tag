@@ -60,6 +60,7 @@ describe('renderResult', () => {
       ctx,
       headerSlot,
       disallowedAdvertiserIds,
+      undefined,
       minVisibleDuration
     );
 
@@ -88,6 +89,7 @@ describe('renderResult', () => {
       adPipelineContext(),
       headerSlot,
       disallowedAdvertiserIds,
+      undefined,
       minVisibleDuration
     );
 
@@ -114,6 +116,7 @@ describe('renderResult', () => {
       adPipelineContext(),
       headerSlot,
       disallowedAdvertiserIds,
+      undefined,
       minVisibleDuration
     );
 
@@ -138,6 +141,7 @@ describe('renderResult', () => {
       adPipelineContext(),
       headerSlot,
       disallowedAdvertiserIds,
+      undefined,
       minVisibleDuration
     );
 
@@ -162,6 +166,7 @@ describe('renderResult', () => {
       adPipelineContext(),
       headerSlot,
       disallowedAdvertiserIds,
+      undefined,
       minVisibleDuration
     );
 
@@ -186,6 +191,7 @@ describe('renderResult', () => {
       adPipelineContext(),
       headerSlot,
       disallowedAdvertiserIds,
+      undefined,
       minVisibleDuration
     );
 
@@ -211,10 +217,62 @@ describe('renderResult', () => {
       adPipelineContext(),
       headerSlot,
       disallowedAdvertiserIds,
+      undefined,
       minVisibleDuration
     );
 
     expect(setTimeSpy).to.have.been.calledWith(Sinon.match.func, minVisibleDuration);
+    expect(result).to.equal('standard');
+  });
+
+  it('should resolve with disallowed if channel is gam, regardless of the render event', async () => {
+    const headerSlot = {
+      domId: domId
+    } as AdSlot;
+    const disallowedAdvertiserIds: number[] = [];
+    const minVisibleDuration = 0;
+
+    resolveListenerWith({
+      slot: {
+        getSlotElementId: () => domId
+      },
+      advertiserId: 2,
+      isEmpty: false
+    } as any);
+
+    const result = await adRenderResult(
+      adPipelineContext(),
+      headerSlot,
+      disallowedAdvertiserIds,
+      'gam',
+      minVisibleDuration
+    );
+
+    expect(result).to.equal('disallowed');
+  });
+
+  it('should resolve with standard if channel is c and advertiser is not disallowed', async () => {
+    const headerSlot = {
+      domId: domId
+    } as AdSlot;
+    const disallowedAdvertiserIds: number[] = [];
+    const minVisibleDuration = 0;
+
+    resolveListenerWith({
+      slot: {
+        getSlotElementId: () => domId
+      },
+      advertiserId: 2
+    } as any);
+
+    const result = await adRenderResult(
+      adPipelineContext(),
+      headerSlot,
+      disallowedAdvertiserIds,
+      'c',
+      minVisibleDuration
+    );
+
     expect(result).to.equal('standard');
   });
 });
