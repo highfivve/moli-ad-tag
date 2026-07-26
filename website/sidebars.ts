@@ -34,7 +34,8 @@ const sidebars: SidebarsConfig = {
         'features/hooks',
         'features/ad-unit-path-variables',
         'features/events',
-        'features/rewarded-ad'
+        'features/rewarded-ad',
+        'features/out-of-page-ads'
       ],
       collapsed: false
     },

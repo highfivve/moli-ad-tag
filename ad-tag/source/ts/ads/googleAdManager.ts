@@ -19,8 +19,13 @@ import { AssetLoadMethod } from '../util/assetLoaderService';
 import { tcfapi } from '../types/tcfapi';
 import { createTestSlots } from '../util/test-slots';
 import { resolveAdUnitPath } from './adUnitPath';
-import { AdSlot, consent, googleAdManager } from '../types/moliConfig';
-import { formatKey, CUSTOM_INTERSTITIAL_FORMAT } from './keyValues';
+import { AdSlot, auction, consent, googleAdManager } from '../types/moliConfig';
+import {
+  formatKey,
+  CUSTOM_INTERSTITIAL_FORMAT,
+  CUSTOM_ANCHOR_BOTTOM_FORMAT,
+  CUSTOM_ANCHOR_TOP_FORMAT
+} from './keyValues';
 
 /**
  * A dummy googletag ad slot for the test mode
@@ -66,6 +71,18 @@ const testAdSlot = (domId: string, adUnitPath: string): googletag.IAdSlot => ({
     return;
   }
 });
+
+// sets the custom format targeting for an anchor slot's `c` channel. GAM channel formats are
+// set separately via the format parameter returned by `defineAnchorSlot`.
+const setCustomAnchorFormatTargeting = (
+  adSlot: googletag.IAdSlot,
+  channel: auction.AnchorChannel | null | undefined,
+  customFormat: string
+): void => {
+  if (channel === 'c') {
+    adSlot.setTargeting(formatKey, customFormat);
+  }
+};
 
 const configureTargeting = (
   window: Window & googletag.IGoogleTagWindow,
@@ -366,6 +383,29 @@ export const gptDefineSlots =
         }
       };
 
+      // defines an anchor-bottom / anchor-top slot depending on the waterfall's current channel:
+      // `gam` -> out-of-page top/bottom anchor, `c` -> in-page slot with prebid demand. The
+      // domId's div is expected to already exist as part of the publisher's sticky header/footer
+      // markup, unlike the interstitial position, which has no natural place in the page.
+      const defineAnchorSlot = (
+        channel: auction.AnchorChannel | null | undefined,
+        outOfPageFormat: googletag.enums.OutOfPageFormat
+      ): [googletag.IAdSlot | null, googletag.enums.OutOfPageFormat | null] => {
+        switch (channel) {
+          case 'gam':
+            return [
+              context.window__.googletag.defineOutOfPageSlot(resolvedAdUnitPath, outOfPageFormat),
+              outOfPageFormat
+            ];
+          case 'c':
+          default:
+            return [
+              context.window__.googletag.defineSlot(resolvedAdUnitPath, sizes, moliSlot.domId),
+              null
+            ];
+        }
+      };
+
       // define an ad slot depending on the `position` parameter
       const defineAdSlot = (): [
         googletag.IAdSlot | null,
@@ -440,6 +480,20 @@ export const gptDefineSlots =
               ),
               context.window__.googletag.enums.OutOfPageFormat.TOP_ANCHOR
             ];
+          case 'anchor-bottom':
+            // note that the anchor-bottom position first requests prebid demand and if none,
+            // switches to a GAM out-of-page bottom anchor slot on the next request. Unlike the
+            // interstitial waterfall, there's no same-cycle fallback: the anchor is a sticky
+            // element that persists across the session, so the next request is enough.
+            return defineAnchorSlot(
+              context.auction__.anchorBottomChannel(moliSlot.domId),
+              context.window__.googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR
+            );
+          case 'anchor-top':
+            return defineAnchorSlot(
+              context.auction__.anchorTopChannel(),
+              context.window__.googletag.enums.OutOfPageFormat.TOP_ANCHOR
+            );
         }
       };
 
@@ -460,6 +514,22 @@ export const gptDefineSlots =
               adSlot.setTargeting(formatKey, CUSTOM_INTERSTITIAL_FORMAT);
             }
             // GAM interstitials already have format set above via the format parameter
+          } else if (moliSlot.position === 'anchor-bottom') {
+            // For custom bottom anchors, use the custom format value. GAM bottom anchors already
+            // have format set above via the format parameter.
+            setCustomAnchorFormatTargeting(
+              adSlot,
+              context.auction__.anchorBottomChannel(moliSlot.domId),
+              CUSTOM_ANCHOR_BOTTOM_FORMAT
+            );
+          } else if (moliSlot.position === 'anchor-top') {
+            // For custom top anchors, use the custom format value. GAM top anchors already have
+            // format set above via the format parameter.
+            setCustomAnchorFormatTargeting(
+              adSlot,
+              context.auction__.anchorTopChannel(),
+              CUSTOM_ANCHOR_TOP_FORMAT
+            );
           } else {
             adSlot.setConfig({ targeting: { [formatKey]: null } });
           }
