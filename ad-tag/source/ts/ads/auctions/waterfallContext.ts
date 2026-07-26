@@ -55,7 +55,7 @@ export interface RotationTrigger<Channel extends string> {
  * empty ad response for `gam`, or no bid for `c`. The winning channel is kept as long as it
  * keeps delivering. See ADR 0004.
  */
-export const createFailOnlyRotationTrigger = <
+export const createOnEmptyBidRotationTrigger = <
   Channel extends string
 >(): RotationTrigger<Channel> => ({
   shouldShiftOnSlotRenderEnded: event => event.isEmpty,

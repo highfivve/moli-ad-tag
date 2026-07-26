@@ -7,7 +7,7 @@ import { NowInstant } from 'ad-tag/ads/auctions/resume';
 import { formatKey } from 'ad-tag/ads/keyValues';
 import {
   createWaterfallContext,
-  createFailOnlyRotationTrigger,
+  createOnEmptyBidRotationTrigger,
   WaterfallContext
 } from 'ad-tag/ads/auctions/waterfallContext';
 
@@ -69,7 +69,7 @@ export const createAnchorContext = (
     ? createWaterfallContext(
         sessionStorageKeys.bottomMobile,
         configs.bottomMobile,
-        createFailOnlyRotationTrigger<auction.AnchorChannel>(),
+        createOnEmptyBidRotationTrigger<auction.AnchorChannel>(),
         window__,
         now,
         logger,
@@ -81,7 +81,7 @@ export const createAnchorContext = (
     ? createWaterfallContext(
         sessionStorageKeys.bottomDesktop,
         configs.bottomDesktop,
-        createFailOnlyRotationTrigger<auction.AnchorChannel>(),
+        createOnEmptyBidRotationTrigger<auction.AnchorChannel>(),
         window__,
         now,
         logger,
@@ -93,7 +93,7 @@ export const createAnchorContext = (
     ? createWaterfallContext(
         sessionStorageKeys.top,
         configs.top,
-        createFailOnlyRotationTrigger<auction.AnchorChannel>(),
+        createOnEmptyBidRotationTrigger<auction.AnchorChannel>(),
         window__,
         now,
         logger,

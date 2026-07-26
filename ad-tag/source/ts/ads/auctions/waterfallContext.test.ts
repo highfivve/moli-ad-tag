@@ -6,7 +6,7 @@ import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStu
 import { prebidjs } from 'ad-tag/types/prebidjs';
 import {
   createWaterfallContext,
-  createFailOnlyRotationTrigger
+  createOnEmptyBidRotationTrigger
 } from 'ad-tag/ads/auctions/waterfallContext';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { auction } from 'ad-tag/types/moliConfig';
@@ -61,7 +61,7 @@ describe('waterfallContext', () => {
     return createWaterfallContext(
       sessionStorageKey,
       config,
-      createFailOnlyRotationTrigger<auction.AnchorChannel>(),
+      createOnEmptyBidRotationTrigger<auction.AnchorChannel>(),
       jsDomWindow,
       jsDateNowStub,
       noopLogger,
@@ -208,7 +208,7 @@ describe('waterfallContext', () => {
       return createWaterfallContext(
         sessionStorageKey,
         config,
-        createFailOnlyRotationTrigger<auction.AnchorChannel>(),
+        createOnEmptyBidRotationTrigger<auction.AnchorChannel>(),
         jsDomWindow,
         jsDateNowStub,
         noopLogger,
