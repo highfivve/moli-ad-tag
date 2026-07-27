@@ -10,6 +10,8 @@
  * so the tokens are declared on :host. Nothing must leak to the publisher page.
  */
 :host {
+  /* stop the publisher page's font-size from inheriting into the console */
+  font-size: 16px;
   --background: 0 0% 100%;
   --foreground: 240 10% 3.9%;
   --card: 0 0% 100%;
