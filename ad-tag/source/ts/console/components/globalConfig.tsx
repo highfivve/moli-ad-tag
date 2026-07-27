@@ -504,7 +504,7 @@ export class GlobalConfig
               <div
                 key={index}
                 ref={el => {
-                  if (el && selectedSlotDomId === slot.domId) {
+                  if (el && selectedSlotDomId && selectedSlotDomId === slot.domId) {
                     el.scrollIntoView({ block: 'start' });
                     this.setState({ selectedSlotDomId: undefined });
                   }
