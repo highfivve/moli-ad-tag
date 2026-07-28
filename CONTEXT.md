@@ -106,3 +106,32 @@ no bid (custom/prebid). The winning channel is kept as long as it keeps deliveri
 _Avoid_: Interstitial Channel's rotation policy, which shifts on *every* attempt including a
 successful GAM render — that exists to work around a GAM-side frequency cap hard-wired to
 the Web Interstitial format specifically, which does not apply to anchor formats.
+
+### Position
+The ad slot's configured shape (`in-page`, `anchor-bottom`, `out-of-page-top-anchor`, etc.) —
+fixed at config time, never changes at runtime. _Avoid_: confusing with Format Targeting
+Value, which describes how a Position actually got rendered this cycle and can vary.
+
+### Format Targeting Value
+The raw value carried by GAM's `format` (`f`) key-value targeting on a live ad slot: either
+GPT's own `OutOfPageFormat` enum number (the slot was defined as a native GAM out-of-page
+format) or one of moli's custom sentinel constants (used when the same Position is instead
+rendered through moli's own custom/prebid-backed path rather than a native GAM out-of-page
+call — e.g. an Anchor Ad on the `c` Channel). Two slots can share the same Position yet carry
+different Format Targeting Values; that's precisely the distinction it exists to capture.
+_Avoid_: treating this as just another name for Position — it answers "how was this rendered,"
+not "what shape was configured."
+
+### Viewability Override
+A per-slot-domId override of what element to monitor for on-screen visibility, in place of
+the slot's own container div. A domId maps to an ordered list of override entries; the first
+entry whose Viewability Override Condition matches — or that has no condition at all — wins
+outright. No matching entry, or the matched entry's target element not being present in the
+DOM, means the slot's own div is monitored instead.
+_Avoid_: treating the list as a merge — like Label-Conditioned Config Override, the winning
+entry replaces, it does not blend with the others.
+
+### Viewability Override Condition
+A predicate on a single Viewability Override entry, currently only a `format` field compared
+against the slot's live Format Targeting Value. Multiple fields on one condition are ANDed
+together; OR is expressed by adding another entry to the list, not by the condition itself.

@@ -4806,6 +4806,19 @@
       },
       "type": "object"
     },
+    "googleAdManager.FormatTargetingValue": {
+      "description": "The raw value carried by GAM's `format` (`f`) key-value targeting on a live ad slot - readable synchronously off any slot via `slot.getTargeting(formatKey)`. Either GPT's own `OutOfPageFormat` enum-as-string (the slot was defined as a native GAM out-of-page format, e.g. `defineOutOfPageSlot`), or one of moli's custom sentinel constants (the same Position instead rendered through moli's own custom/prebid-backed path, e.g. an Anchor Ad on the `c` channel). See `ads/keyValues.ts` for the constants.",
+      "enum": [
+        "2",
+        "3",
+        "4",
+        "5",
+        "100",
+        "101",
+        "102"
+      ],
+      "type": "string"
+    },
     "googleAdManager.GeoConfig": {
       "additionalProperties": false,
       "properties": {
@@ -6126,6 +6139,16 @@
       ],
       "description": "Used to configure the strictness of user activity checks."
     },
+    "modules.adreload.ViewabilityOverrideCondition": {
+      "additionalProperties": false,
+      "description": "A predicate on a single Viewability Override entry. Compared against the slot's live Format Targeting Value (`slot.getTargeting(formatKey)`) at `trackSlot()` time - no cross-module lookup required, works uniformly for anchor and interstitial slots.\n\nMultiple fields on one condition are ANDed together; OR is expressed by adding another entry to the  {@link  ViewabilityOverrides }  list, not by this condition itself.",
+      "properties": {
+        "format": {
+          "$ref": "#/definitions/googleAdManager.FormatTargetingValue"
+        }
+      },
+      "type": "object"
+    },
     "modules.adreload.ViewabilityOverrideEntry": {
       "anyOf": [
         {
@@ -6140,6 +6163,10 @@
     "modules.adreload.ViewabilityOverrideEntryCss": {
       "additionalProperties": false,
       "properties": {
+        "conditions": {
+          "$ref": "#/definitions/modules.adreload.ViewabilityOverrideCondition",
+          "description": "Restricts this entry to slots whose live Format Targeting Value matches. Omitted means \"always matches\" - see  {@link  ViewabilityOverrides }  for how the entry list is resolved."
+        },
         "cssSelector": {
           "description": "Used to select a single element to monitor for viewability",
           "type": "string"
@@ -6162,6 +6189,10 @@
     "modules.adreload.ViewabilityOverrideEntryDisabled": {
       "additionalProperties": false,
       "properties": {
+        "conditions": {
+          "$ref": "#/definitions/modules.adreload.ViewabilityOverrideCondition",
+          "description": "Restricts this entry to slots whose live Format Targeting Value matches. Omitted means \"always matches\" - see  {@link  ViewabilityOverrides }  for how the entry list is resolved."
+        },
         "disableAllAdVisibilityChecks": {
           "description": "Enable reloading ads that are not in viewport without any restrictions.\n\nIt is not advised to use this option. Impressions are usually only counted on ads that have been 50% visible, and it's generally not very user-centric to load stuff that is out of viewport.\n\nSet this to false and provide additional configuration options to restrict the unconditional ad reload to certain advertisers.",
           "type": "boolean"
@@ -6196,12 +6227,18 @@
             "$ref": "#/definitions/modules.adreload.ViewabilityOverrideEntry"
           },
           {
+            "items": {
+              "$ref": "#/definitions/modules.adreload.ViewabilityOverrideEntry"
+            },
+            "type": "array"
+          },
+          {
             "not": {}
           }
         ],
         "description": "Ad Slot DOM ID to viewability configuration"
       },
-      "description": "Viewability is measured by gpt visibility events or a separate IntersectionObserver.\n\nThis configuration object allows to provide a CSS selector to check for visibility. If set and available in the DOM it will be used to check for visibility with an IntersectionObserver. Otherwise, the configured default behavior will be used.\n\nA record in this overrides object is a mapping of a slot's DOM id to the override configuration.",
+      "description": "Viewability is measured by gpt visibility events or a separate IntersectionObserver.\n\nThis configuration object allows to provide a CSS selector to check for visibility. If set and available in the DOM it will be used to check for visibility with an IntersectionObserver. Otherwise, the configured default behavior will be used.\n\nA record in this overrides object is a mapping of a slot's DOM id to the override configuration - either a single entry, or an ordered list of entries. For a list, the first entry whose `conditions` matches the slot's live Format Targeting Value - or that has no `conditions` at all - wins outright; entries are never merged. If nothing matches, the slot's own div is monitored instead.",
       "type": "object"
     },
     "modules.blocklist.Blocklist": {
@@ -6415,7 +6452,7 @@
       "properties": {
         "bidder": {
           "$ref": "#/definitions/prebidjs.BidderCode",
-          "description": "The bidder that offers the special format."
+          "description": "The bidder that offers the special format.\n\nOptional - if omitted, cleanup always runs and skips the \"did this bidder win the last auction on this slot\" gate. Use this for formats not served through a prebid bidder, e.g. a GAM-only out-of-page slot cleaned up via  {@link  GamSlotDeletionMethod } ."
         },
         "deleteMethod": {
           "anyOf": [
@@ -6424,6 +6461,9 @@
             },
             {
               "$ref": "#/definitions/modules.cleanup.JSDeletionMethod"
+            },
+            {
+              "$ref": "#/definitions/modules.cleanup.GamSlotDeletionMethod"
             }
           ],
           "description": "The method how the special format should be cleaned up."
@@ -6434,7 +6474,6 @@
         }
       },
       "required": [
-        "bidder",
         "domId",
         "deleteMethod"
       ],
@@ -6463,6 +6502,25 @@
       "required": [
         "configs",
         "enabled"
+      ],
+      "type": "object"
+    },
+    "modules.cleanup.GamSlotDeletionMethod": {
+      "additionalProperties": false,
+      "description": "Destroys the googletag slot matching `CleanupConfig.domId` via `googletag.destroySlots()`. Used for GAM-only out-of-page formats (e.g. anchor ads) where there is no prebid bidder involved, so there is nothing for `CSSDeletionMethod`/`JSDeletionMethod` to clean up in the DOM - the stale GAM slot itself is the thing that must go before it's redefined.\n\nOut-of-page slots (anchor/interstitial) never get GPT's own element id set to `domId`, so the lookup also matches by `adUnitPath` as a fallback (see `ads/modules/cleanup/index.ts`).",
+      "properties": {
+        "adUnitPath": {
+          "description": "The slot's ad unit path, may contain the same placeholders as elsewhere (`{device}`, `{channel}`) - resolved via `resolveAdUnitPath` before the lookup runs.",
+          "type": "string"
+        },
+        "destroySlot": {
+          "const": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "destroySlot",
+        "adUnitPath"
       ],
       "type": "object"
     },
