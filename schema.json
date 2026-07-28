@@ -5913,6 +5913,9 @@
             "appnexusAst": {
               "type": "number"
             },
+            "aps": {
+              "type": "number"
+            },
             "connectad": {
               "type": "number"
             },
@@ -8147,6 +8150,7 @@
         "amx",
         "aduptech",
         "adf",
+        "aps",
         "connectad",
         "criteo",
         "cwire",
@@ -8865,6 +8869,48 @@
       ],
       "type": "object"
     },
+    "prebidjs.IApsBid": {
+      "additionalProperties": false,
+      "properties": {
+        "bidSource": {
+          "$ref": "#/definitions/prebidjs.server.BidSource",
+          "description": "Only available with the s2sTesting module. Overrides the global bidSource configuration"
+        },
+        "bidder": {
+          "const": "aps",
+          "description": "Unique code identifying the bidder. For bidder codes, see the [bidder param reference](https://prebid.org/dev-docs/bidders.html).",
+          "type": "string"
+        },
+        "labelAll": {
+          "description": "Used for [conditional ads](https://prebid.org/dev-docs/conditional-ad-units.html). Works with sizeConfig argument to [pbjs.setConfig](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads).\n\nNote: will be removed by the ad tag and thus hidden for prebid",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "labelAny": {
+          "description": "Used for [conditional ads](https://prebid.org/dev-docs/conditional-ad-units.html). Works with sizeConfig argument to [pbjs.setConfig](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads).\n\nNote: will be removed by the ad tag and thus hidden for prebid",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "params": {
+          "$ref": "#/definitions/prebidjs.IApsParams",
+          "description": "Bid request parameters for a given bidder. For allowed params, see the [bidder param reference](https://prebid.org/dev-docs/bidders.html)."
+        }
+      },
+      "required": [
+        "bidder",
+        "params"
+      ],
+      "type": "object"
+    },
+    "prebidjs.IApsParams": {
+      "additionalProperties": false,
+      "description": "APS has zero bid params. All configuration happens through [[IApsConfig]].",
+      "type": "object"
+    },
     "prebidjs.IBid": {
       "anyOf": [
         {
@@ -8878,6 +8924,9 @@
         },
         {
           "$ref": "#/definitions/prebidjs.IAdUpBid"
+        },
+        {
+          "$ref": "#/definitions/prebidjs.IApsBid"
         },
         {
           "$ref": "#/definitions/prebidjs.IConnectAdBid"
@@ -9351,6 +9400,43 @@
               ],
               "type": "object"
             },
+            "aps": {
+              "additionalProperties": false,
+              "description": "Global APS property",
+              "properties": {
+                "accountID": {
+                  "description": "APS-provided account ID used for APS bidding and telemetry state isolation.",
+                  "type": [
+                    "string",
+                    "number"
+                  ]
+                },
+                "creativeURL": {
+                  "description": "Optional script URL for banner creative rendering.",
+                  "type": "string"
+                },
+                "debug": {
+                  "description": "Toggle APS debug mode in bid request URL construction.",
+                  "type": "boolean"
+                },
+                "debugURL": {
+                  "description": "Optional override of the APS bid endpoint.",
+                  "type": "string"
+                },
+                "renderMethod": {
+                  "description": "Optional render mode used by APS debug signaling.",
+                  "type": "string"
+                },
+                "telemetry": {
+                  "description": "Enable or disable adapter telemetry events.",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "accountID"
+              ],
+              "type": "object"
+            },
             "auctionOptions": {
               "$ref": "#/definitions/prebidjs.auctionOptions.IAuctionOptionsConfig",
               "description": "The auctionOptions object controls aspects related to auctions."
@@ -9689,6 +9775,9 @@
           "$ref": "#/definitions/prebidjs.IBidderSetting"
         },
         "appnexusAst": {
+          "$ref": "#/definitions/prebidjs.IBidderSetting"
+        },
+        "aps": {
           "$ref": "#/definitions/prebidjs.IBidderSetting"
         },
         "connectad": {
@@ -10124,6 +10213,7 @@
             "amx",
             "aduptech",
             "adf",
+            "aps",
             "connectad",
             "criteo",
             "cwire",
@@ -12399,6 +12489,7 @@
             "amx": {},
             "appnexus": {},
             "appnexusAst": {},
+            "aps": {},
             "connectad": {},
             "criteo": {},
             "cwire": {},
@@ -12446,6 +12537,7 @@
             "amx",
             "aduptech",
             "adf",
+            "aps",
             "connectad",
             "criteo",
             "cwire",
@@ -12596,6 +12688,43 @@
           },
           "required": [
             "constructor"
+          ],
+          "type": "object"
+        },
+        "aps": {
+          "additionalProperties": false,
+          "description": "Global APS property",
+          "properties": {
+            "accountID": {
+              "description": "APS-provided account ID used for APS bidding and telemetry state isolation.",
+              "type": [
+                "string",
+                "number"
+              ]
+            },
+            "creativeURL": {
+              "description": "Optional script URL for banner creative rendering.",
+              "type": "string"
+            },
+            "debug": {
+              "description": "Toggle APS debug mode in bid request URL construction.",
+              "type": "boolean"
+            },
+            "debugURL": {
+              "description": "Optional override of the APS bid endpoint.",
+              "type": "string"
+            },
+            "renderMethod": {
+              "description": "Optional render mode used by APS debug signaling.",
+              "type": "string"
+            },
+            "telemetry": {
+              "description": "Enable or disable adapter telemetry events.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "accountID"
           ],
           "type": "object"
         },
@@ -14778,7 +14907,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-208960-208963-248365657-208953-208963-248365657-208921-209749-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-221997%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-210501-210504-248365657-210494-210504-248365657-210462-211290-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538%3E"
           },
           "type": "array"
         }
@@ -14788,7 +14917,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<(alias-248365657-207864-208034-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-2219971149092559&alias-248365657-208034-208167-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-2219971210238678)>": {
+    "prebidjs.activitycontrols.IActivity<(alias-248365657-209405-209575-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-2235381149092559&alias-248365657-209575-209708-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-2235381210238678)>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -14798,7 +14927,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-207864-208034-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-2219971149092559%26alias-248365657-208034-208167-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-2219971210238678)%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-209405-209575-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-2235381149092559%26alias-248365657-209575-209708-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-2235381210238678)%3E"
           },
           "type": "array"
         }
@@ -14808,7 +14937,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-207409-207623-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-22199798888365>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-208950-209164-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-22353898888365>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -14818,7 +14947,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-207409-207623-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-22199798888365%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-208950-209164-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-22353898888365%3E"
           },
           "type": "array"
         }
@@ -14828,7 +14957,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-207623-207864-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-221997187177090>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-209164-209405-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538187177090>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -14838,7 +14967,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-207623-207864-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-221997187177090%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-209164-209405-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538187177090%3E"
           },
           "type": "array"
         }
@@ -14848,7 +14977,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-207864-208034-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-2219971149092559&alias-248365657-208034-208167-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-2219971210238678)>": {
+    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-209405-209575-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-2235381149092559&alias-248365657-209575-209708-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-2235381210238678)>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -14911,7 +15040,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-207409-207623-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-22199798888365>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-208950-209164-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-22353898888365>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -14971,7 +15100,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-207623-207864-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-221997187177090>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-209164-209405-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538187177090>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -15026,7 +15155,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<structure-248365657-208960-208963-248365657-208953-208963-248365657-208921-209749-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-221997>": {
+    "prebidjs.activitycontrols.IActivityRule<structure-248365657-210501-210504-248365657-210494-210504-248365657-210462-211290-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -15082,7 +15211,7 @@
       "description": "Starting with version 7.52, Prebid.js introduced a centralized control mechanism for privacy-sensitive activities\n- such as accessing device storage or sharing data with partners.  These controls are intended to serve as building blocks for privacy protection mechanisms, allowing module developers or publishers to directly specify what should be permitted or avoided in any given regulatory environment.",
       "properties": {
         "accessDevice": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-207409-207623-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-22199798888365%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-208950-209164-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-22353898888365%3E",
           "description": "A component wants to use device storage.\n\nEffect when denied: Storage is disabled"
         },
         "enrichEids": {
@@ -15094,7 +15223,7 @@
           "description": "A Real-Time Data (RTD) submodule wants to add user first-party data to outgoing requests (`user.data` in ORTB)\n\nEffect when denied: User FPD is discarded"
         },
         "fetchBids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-207623-207864-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-221997187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209164-209405-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538187177090%3E",
           "description": "A bid adapter wants to participate in an auction\n\nEffect when denied: Bidder is removed from the auction"
         },
         "reportAnalytics": {
@@ -15102,23 +15231,23 @@
           "description": "An analytics adapter is being enabled through `pbjs.enableAnalytics`\n\nEffect when denied: Adapter remains disabled"
         },
         "syncUser": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-207864-208034-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-2219971149092559%26alias-248365657-208034-208167-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-2219971210238678)%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-209405-209575-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-2235381149092559%26alias-248365657-209575-209708-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-2235381210238678)%3E",
           "description": "A bid adapter wants to fetch a [user sync](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-Configure-User-Syncing)\n\nEffect when denied: User sync is skipped"
         },
         "transmitEids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-207623-207864-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-221997187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209164-209405-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user IDs to their endpoint.\n\nEffect when denied: User IDs are hidden from the component"
         },
         "transmitPreciseGeo": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-207623-207864-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-221997187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209164-209405-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit precise geolocation data to their endpoint.\n\nEffect when denied: Component is allowed only 2-digit precision for latitude and longitude"
         },
         "transmitTid": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-207623-207864-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-221997187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209164-209405-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit globally unique transaction IDs to their endpoint.\n\nEffect when denied: Transaction IDs are hidden from the component"
         },
         "transmitUfpd": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-207623-207864-248365657-206828-212931-248365657-206713-212931-248365657-195-221996-248365657-168-221996-248365657-0-221997187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209164-209405-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user FPD to their endpoint.\n\nEffect when denied: User FPD is hidden from the component"
         }
       },
@@ -15866,6 +15995,9 @@
         "appnexusAst": {
           "$ref": "#/definitions/prebidjs.currency.ICurrency"
         },
+        "aps": {
+          "$ref": "#/definitions/prebidjs.currency.ICurrency"
+        },
         "connectad": {
           "$ref": "#/definitions/prebidjs.currency.ICurrency"
         },
@@ -15995,6 +16127,7 @@
         "amx",
         "aduptech",
         "adf",
+        "aps",
         "connectad",
         "criteo",
         "cwire",
@@ -17609,6 +17742,7 @@
         "amx": {},
         "appnexus": {},
         "appnexusAst": {},
+        "aps": {},
         "connectad": {},
         "criteo": {},
         "cwire": {},
@@ -17914,6 +18048,9 @@
               "$ref": "#/definitions/prebidjs.server.BidderControl"
             },
             "appnexusAst": {
+              "$ref": "#/definitions/prebidjs.server.BidderControl"
+            },
+            "aps": {
               "$ref": "#/definitions/prebidjs.server.BidderControl"
             },
             "connectad": {
