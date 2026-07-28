@@ -5,6 +5,8 @@ import type { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import type { IntersectionObserverWindow } from 'ad-tag/types/dom';
 import type { prebidjs } from 'ad-tag/types/prebidjs';
 import { isAdvertiserIncluded } from 'ad-tag/ads/isAdvertiserIncluded';
+import { formatKey } from 'ad-tag/ads/keyValues';
+import { asViewabilityOverrideEntryList, resolveViewabilityOverride } from './viewabilityOverride';
 
 /**
  * Tracks the visibility of ad slots.
@@ -56,11 +58,13 @@ export class AdVisibilityService {
 
     this.visibilityRecords = new Map<string, VisibilityRecord>();
 
-    // instantiate IntersectionObserver if it is enabled or if there are custom overrides that
-    // require an observer to be available
+    // instantiate IntersectionObserver if it is enabled or if any configured override entry could
+    // require one (a `css` variant somewhere in the entry list for any domId)
     const requiredIntersectionObserver =
       (useIntersectionObserver ||
-        Object.values(viewabilityOverrides).some(entry => entry?.variant === 'css')) &&
+        Object.values(viewabilityOverrides).some(entryOrList =>
+          asViewabilityOverrideEntryList(entryOrList).some(entry => entry.variant === 'css')
+        )) &&
       'IntersectionObserver' in this.window;
 
     if (requiredIntersectionObserver) {
@@ -121,6 +125,7 @@ export class AdVisibilityService {
       const override = domElement.viewabilityOverride;
       this.visibilityRecords.set(slot.getSlotElementId(), {
         slot: slot,
+        target: domElement.target,
         latestStartVisible:
           this.disableAdVisibilityChecks ||
           (override?.variant === 'disabled' &&
@@ -159,11 +164,14 @@ export class AdVisibilityService {
       slot
     );
 
+    const record = this.visibilityRecords.get(slot.getSlotElementId());
     this.visibilityRecords.delete(slot.getSlotElementId());
 
-    const observedSlot = this.observedDomElementForSlot(slot);
-    if (this.intersectionObserver && observedSlot) {
-      this.intersectionObserver.unobserve(observedSlot.target);
+    // unobserve the target that was actually tracked, not one recomputed from the (possibly since
+    // changed) override configuration - important for slots whose live Format Targeting Value,
+    // and therefore the matched override entry, can flip between trackSlot() calls.
+    if (this.intersectionObserver && record) {
+      this.intersectionObserver.unobserve(record.target);
     }
   };
 
@@ -323,7 +331,11 @@ export class AdVisibilityService {
   /**
    * use the override element if it exists, otherwise use the ad slot element
    * this is necessary for ad formats that do not exist inside the regular ad slot element
-   * @param slot
+   *
+   * Resolution is purely slot-local: the slot's live Format Targeting Value
+   * (`slot.getTargeting(formatKey)`) picks the first matching entry from the configured list for
+   * this domId (see {@link resolveViewabilityOverride}). If the matched entry's target isn't in
+   * the DOM yet, or nothing matches, this falls back to the slot's own div for this call.
    */
   private observedDomElementForSlot(slot: googletag.IAdSlot): {
     target: HTMLElement;
@@ -331,12 +343,18 @@ export class AdVisibilityService {
     viewabilityOverride?: modules.adreload.ViewabilityOverrideEntry;
   } | null {
     const slotDomId = slot.getSlotElementId();
-    const viewabilityOverride = this.viewabilityOverrides[slotDomId];
+    const [liveFormat] = slot.getTargeting(formatKey);
+    const viewabilityOverride = resolveViewabilityOverride(
+      asViewabilityOverrideEntryList(this.viewabilityOverrides[slotDomId]),
+      liveFormat
+    );
     const adSlotElement = this.window.document.getElementById(slotDomId);
+
     const overrideElement =
       viewabilityOverride && viewabilityOverride.variant === 'css'
         ? this.window.document.querySelector<HTMLElement>(viewabilityOverride.cssSelector)
         : null;
+
     return overrideElement
       ? { target: overrideElement, targetOverride: true, viewabilityOverride }
       : adSlotElement
@@ -353,6 +371,12 @@ type VisibilityRecord = {
    * The refreshable ad slot.
    */
   slot: googletag.IAdSlot;
+  /**
+   * The DOM element actually resolved and (potentially) observed for this slot at `trackSlot()`
+   * time - the slot's own div or a matched viewability override's target. Stored so
+   * `removeSlotTracking()` unobserves the correct element instead of recomputing it.
+   */
+  target: HTMLElement;
   /**
    * Point in time when this ad became visible to the user. Undefined when this slot is currently not seen.
    */

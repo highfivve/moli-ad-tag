@@ -3,6 +3,7 @@ import React, { Fragment, PropsWithChildren } from 'react';
 import { Tag, TagLabel } from './tag';
 import { SubHeadline, TagContainer } from './ui';
 import { modules } from '../../types/moliConfig';
+import { asViewabilityOverrideEntryList } from 'ad-tag/ads/modules/ad-reload/viewabilityOverride';
 
 /**
  * Concise, hand crafted views for each module configuration.
@@ -155,13 +156,18 @@ const AdReloadModule: React.FC<{ config: modules.adreload.AdReloadModuleConfig }
     {config.viewabilityOverrides && Object.keys(config.viewabilityOverrides).length > 0 && (
       <>
         <SubHeadline>Viewability overrides</SubHeadline>
-        {Object.entries(config.viewabilityOverrides).map(([domId, override]) => (
-          <Row key={domId} label={domId} subEntry>
-            {override?.variant === 'css' && <Tag variant="grey">css: {override.cssSelector}</Tag>}
-            {override?.variant === 'disabled' && <Tag variant="yellow">checks disabled</Tag>}
-            {override?.refreshBucket && <Tag variant="yellow">refreshes bucket</Tag>}
-          </Row>
-        ))}
+        {Object.entries(config.viewabilityOverrides).flatMap(([domId, entryOrList]) =>
+          asViewabilityOverrideEntryList(entryOrList).map((override, index) => (
+            <Row key={`${domId}-${index}`} label={index === 0 ? domId : ''} subEntry>
+              {override.conditions?.format && (
+                <Tag variant="blue">format: {override.conditions.format}</Tag>
+              )}
+              {override.variant === 'css' && <Tag variant="grey">css: {override.cssSelector}</Tag>}
+              {override.variant === 'disabled' && <Tag variant="yellow">checks disabled</Tag>}
+              {override.refreshBucket && <Tag variant="yellow">refreshes bucket</Tag>}
+            </Row>
+          ))
+        )}
       </>
     )}
   </>
@@ -217,11 +223,13 @@ const CleanupModule: React.FC<{ config: modules.cleanup.CleanupModuleConfig }> =
     {config.configs.length === 0 && <i>No cleanup configs</i>}
     {config.configs.map((cleanupConfig, index) => (
       <Row key={index} label={cleanupConfig.domId}>
-        <Tag variant="blue">{cleanupConfig.bidder}</Tag>
+        {cleanupConfig.bidder && <Tag variant="blue">{cleanupConfig.bidder}</Tag>}
         {'cssSelectors' in cleanupConfig.deleteMethod ? (
           <Tag variant="grey">css: {cleanupConfig.deleteMethod.cssSelectors.join(', ')}</Tag>
-        ) : (
+        ) : 'jsAsString' in cleanupConfig.deleteMethod ? (
           <Tag variant="yellow">JS snippet ({cleanupConfig.deleteMethod.jsAsString.length})</Tag>
+        ) : (
+          <Tag variant="yellow">destroy GAM slot: {cleanupConfig.deleteMethod.adUnitPath}</Tag>
         )}
       </Row>
     ))}

@@ -1,6 +1,7 @@
 import { googletag } from 'ad-tag/types/googletag';
 import { AdPipelineContext, InitStep, mkInitStep } from 'ad-tag/ads/adPipeline';
 import { isPlainObject } from 'ad-tag/util/objectUtils';
+import { findGoogletagSlot } from 'ad-tag/ads/findGoogletagSlot';
 
 export type PassbackMessage = {
   /**
@@ -37,18 +38,6 @@ export type RefreshAdUnitMessage = {
 
 export type BridgeProtocol = PassbackMessage | RefreshAdUnitMessage;
 
-const findAdSlot = (
-  message: { domId?: string; adUnitPath?: string },
-  googletag: googletag.IGoogleTag
-): googletag.IAdSlot | undefined =>
-  googletag
-    .pubads()
-    .getSlots()
-    .find(
-      slot =>
-        slot.getSlotElementId() === message.domId || slot.getAdUnitPath() === message.adUnitPath
-    );
-
 const parseMessageData = (data: any): BridgeProtocol | null => {
   try {
     const message: BridgeProtocol | null =
@@ -80,7 +69,7 @@ const handleRefresh = (message: RefreshAdUnitMessage, context: AdPipelineContext
   const backfillMoliSlot = context.config__.slots.find(
     slot => slot.domId === message.domId && slot.behaviour.loaded === 'backfill'
   );
-  const adSlot = findAdSlot(message, context.window__.googletag);
+  const adSlot = findGoogletagSlot(message, context.window__.googletag);
   if (backfillMoliSlot && adSlot) {
     context.logger__.debug('bridge', `Refresh ad slot ${message.domId}`);
     context.window__.googletag.destroySlots([adSlot]);
@@ -129,7 +118,7 @@ const handleRefresh = (message: RefreshAdUnitMessage, context: AdPipelineContext
  * @param context
  */
 const handlePassback = (message: PassbackMessage, context: AdPipelineContext): void => {
-  const adSlot = findAdSlot(message, context.window__.googletag);
+  const adSlot = findGoogletagSlot(message, context.window__.googletag);
   const passbackKey = 'passback';
   // only refresh if the ad slot is available and has not yet been marked as passback
   if (adSlot && adSlot.getTargeting(passbackKey).length === 0) {
