@@ -13,6 +13,7 @@ import RefreshIntervalOverrides = modules.adreload.RefreshIntervalOverrides;
 import type { IntersectionObserverWindow } from 'ad-tag/types/dom';
 import { prebidjs } from 'ad-tag/types/prebidjs';
 import { MockIntersectionObserver } from 'ad-tag/stubs/dom';
+import { formatKey } from 'ad-tag/ads/keyValues';
 
 use(sinonChai);
 
@@ -481,6 +482,113 @@ describe('AdVisibilityService', () => {
           expect(unobserveSpy).to.have.been.calledOnce;
           expect(unobserveSpy).to.have.been.calledOnceWithExactly(overrideElement);
         });
+      });
+    });
+
+    describe('trackSlot with a list of entries and format conditions', () => {
+      const anchorDomId = 'mobile_stickyad';
+      const gamAnchorFormat = '3'; // googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR
+      const customAnchorFormat = '101'; // CUSTOM_ANCHOR_BOTTOM_FORMAT
+      const gamInsSelector = 'ins[id^="gpt_unit_/123/anchor"]';
+
+      const listOverrides: modules.adreload.ViewabilityOverrides = {
+        [anchorDomId]: [
+          {
+            variant: 'css',
+            cssSelector: gamInsSelector,
+            conditions: { format: gamAnchorFormat }
+          },
+          { variant: 'disabled', disableAllAdVisibilityChecks: true }
+        ]
+      };
+
+      it('matches the conditioned entry when the live format targeting value matches', () => {
+        const service = createAdVisibilityService(false, {}, listOverrides, false);
+        const { slot } = createAndStubAdSlot(anchorDomId);
+        slot.setTargeting(formatKey, gamAnchorFormat);
+        const insElement = jsDomWindow.document.createElement('ins');
+        const querySelectorStub = sandbox
+          .stub(jsDomWindow.document, 'querySelector')
+          .returns(insElement);
+
+        service.trackSlot(slot, sandbox.stub);
+
+        expect(querySelectorStub).to.have.been.calledOnceWithExactly(gamInsSelector);
+        expect(observeSpy).to.have.been.calledOnceWithExactly(insElement);
+      });
+
+      it('falls through to the next entry (no condition, disabled variant) when the format does not match', () => {
+        const performanceNowStub = sandbox.stub(jsDomWindow.performance, 'now');
+        Array.from({ length: 30 }).forEach((_, index) => {
+          performanceNowStub.onCall(index).returns((index + 1) * 1000);
+        });
+
+        const service = createAdVisibilityService(false, {}, listOverrides, false);
+        const { slot } = createAndStubAdSlot(anchorDomId);
+        slot.setTargeting(formatKey, customAnchorFormat);
+        const querySelectorStub = sandbox.stub(jsDomWindow.document, 'querySelector');
+
+        const refreshCallback = sandbox.stub();
+        service.trackSlot(slot, refreshCallback);
+
+        // the css-conditioned entry didn't match, so it fell through to the unconditioned
+        // "disabled" entry - no css lookup should have happened at all
+        expect(querySelectorStub).to.not.have.been.called;
+        expect(observeSpy).to.not.have.been.called;
+
+        sandbox.clock.tick(adRefreshInterval + tickInterval);
+        // the disabled entry's checks are disabled, so the slot is always considered visible
+        expect(refreshCallback).to.have.been.calledOnceWithExactly(slot);
+      });
+
+      it('falls back to the slot own div for this cycle if the matched entry target is not yet in the DOM', () => {
+        const service = createAdVisibilityService(false, {}, listOverrides, true);
+        const { slot, slotElement } = createAndStubAdSlot(anchorDomId);
+        slot.setTargeting(formatKey, gamAnchorFormat);
+        sandbox.stub(jsDomWindow.document, 'querySelector').returns(null);
+
+        service.trackSlot(slot, sandbox.stub);
+
+        expect(observeSpy).to.have.been.calledOnceWithExactly(slotElement);
+      });
+
+      it('treats an entry with no conditions field as always matching, regardless of live format', () => {
+        const alwaysMatchOverrides: modules.adreload.ViewabilityOverrides = {
+          [adSlotDomId]: [{ variant: 'css', cssSelector }]
+        };
+        const service = createAdVisibilityService(false, {}, alwaysMatchOverrides, false);
+        const { slot } = createAndStubAdSlot(adSlotDomId);
+        // no format targeting set on the slot at all
+        const overrideElement = jsDomWindow.document.createElement('div');
+        const querySelectorStub = sandbox
+          .stub(jsDomWindow.document, 'querySelector')
+          .returns(overrideElement);
+
+        service.trackSlot(slot, sandbox.stub);
+
+        expect(querySelectorStub).to.have.been.calledOnceWithExactly(cssSelector);
+        expect(observeSpy).to.have.been.calledOnceWithExactly(overrideElement);
+      });
+
+      it('removeSlotTracking unobserves the entry that was actually matched at trackSlot() time, even if the live format changed since', () => {
+        const service = createAdVisibilityService(false, {}, listOverrides, false);
+        const { slot } = createAndStubAdSlot(anchorDomId);
+        slot.setTargeting(formatKey, gamAnchorFormat);
+        const insElement = jsDomWindow.document.createElement('ins');
+        const querySelectorStub = sandbox
+          .stub(jsDomWindow.document, 'querySelector')
+          .returns(insElement);
+
+        service.trackSlot(slot, sandbox.stub);
+
+        // simulate the live format flipping to the `c` channel's custom value before removal
+        slot.setTargeting(formatKey, customAnchorFormat);
+        const otherInsElement = jsDomWindow.document.createElement('ins');
+        querySelectorStub.returns(otherInsElement);
+
+        service.removeSlotTracking(slot);
+
+        expect(unobserveSpy).to.have.been.calledOnceWithExactly(insElement);
       });
     });
 

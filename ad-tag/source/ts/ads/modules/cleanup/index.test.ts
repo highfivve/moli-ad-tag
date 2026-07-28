@@ -14,6 +14,7 @@ import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { AdPipelineContext } from '../../adPipeline';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { createPbjsStub } from 'ad-tag/stubs/prebidjsStubs';
+import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -148,7 +149,7 @@ describe('Cleanup Module', () => {
     const configureSteps = module.configureSteps__();
     const prepareRequestAdsSteps = module.prepareRequestAdsSteps__();
 
-    expect(configureSteps.length).to.equal(1);
+    expect(configureSteps.length).to.equal(2);
     expect(prepareRequestAdsSteps.length).to.equal(1);
   });
 
@@ -472,5 +473,215 @@ describe('Cleanup Module', () => {
     expect(errorLogSpy.called).to.be.true;
     expect(consoleLogSpy.calledWith(`This is broken`)).to.be.false;
     expect(consoleLogSpy.calledWith(`This is not broken`)).to.be.true;
+  });
+
+  describe('destroySlot deleteMethod (GAM-only, bidder-less cleanup)', () => {
+    const anchorDomId = 'mobile_stickyad';
+
+    const stubGoogletagWithSlots = (slots: IAdSlot[]) => {
+      const destroySlotsSpy = sandbox.spy();
+      jsDomWindow.googletag = {
+        ...createGoogletagStub(),
+        pubads: () => ({
+          ...createGoogletagStub().pubads(),
+          getSlots: () => slots
+        }),
+        destroySlots: destroySlotsSpy
+      };
+      return destroySlotsSpy;
+    };
+
+    it('destroys the matching googletag slot in cleanUp()', () => {
+      const anchorSlot = googleAdSlotStub('/1234/anchor', anchorDomId);
+      const otherSlot = googleAdSlotStub('/1234/other', domId1);
+      const destroySlotsSpy = stubGoogletagWithSlots([anchorSlot, otherSlot]);
+
+      const module = createCleanup();
+      module.cleanUp(adPipelineContext(), [
+        { domId: anchorDomId, deleteMethod: { destroySlot: true, adUnitPath: '/1234/anchor' } }
+      ]);
+
+      expect(destroySlotsSpy).to.have.been.calledWith([anchorSlot]);
+    });
+
+    it('does not throw if no matching googletag slot exists', () => {
+      stubGoogletagWithSlots([]);
+      const module = createCleanup();
+
+      expect(() =>
+        module.cleanUp(adPipelineContext(), [
+          { domId: anchorDomId, deleteMethod: { destroySlot: true, adUnitPath: '/1234/anchor' } }
+        ])
+      ).to.not.throw();
+    });
+
+    it("matches by resolved adUnitPath when the domId does not match GPT's auto-generated element id", () => {
+      // GPT never receives moli's domId for out-of-page slots - the live slot's element id is
+      // some auto-generated string, but its ad unit path is still the one moli configured.
+      const anchorSlot = googleAdSlotStub('/1234/anchor/mobile', 'gpt_auto_generated_id');
+      const destroySlotsSpy = stubGoogletagWithSlots([anchorSlot]);
+
+      const module = createCleanup();
+      module.cleanUp({ ...adPipelineContext(), adUnitPathVariables__: { device: 'mobile' } }, [
+        {
+          domId: anchorDomId,
+          deleteMethod: { destroySlot: true, adUnitPath: '/1234/anchor/{device}' }
+        }
+      ]);
+
+      expect(destroySlotsSpy).to.have.been.calledWith([anchorSlot]);
+    });
+
+    it('logs and skips the config if the adUnitPath placeholder cannot be resolved', () => {
+      const anchorSlot = googleAdSlotStub('/1234/anchor/mobile', anchorDomId);
+      const destroySlotsSpy = stubGoogletagWithSlots([anchorSlot]);
+
+      const module = createCleanup();
+      module.cleanUp(adPipelineContext(), [
+        {
+          domId: 'some-other-domid',
+          deleteMethod: { destroySlot: true, adUnitPath: '/1234/anchor/{device}' }
+        }
+      ]);
+
+      expect(destroySlotsSpy).to.not.have.been.called;
+      expect(errorLogSpy).to.have.been.called;
+    });
+
+    it('registers a dedicated configure step that destroys the stale slot unconditionally, without any bidder-won gate', async () => {
+      const anchorSlot = googleAdSlotStub('/1234/anchor', anchorDomId);
+      const destroySlotsSpy = stubGoogletagWithSlots([anchorSlot]);
+      // no winning bid data at all - must not matter, bidder is omitted for this config
+      jsDomWindow.pbjs = { ...createPbjsStub(), getAllWinningBids: () => [] };
+
+      const module = createAndConfigureModule({
+        enabled: true,
+        configs: [
+          { domId: anchorDomId, deleteMethod: { destroySlot: true, adUnitPath: '/1234/anchor' } }
+        ]
+      });
+
+      const destroyStep = module
+        .configureSteps__()
+        .find(step => step.name === 'destroy-stale-gam-slot-before-redefine');
+      expect(destroyStep).to.exist;
+
+      const slots = createAdSlots(jsDomWindow, [anchorDomId]);
+      await destroyStep!(adPipelineContext(), slots);
+
+      expect(destroySlotsSpy).to.have.been.calledWith([anchorSlot]);
+    });
+
+    it('only destroys configs whose domId is part of the current cycle slots', async () => {
+      const anchorSlot = googleAdSlotStub('/1234/anchor', anchorDomId);
+      const destroySlotsSpy = stubGoogletagWithSlots([anchorSlot]);
+
+      const module = createAndConfigureModule({
+        enabled: true,
+        configs: [
+          { domId: anchorDomId, deleteMethod: { destroySlot: true, adUnitPath: '/1234/anchor' } }
+        ]
+      });
+
+      const destroyStep = module
+        .configureSteps__()
+        .find(step => step.name === 'destroy-stale-gam-slot-before-redefine')!;
+
+      // current cycle only reloads an unrelated slot, not the anchor slot
+      const slots = createAdSlots(jsDomWindow, [domId1]);
+      await destroyStep(adPipelineContext(), slots);
+
+      expect(destroySlotsSpy).to.not.have.been.called;
+    });
+
+    it('does not run in environment test', async () => {
+      const anchorSlot = googleAdSlotStub('/1234/anchor', anchorDomId);
+      const destroySlotsSpy = stubGoogletagWithSlots([anchorSlot]);
+
+      const module = createAndConfigureModule({
+        enabled: true,
+        configs: [
+          { domId: anchorDomId, deleteMethod: { destroySlot: true, adUnitPath: '/1234/anchor' } }
+        ]
+      });
+
+      const destroyStep = module
+        .configureSteps__()
+        .find(step => step.name === 'destroy-stale-gam-slot-before-redefine')!;
+
+      const slots = createAdSlots(jsDomWindow, [anchorDomId]);
+      await destroyStep(
+        { ...adPipelineContext(), runtimeConfig__: { ...emptyRuntimeConfig, environment: 'test' } },
+        slots
+      );
+
+      expect(destroySlotsSpy).to.not.have.been.called;
+    });
+
+    it('is never destroyed by the existing prepareRequestAdsSteps__ step, which runs after defineSlots (too late)', async () => {
+      const anchorSlot = googleAdSlotStub('/1234/anchor', anchorDomId);
+      const destroySlotsSpy = stubGoogletagWithSlots([anchorSlot]);
+
+      const module = createAndConfigureModule({
+        enabled: true,
+        configs: [
+          { domId: anchorDomId, deleteMethod: { destroySlot: true, adUnitPath: '/1234/anchor' } }
+        ]
+      });
+
+      const prepareRequestAds = module.prepareRequestAdsSteps__()[0];
+      expect(prepareRequestAds?.name).to.be.eq('cleanup-before-ad-reload');
+
+      // the anchor slot's domId matches this reload's slot - if unfiltered, this step would
+      // destroy the slot after defineSlots has already (re)defined it for the same cycle
+      await prepareRequestAds(adPipelineContext(), [createSlotDefinition(anchorDomId)]);
+
+      expect(destroySlotsSpy).to.not.have.been.called;
+    });
+
+    it('leaves existing bidder-gated cleanup configs (e.g. dspx) unaffected', async () => {
+      jsDomWindow.pbjs = {
+        ...createPbjsStub(),
+        getAllWinningBids: () => [{ adUnitCode: domId2, bidder: 'dspx' }]
+      };
+      const anchorSlot = googleAdSlotStub('/1234/anchor', anchorDomId);
+      const destroySlotsSpy = stubGoogletagWithSlots([anchorSlot]);
+      const consoleLogSpy = sandbox.spy(globalThis.console, 'log');
+
+      const module = createAndConfigureModule({
+        enabled: true,
+        configs: [
+          {
+            bidder: 'dspx',
+            domId: domId2,
+            deleteMethod: {
+              jsAsString: [
+                `globalThis.console.log('JS for slot ${domId2} and bidder dspx is being executed');`
+              ]
+            }
+          },
+          { domId: anchorDomId, deleteMethod: { destroySlot: true, adUnitPath: '/1234/anchor' } }
+        ]
+      });
+
+      const slots = createAdSlots(jsDomWindow, [domId2, anchorDomId]);
+
+      // the existing bidder-gated step still cleans up dspx exactly as before, and must not
+      // also destroy the bidder-less destroySlot config - that's the dedicated step's job only
+      const bidderGatedStep = module.configureSteps__()[0];
+      expect(bidderGatedStep.name).to.equal('destroy-out-of-page-ad-format');
+      await bidderGatedStep(adPipelineContext(), slots);
+      expect(consoleLogSpy).to.be.calledWith(
+        `JS for slot ${domId2} and bidder dspx is being executed`
+      );
+      expect(destroySlotsSpy).to.not.have.been.called;
+
+      // the new dedicated step destroys the bidder-less anchor slot, independent of the above
+      const destroyStep = module
+        .configureSteps__()
+        .find(step => step.name === 'destroy-stale-gam-slot-before-redefine')!;
+      await destroyStep(adPipelineContext(), slots);
+      expect(destroySlotsSpy).to.have.been.calledWith([anchorSlot]);
+    });
   });
 });

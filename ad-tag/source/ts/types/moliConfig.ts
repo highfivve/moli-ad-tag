@@ -5,6 +5,11 @@ import { MoliRuntime } from './moliRuntime';
 import { EmetriqAdditionalIdentifier, EmetriqParams, EmetriqCustomParam } from './emetriq';
 import { googletag } from './googletag';
 import { LabelCondition } from 'ad-tag/ads/labelConfigService';
+import {
+  CUSTOM_ANCHOR_BOTTOM_FORMAT,
+  CUSTOM_ANCHOR_TOP_FORMAT,
+  CUSTOM_INTERSTITIAL_FORMAT
+} from 'ad-tag/ads/keyValues';
 
 /**
  * Type for a device where Moli could possibly be run on.
@@ -393,6 +398,20 @@ export namespace consent {
 
 export namespace googleAdManager {
   export type SlotSize = [number, number] | 'fluid';
+
+  /**
+   * The raw value carried by GAM's `format` (`f`) key-value targeting on a live ad slot -
+   * readable synchronously off any slot via `slot.getTargeting(formatKey)`. Either GPT's own
+   * `OutOfPageFormat` enum-as-string (the slot was defined as a native GAM out-of-page format,
+   * e.g. `defineOutOfPageSlot`), or one of moli's custom sentinel constants (the same Position
+   * instead rendered through moli's own custom/prebid-backed path, e.g. an Anchor Ad on the `c`
+   * channel). See `ads/keyValues.ts` for the constants.
+   */
+  export type FormatTargetingValue =
+    | `${googletag.enums.OutOfPageFormat}`
+    | typeof CUSTOM_INTERSTITIAL_FORMAT
+    | typeof CUSTOM_ANCHOR_BOTTOM_FORMAT
+    | typeof CUSTOM_ANCHOR_TOP_FORMAT;
 
   /**
    * KeyValue map. Last insert wins.
@@ -1606,6 +1625,18 @@ export namespace modules {
       [slotDomId: string]: number | RefreshIntervalOverrideEntry;
     };
 
+    /**
+     * A predicate on a single Viewability Override entry. Compared against the slot's live
+     * Format Targeting Value (`slot.getTargeting(formatKey)`) at `trackSlot()` time - no
+     * cross-module lookup required, works uniformly for anchor and interstitial slots.
+     *
+     * Multiple fields on one condition are ANDed together; OR is expressed by adding another
+     * entry to the {@link ViewabilityOverrides} list, not by this condition itself.
+     */
+    export type ViewabilityOverrideCondition = {
+      readonly format?: googleAdManager.FormatTargetingValue;
+    };
+
     export type ViewabilityOverrideEntryBase = {
       /**
        * An optional bucket that is used to refresh the ad slot and all other ad slots in the same bucket.
@@ -1616,6 +1647,12 @@ export namespace modules {
        *       are not in viewport.
        */
       refreshBucket?: boolean;
+
+      /**
+       * Restricts this entry to slots whose live Format Targeting Value matches. Omitted means
+       * "always matches" - see {@link ViewabilityOverrides} for how the entry list is resolved.
+       */
+      conditions?: ViewabilityOverrideCondition;
     };
 
     export type ViewabilityOverrideEntryCss = ViewabilityOverrideEntryBase & {
@@ -1666,13 +1703,17 @@ export namespace modules {
      * If set and available in the DOM it will be used to check for visibility with an IntersectionObserver.
      * Otherwise, the configured default behavior will be used.
      *
-     * A record in this overrides object is a mapping of a slot's DOM id to the override configuration.
+     * A record in this overrides object is a mapping of a slot's DOM id to the override
+     * configuration - either a single entry, or an ordered list of entries. For a list, the
+     * first entry whose `conditions` matches the slot's live Format Targeting Value - or that
+     * has no `conditions` at all - wins outright; entries are never merged. If nothing matches,
+     * the slot's own div is monitored instead.
      */
     export type ViewabilityOverrides = {
       /**
        * Ad Slot DOM ID to viewability configuration
        */
-      [slotDomId: string]: ViewabilityOverrideEntry | undefined;
+      [slotDomId: string]: ViewabilityOverrideEntry | ViewabilityOverrideEntry[] | undefined;
     };
 
     export type UserActivityParameters = {
@@ -1814,11 +1855,35 @@ export namespace modules {
       readonly jsAsString: string[];
     }
 
+    /**
+     * Destroys the googletag slot matching `CleanupConfig.domId` via `googletag.destroySlots()`.
+     * Used for GAM-only out-of-page formats (e.g. anchor ads) where there is no prebid bidder
+     * involved, so there is nothing for `CSSDeletionMethod`/`JSDeletionMethod` to clean up in the
+     * DOM - the stale GAM slot itself is the thing that must go before it's redefined.
+     *
+     * Out-of-page slots (anchor/interstitial) never get GPT's own element id set to `domId`, so
+     * the lookup also matches by `adUnitPath` as a fallback (see `ads/modules/cleanup/index.ts`).
+     */
+    export interface GamSlotDeletionMethod {
+      readonly destroySlot: true;
+
+      /**
+       * The slot's ad unit path, may contain the same placeholders as elsewhere (`{device}`,
+       * `{channel}`) - resolved via `resolveAdUnitPath` before the lookup runs.
+       */
+      readonly adUnitPath: string;
+    }
+
     export interface CleanupConfig {
       /**
        * The bidder that offers the special format.
+       *
+       * Optional - if omitted, cleanup always runs and skips the "did this bidder win the last
+       * auction on this slot" gate. Use this for formats not served through a prebid bidder, e.g.
+       * a GAM-only out-of-page slot cleaned up via {@link GamSlotDeletionMethod}.
        */
-      readonly bidder: prebidjs.BidderCode;
+      readonly bidder?: prebidjs.BidderCode;
+
       /**
        * The domId of the slot on which the special format runs.
        */
@@ -1826,7 +1891,7 @@ export namespace modules {
       /**
        * The method how the special format should be cleaned up.
        */
-      readonly deleteMethod: CSSDeletionMethod | JSDeletionMethod;
+      readonly deleteMethod: CSSDeletionMethod | JSDeletionMethod | GamSlotDeletionMethod;
     }
   }
 

@@ -31,6 +31,8 @@ import { IntersectionObserverWindow } from 'ad-tag/types/dom';
 import { isNotNull } from 'ad-tag/util/arrayUtils';
 import { isAdvertiserIncluded } from 'ad-tag/ads/isAdvertiserIncluded';
 import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
+import { formatKey } from 'ad-tag/ads/keyValues';
+import { asViewabilityOverrideEntryList, resolveViewabilityOverride } from './viewabilityOverride';
 
 export interface IAdReloadModule extends IModule {
   isInitialized(): boolean;
@@ -208,8 +210,12 @@ export const createAdReload = (): IAdReloadModule => {
         googleTagSlot.setTargeting(reloadKeyValue, 'true');
 
         const getBucketAndLoadingBehaviour = () => {
-          const bucketOverride = config.viewabilityOverrides?.[slotId]?.refreshBucket;
-          if (bucketOverride === true) {
+          const [liveFormat] = googleTagSlot.getTargeting(formatKey);
+          const matchedOverride = resolveViewabilityOverride(
+            asViewabilityOverrideEntryList(config.viewabilityOverrides?.[slotId]),
+            liveFormat
+          );
+          if (matchedOverride?.refreshBucket === true) {
             const loaded = moliSlot.behaviour.loaded;
             const bucket = moliSlot.behaviour.bucket;
             const bucketName =
