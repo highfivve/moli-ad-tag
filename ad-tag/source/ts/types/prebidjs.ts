@@ -339,6 +339,51 @@ export namespace prebidjs {
   interface IIndexExchangeConfig {}
 
   /**
+   * ## Global APS configuration
+   *
+   * This extends the [[IPrebidJsConfig]] with APS (Amazon Publisher Services) specific
+   * configuration options.
+   *
+   * @see https://github.com/prebid/Prebid.js/blob/master/modules/apsBidAdapter.js
+   */
+  interface IApsConfig {
+    /**
+     * Global APS property
+     */
+    readonly aps?: {
+      /**
+       * APS-provided account ID used for APS bidding and telemetry state isolation.
+       */
+      readonly accountID: string | number;
+
+      /**
+       * Toggle APS debug mode in bid request URL construction.
+       */
+      readonly debug?: boolean;
+
+      /**
+       * Optional override of the APS bid endpoint.
+       */
+      readonly debugURL?: string;
+
+      /**
+       * Optional render mode used by APS debug signaling.
+       */
+      readonly renderMethod?: 'fif' | string;
+
+      /**
+       * Optional script URL for banner creative rendering.
+       */
+      readonly creativeURL?: string;
+
+      /**
+       * Enable or disable adapter telemetry events.
+       */
+      readonly telemetry?: boolean;
+    };
+  }
+
+  /**
    * ## Global Rubicon configuration
    *
    * This extends the [[IPrebidJsConfig]] with Rubicon specific configuration options.
@@ -2611,7 +2656,8 @@ export namespace prebidjs {
       IRubiconConfig,
       IIndexExchangeConfig,
       IAdagioConfig,
-      INextMillenniumConfig {
+      INextMillenniumConfig,
+      IApsConfig {
     /**
      * Turn on debugging
      */
@@ -3958,6 +4004,7 @@ export namespace prebidjs {
   export const AdaptMx = 'amx';
   export const Adform = 'adf';
   export const AdUp = 'aduptech';
+  export const Aps = 'aps';
   export const Criteo = 'criteo';
   export const CWire = 'cwire';
   export const ConnectAd = 'connectad';
@@ -4010,6 +4057,7 @@ export namespace prebidjs {
     | typeof AdaptMx
     | typeof AdUp
     | typeof Adform
+    | typeof Aps
     | typeof ConnectAd
     | typeof Criteo
     | typeof CWire
@@ -6116,6 +6164,18 @@ export namespace prebidjs {
   export interface IStroeerCoreBid extends IBidObject<typeof StroeerCore, IStroeerParams> {}
 
   /**
+   * APS has zero bid params. All configuration happens through [[IApsConfig]].
+   *
+   * @see https://github.com/prebid/Prebid.js/blob/master/modules/apsBidAdapter.js
+   */
+  export interface IApsParams {}
+
+  /**
+   * @see https://github.com/prebid/Prebid.js/blob/master/modules/apsBidAdapter.js
+   */
+  export interface IApsBid extends IBidObject<typeof Aps, IApsParams> {}
+
+  /**
    * Supported bid object types.
    */
   export type IBid =
@@ -6123,6 +6183,7 @@ export namespace prebidjs {
     | IAdaptMxBid
     | IAdformBid
     | IAdUpBid
+    | IApsBid
     | IConnectAdBid
     | ICriteoBid
     | ICwireBid
