@@ -109,7 +109,7 @@ export function getDefaultLogger(): MoliRuntime.MoliLogger {
     debug(source?: any, message?: any, ...optionalParams: any[]): void {
       // eslint-disable-next-line
       console.debug(
-        `%c[DEBUG]%c${source}%c${message}`,
+        `%c[DEBUG] %c${source} %c${message}`,
         getLogStageLabelStyle('debug'),
         getSourceLabelStyle(source),
         '',
@@ -119,7 +119,7 @@ export function getDefaultLogger(): MoliRuntime.MoliLogger {
     info(source?: any, message?: any, ...optionalParams: any[]): void {
       // eslint-disable-next-line
       console.info(
-        `%c[INFO]%c${source}%c${message}`,
+        `%c[INFO] %c${source} %c${message}`,
         getLogStageLabelStyle('info'),
         getSourceLabelStyle(source),
         '',
@@ -128,7 +128,7 @@ export function getDefaultLogger(): MoliRuntime.MoliLogger {
     },
     warn(source?: any, message?: any, ...optionalParams: any[]): void {
       console.warn(
-        `%c[WARN]%c${source}%c${message}`,
+        `%c[WARN] %c${source} %c${message}`,
         getLogStageLabelStyle('warn'),
         getSourceLabelStyle(source),
         '',
@@ -137,7 +137,7 @@ export function getDefaultLogger(): MoliRuntime.MoliLogger {
     },
     error(source?: any, message?: any, ...optionalParams: any[]): void {
       console.error(
-        `%c[ERROR]%c${source}%c${message}`,
+        `%c[ERROR] %c${source} %c${message}`,
         getLogStageLabelStyle('error'),
         getSourceLabelStyle(source),
         '',

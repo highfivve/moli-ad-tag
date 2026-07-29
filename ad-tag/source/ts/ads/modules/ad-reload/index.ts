@@ -28,18 +28,30 @@ import {
 import { AdSlot, googleAdManager, modules } from 'ad-tag/types/moliConfig';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { IntersectionObserverWindow } from 'ad-tag/types/dom';
-import { isNotNull } from 'ad-tag/util/arrayUtils';
 import { isAdvertiserIncluded } from 'ad-tag/ads/isAdvertiserIncluded';
 import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import { formatKey } from 'ad-tag/ads/keyValues';
+import { resolveAdUnitPath } from 'ad-tag/ads/adUnitPath';
 import { asViewabilityOverrideEntryList, resolveViewabilityOverride } from './viewabilityOverride';
+
+/**
+ * Identifies a monitored slot for the `slotRenderEnded` listener. `domId` matches in-page and
+ * `'out-of-page'`-format slots directly via `getSlotElementId()`. `adUnitPath` is required as a
+ * fallback because `defineOutOfPageSlot` (anchor/interstitial on the `gam` channel) never passes
+ * moli's configured `domId` to GPT - GPT assigns its own auto-generated element id instead (see
+ * docs/adr/0007-out-of-page-slot-identification.md).
+ */
+export interface MonitoredSlot {
+  readonly domId: string;
+  readonly adUnitPath: string;
+}
 
 export interface IAdReloadModule extends IModule {
   isInitialized(): boolean;
   initialize(
     context: AdPipelineContext,
     config: modules.adreload.AdReloadModuleConfig,
-    slotsToMonitor: string[],
+    slotsToMonitor: MonitoredSlot[],
     reloadAdSlotCallback: (slot: googletag.IAdSlot) => void
   ): void;
   readonly adVisibilityService: AdVisibilityService | undefined;
@@ -194,7 +206,22 @@ export const createAdReload = (): IAdReloadModule => {
     (config: modules.adreload.AdReloadModuleConfig, ctx: AdPipelineContext) =>
     (googleTagSlot: googletag.IAdSlot) => {
       const slotId = googleTagSlot.getSlotElementId();
-      const moliSlot = ctx.config__.slots.find(moliSlot => moliSlot.domId === slotId);
+      const slotAdUnitPath = googleTagSlot.getAdUnitPath();
+      const moliSlot = ctx.config__.slots.find(candidate => {
+        if (candidate.domId === slotId) {
+          return true;
+        }
+        if (!slotAdUnitPath) {
+          return false;
+        }
+        try {
+          return (
+            resolveAdUnitPath(candidate.adUnitPath, ctx.adUnitPathVariables__) === slotAdUnitPath
+          );
+        } catch (e) {
+          return false;
+        }
+      });
 
       if (moliSlot && moliSlot.behaviour.loaded !== 'infinite') {
         ctx.logger__.debug('AdReload', 'fired slot reload', moliSlot.domId);
@@ -212,7 +239,7 @@ export const createAdReload = (): IAdReloadModule => {
         const getBucketAndLoadingBehaviour = () => {
           const [liveFormat] = googleTagSlot.getTargeting(formatKey);
           const matchedOverride = resolveViewabilityOverride(
-            asViewabilityOverrideEntryList(config.viewabilityOverrides?.[slotId]),
+            asViewabilityOverrideEntryList(config.viewabilityOverrides?.[moliSlot.domId]),
             liveFormat
           );
           if (matchedOverride?.refreshBucket === true) {
@@ -239,18 +266,20 @@ export const createAdReload = (): IAdReloadModule => {
             );
         } else {
           ctx.window__.moli
-            .refreshAdSlot(slotId, {
+            .refreshAdSlot(moliSlot.domId, {
               loaded: moliSlot.behaviour.loaded,
               ...(sizesOverride && { sizesOverride: sizesOverride })
             })
-            .catch(error => ctx.logger__.error('AdReload', `refreshing ${slotId} failed`, error));
+            .catch(error =>
+              ctx.logger__.error('AdReload', `refreshing ${moliSlot.domId} failed`, error)
+            );
         }
       }
     };
 
   const setupSlotRenderListener = (
     config: modules.adreload.AdReloadModuleConfig,
-    slotsToMonitor: string[],
+    slotsToMonitor: MonitoredSlot[],
     reloadAdSlotCallback: (googleTagSlot: googletag.IAdSlot) => void,
     window: Window & googletag.IGoogleTagWindow,
     logger: MoliRuntime.MoliLogger
@@ -265,7 +294,13 @@ export const createAdReload = (): IAdReloadModule => {
         isEmpty: slotIsEmpty
       } = renderEndedEvent;
       const slotDomId = googleTagSlot.getSlotElementId();
-      const slotIsMonitored = slotsToMonitor.indexOf(slotDomId) > -1;
+      const slotAdUnitPath = googleTagSlot.getAdUnitPath();
+      const monitoredSlot = slotsToMonitor.find(
+        monitored =>
+          monitored.domId === slotDomId ||
+          (!!slotAdUnitPath && monitored.adUnitPath === slotAdUnitPath)
+      );
+      const slotIsMonitored = !!monitoredSlot;
       const orderIdNotExcluded = !campaignId || config.excludeOrderIds.indexOf(campaignId) === -1;
       const orderIdIncluded = !!campaignId && config.includeOrderIds.indexOf(campaignId) > -1;
       const advertiserIdIncluded = isAdvertiserIncluded(
@@ -311,7 +346,8 @@ export const createAdReload = (): IAdReloadModule => {
       const slotAlreadyTracked = !!adVisibilityService?.isSlotTracked(slotDomId);
 
       if (trackingSlotAllowed) {
-        const bidderCode = globalAuctionContext?.getLastWinningBidderOfAdUnit(slotDomId);
+        const bidderCode =
+          monitoredSlot && globalAuctionContext?.getLastWinningBidderOfAdUnit(monitoredSlot.domId);
 
         // add tracking for non-excluded slots
         adVisibilityService!.trackSlot(
@@ -332,7 +368,7 @@ export const createAdReload = (): IAdReloadModule => {
   const initialize = (
     context: AdPipelineContext,
     config: modules.adreload.AdReloadModuleConfig,
-    slotsToMonitor: string[],
+    slotsToMonitor: MonitoredSlot[],
     reloadAdSlotCallback: (slot: googletag.IAdSlot) => void
   ) => {
     if (context.env__ === 'test') {
@@ -371,11 +407,24 @@ export const createAdReload = (): IAdReloadModule => {
     return config
       ? [
           mkConfigureStep(name, context => {
-            const slotsToMonitor = context.config__.slots
-              // filter out slots excluded by dom id
-              .filter(slot => config.excludeAdSlotDomIds.indexOf(slot.domId) === -1)
-              .map(slot => slot.domId)
-              .filter(isNotNull);
+            const slotsToMonitor: MonitoredSlot[] = context.config__.slots
+              // filter out slots without a domId and slots excluded by dom id
+              .filter(slot => !!slot.domId && config.excludeAdSlotDomIds.indexOf(slot.domId) === -1)
+              .map(slot => {
+                try {
+                  return {
+                    domId: slot.domId,
+                    adUnitPath: resolveAdUnitPath(slot.adUnitPath, context.adUnitPathVariables__)
+                  };
+                } catch (e) {
+                  context.logger__.error(
+                    'AdReload',
+                    `failed to resolve adUnitPath '${slot.adUnitPath}' for domId ${slot.domId}, monitoring by domId only`,
+                    e
+                  );
+                  return { domId: slot.domId, adUnitPath: '' };
+                }
+              });
 
             const reloadAdSlotCallback: (slot: googletag.IAdSlot) => void = reloadAdSlot(
               config,
