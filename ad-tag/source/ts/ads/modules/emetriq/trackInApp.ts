@@ -1,14 +1,26 @@
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
-import { modules } from 'ad-tag/types/moliConfig';
+import { googleAdManager, modules } from 'ad-tag/types/moliConfig';
 import { EmetriqAdditionalIdentifier, EmetriqCustomParams } from 'ad-tag/types/emetriq';
 
 const extractDeviceIdParam = (
-  context: AdPipelineContext,
+  targeting: googleAdManager.KeyValueMap,
   advertiserIdKey: string
-): string | undefined => {
-  const deviceId = context.config__.targeting?.keyValues[advertiserIdKey];
+): string => {
+  const deviceId = targeting[advertiserIdKey];
   if (deviceId) {
     return `&device_id=${typeof deviceId === 'string' ? deviceId : deviceId[0]}`;
+  }
+  return '';
+};
+
+const extractKeywordsParam = (
+  targeting: googleAdManager.KeyValueMap,
+  keywordsKey: string | undefined
+): string => {
+  const keywords = keywordsKey ? targeting[keywordsKey] : undefined;
+  if (keywords) {
+    const value = typeof keywords === 'string' ? keywords : keywords.join(',');
+    return `&keywords=${encodeURIComponent(value)}`;
   }
   return '';
 };
@@ -31,17 +43,21 @@ export const trackInApp = (
   additionalCustomParams: EmetriqCustomParams,
   document: Document
 ): void => {
-  const deviceIdParam = extractDeviceIdParam(context, appConfig.advertiserIdKey);
+  // merged targeting: runtime key-values (e.g. an `advertising_id` set via `setTargeting` from an
+  // app webview) take precedence over static config key-values.
+  const targeting = {
+    ...context.config__.targeting?.keyValues,
+    ...context.runtimeConfig__.keyValues
+  };
+
+  const deviceIdParam = extractDeviceIdParam(targeting, appConfig.advertiserIdKey);
   const consentString = context.tcData__.gdprApplies
     ? `gdpr=1&gdpr_consent=${context.tcData__.tcString}`
     : 'gdpr=0';
 
-  const linkParam = appConfig.linkOrKeyword.link
-    ? `&link=${encodeURIComponent(appConfig.linkOrKeyword.link)}`
-    : '';
-  const keywordsParam = appConfig.linkOrKeyword.keywords
-    ? `&keywords=${encodeURIComponent(appConfig.linkOrKeyword.keywords)}`
-    : '';
+  // the app pixel always tracks the current page URL; a static config cannot carry it.
+  const linkParam = `&link=${encodeURIComponent(context.window__.location.href)}`;
+  const keywordsParam = extractKeywordsParam(targeting, appConfig.keywordsKey);
 
   let additionalIdsParam = '';
   const identifiers = { ...appConfig.additionalIdentifier, ...additionalIdentifier };

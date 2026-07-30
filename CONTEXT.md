@@ -35,6 +35,15 @@ Applies to two kinds of configuration:
   exist without a default — overriding a feature that has no base configuration is not
   supported.
 
+### Client Type
+The kind of client the embedding app reports the page is running in — `web`, `pwa`, `android`, or
+`ios` — originating outside moli (e.g. gutefrage's NMMS). moli has no first-class Client Type field:
+the app expresses it as a [Label] (`ios`/`android`) that selects a [Label-Conditioned Config
+Override], and separately as key-values (`advertising_id`, keywords) that a module reads from
+targeting. `web`/`pwa` are the default — no override, so no label needed.
+_Avoid_: os (the emetriq `os` field is *derived* from Client Type, not the same thing); device
+(device is `mobile`/`desktop`, an orthogonal axis).
+
 ### Module
 
 A pluggable feature (`IModule`) with two distinct, independent identity strings — do not
