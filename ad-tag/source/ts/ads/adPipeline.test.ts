@@ -348,6 +348,58 @@ describe('AdPipeline', () => {
     });
   });
 
+  describe('debug labels', () => {
+    afterEach(() => {
+      dom.reconfigure({ url: 'http://localhost' });
+      jsDomWindow.localStorage.clear();
+    });
+
+    it('should merge moliLabels query param into extraLabels', async () => {
+      dom.reconfigure({ url: 'http://localhost?moliLabels=foo,bar' });
+      let supportedLabels: string[] = [];
+      const configureStep: ConfigureStep[] = [
+        context => {
+          supportedLabels = context.labelConfigService__.getSupportedLabels();
+          return Promise.resolve();
+        }
+      ];
+      const pipeline = newAdPipeline({ ...emptyPipelineConfig, configure: configureStep });
+      await pipeline.run([adSlot], emptyConfig, emptyRuntimeConfig, 1);
+
+      expect(supportedLabels).to.contain('foo');
+      expect(supportedLabels).to.contain('bar');
+    });
+
+    it('should merge moli-labels localStorage entry into extraLabels', async () => {
+      jsDomWindow.localStorage.setItem('moli-labels', JSON.stringify(['baz']));
+      let supportedLabels: string[] = [];
+      const configureStep: ConfigureStep[] = [
+        context => {
+          supportedLabels = context.labelConfigService__.getSupportedLabels();
+          return Promise.resolve();
+        }
+      ];
+      const pipeline = newAdPipeline({ ...emptyPipelineConfig, configure: configureStep });
+      await pipeline.run([adSlot], emptyConfig, emptyRuntimeConfig, 1);
+
+      expect(supportedLabels).to.contain('baz');
+    });
+
+    it('should ignore a malformed moli-labels localStorage entry', async () => {
+      jsDomWindow.localStorage.setItem('moli-labels', '{not json');
+      let supportedLabels: string[] = [];
+      const configureStep: ConfigureStep[] = [
+        context => {
+          supportedLabels = context.labelConfigService__.getSupportedLabels();
+          return Promise.resolve();
+        }
+      ];
+      const pipeline = newAdPipeline({ ...emptyPipelineConfig, configure: configureStep });
+      await expect(pipeline.run([adSlot], emptyConfig, emptyRuntimeConfig, 1)).to.eventually.be
+        .fulfilled;
+    });
+  });
+
   describe('mkConfigureStepOnce', () => {
     it('should run the configure step on the first requestAds call with requestId 1', async () => {
       const stubFn = sandbox.stub().resolves();

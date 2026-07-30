@@ -47,6 +47,12 @@ import {
   removeBrowserStorageValue,
   setBrowserStorageValue
 } from 'ad-tag/util/localStorage';
+import {
+  addMoliLabelToStorage,
+  clearMoliLabelsFromStorage,
+  getMoliLabelsFromStorage,
+  removeMoliLabelFromStorage
+} from 'ad-tag/util/debugLabels';
 
 declare const window: Window &
   prebidjs.IPrebidjsWindow &
@@ -82,6 +88,7 @@ type IGlobalConfigState = {
   adstxtError: string;
   adDensity: AdDensityState;
   configVersion: string;
+  newDebugLabel: string;
 };
 
 export type Message = {
@@ -111,7 +118,8 @@ export class GlobalConfig
         totalAdDensity: undefined,
         percentagePerSlot: []
       },
-      configVersion: 'not available'
+      configVersion: 'not available',
+      newDebugLabel: ''
     };
 
     if (!props.config) {
@@ -403,6 +411,10 @@ export class GlobalConfig
           </TagContainer>
         </Block>
 
+        <Block title="Debug Labels" color="debugLabels">
+          {this.renderDebugLabels()}
+        </Block>
+
         <Block title="Targeting" color="targeting">
           {config.targeting && (
             <div>
@@ -460,6 +472,49 @@ export class GlobalConfig
         </Block>
       </>
     );
+  };
+
+  private renderDebugLabels = (): React.ReactElement => {
+    const debugLabels = getMoliLabelsFromStorage(window);
+
+    return (
+      <div>
+        {this.labels(debugLabels, {
+          onRemove: this.removeDebugLabel,
+          emptyMessage: 'No debug labels set.'
+        })}
+        <TagContainer>
+          <TextInput
+            placeholder="label"
+            value={this.state.newDebugLabel}
+            onChange={e => this.setState({ newDebugLabel: e.currentTarget.value })}
+          />
+          <Btn onClick={() => this.addDebugLabel(this.state.newDebugLabel)}>add</Btn>
+          <Btn variant="red" onClick={this.clearDebugLabels} disabled={debugLabels.length === 0}>
+            clear all
+          </Btn>
+        </TagContainer>
+      </div>
+    );
+  };
+
+  private addDebugLabel = (label: string): void => {
+    const trimmed = label.trim();
+    if (trimmed.length === 0) {
+      return;
+    }
+    addMoliLabelToStorage(window, trimmed);
+    window.location.reload();
+  };
+
+  private removeDebugLabel = (label: string): void => {
+    removeMoliLabelFromStorage(window, label);
+    window.location.reload();
+  };
+
+  private clearDebugLabels = (): void => {
+    clearMoliLabelsFromStorage(window);
+    window.location.reload();
   };
 
   private renderAdSetup = (config: MoliConfig): React.ReactElement => {
@@ -993,16 +1048,30 @@ export class GlobalConfig
     );
   };
 
-  private labels = (labels: string[] | undefined): React.ReactElement => {
+  private labels = (
+    labels: string[] | undefined,
+    options?: { onRemove?: (label: string) => void; emptyMessage?: string }
+  ): React.ReactElement => {
     return (
       <div className="mt-2 flex flex-wrap items-center gap-y-1">
         {labels &&
           labels.map((label, index) => (
             <Tag key={index} variant="grey" spacing="medium">
               {label}
+              {options?.onRemove && (
+                <button
+                  className="ml-1 border-0 bg-transparent p-0 font-bold"
+                  title={`Remove ${label}`}
+                  onClick={() => options.onRemove!(label)}
+                >
+                  ✕
+                </button>
+              )}
             </Tag>
           ))}
-        {(!labels || labels.length === 0) && <span>No labels present.</span>}
+        {(!labels || labels.length === 0) && (
+          <span>{options?.emptyMessage ?? 'No labels present.'}</span>
+        )}
       </div>
     );
   };

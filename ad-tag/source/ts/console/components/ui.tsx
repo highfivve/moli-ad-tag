@@ -9,6 +9,7 @@ export type SectionColor =
   | 'moli'
   | 'slots'
   | 'targeting'
+  | 'debugLabels'
   | 'sizeConfig'
   | 'modules'
   | 'prebid'
@@ -22,6 +23,7 @@ const sectionAccent: Record<SectionColor, string> = {
   moli: 'border-l-[#998fc7]',
   slots: 'border-l-[#506684]',
   targeting: 'border-l-[#998fc7]',
+  debugLabels: 'border-l-[#b6e388]',
   sizeConfig: 'border-l-[#d4c2fc]',
   modules: 'border-l-[#8a7de0]',
   prebid: 'border-l-[#76949f]',

@@ -17,5 +17,10 @@ export const QueryParameters = {
   /**
    * The query parameter to activate the ab test.
    */
-  abTest: 'ABtest'
+  abTest: 'ABtest',
+
+  /**
+   * The query parameter to inject debug labels (comma-separated).
+   */
+  moliLabels: 'moliLabels'
 };
