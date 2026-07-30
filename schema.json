@@ -9533,6 +9533,10 @@
               "$ref": "#/definitions/prebidjs.consent.IConsentManagementConfig",
               "description": "'Consent Management' module configuration"
             },
+            "consistentTIDs": {
+              "description": "From version 10.9.0 - 10.13.0 transaction IDs are unique for each bidder and cannot be used to correlate requests from different sources, even when enableTIDs is set.\n\nFrom version 10.14.0+ when enableTIDs is set you can also pass consistentTIDs set to true to get transaction IDs behavior prior to version 10.9.0 (global vs bidder specific TIDs)",
+              "type": "boolean"
+            },
             "currency": {
               "$ref": "#/definitions/prebidjs.currency.ICurrencyConfig",
               "description": "The configuration for the currency module\n\nhttps://prebid.org/dev-docs/modules/currency.html"
@@ -12824,6 +12828,10 @@
           "$ref": "#/definitions/prebidjs.consent.IConsentManagementConfig",
           "description": "'Consent Management' module configuration"
         },
+        "consistentTIDs": {
+          "description": "From version 10.9.0 - 10.13.0 transaction IDs are unique for each bidder and cannot be used to correlate requests from different sources, even when enableTIDs is set.\n\nFrom version 10.14.0+ when enableTIDs is set you can also pass consistentTIDs set to true to get transaction IDs behavior prior to version 10.9.0 (global vs bidder specific TIDs)",
+          "type": "boolean"
+        },
         "currency": {
           "$ref": "#/definitions/prebidjs.currency.ICurrencyConfig",
           "description": "The configuration for the currency module\n\nhttps://prebid.org/dev-docs/modules/currency.html"
@@ -14965,7 +14973,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-210501-210504-248365657-210494-210504-248365657-210462-211290-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-211063-211066-248365657-211056-211066-248365657-211024-211852-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100%3E"
           },
           "type": "array"
         }
@@ -14975,7 +14983,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<(alias-248365657-209405-209575-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-2235381149092559&alias-248365657-209575-209708-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-2235381210238678)>": {
+    "prebidjs.activitycontrols.IActivity<(alias-248365657-209967-210137-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-2241001149092559&alias-248365657-210137-210270-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-2241001210238678)>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -14985,7 +14993,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-209405-209575-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-2235381149092559%26alias-248365657-209575-209708-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-2235381210238678)%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-209967-210137-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-2241001149092559%26alias-248365657-210137-210270-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-2241001210238678)%3E"
           },
           "type": "array"
         }
@@ -14995,7 +15003,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-208950-209164-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-22353898888365>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-209512-209726-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-22410098888365>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -15005,7 +15013,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-208950-209164-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-22353898888365%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-209512-209726-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-22410098888365%3E"
           },
           "type": "array"
         }
@@ -15015,7 +15023,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-209164-209405-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538187177090>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-209726-209967-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100187177090>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -15025,7 +15033,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-209164-209405-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538187177090%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-209726-209967-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100187177090%3E"
           },
           "type": "array"
         }
@@ -15035,7 +15043,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-209405-209575-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-2235381149092559&alias-248365657-209575-209708-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-2235381210238678)>": {
+    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-209967-210137-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-2241001149092559&alias-248365657-210137-210270-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-2241001210238678)>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -15098,7 +15106,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-208950-209164-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-22353898888365>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-209512-209726-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-22410098888365>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -15158,7 +15166,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-209164-209405-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538187177090>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-209726-209967-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100187177090>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -15213,7 +15221,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<structure-248365657-210501-210504-248365657-210494-210504-248365657-210462-211290-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538>": {
+    "prebidjs.activitycontrols.IActivityRule<structure-248365657-211063-211066-248365657-211056-211066-248365657-211024-211852-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -15269,7 +15277,7 @@
       "description": "Starting with version 7.52, Prebid.js introduced a centralized control mechanism for privacy-sensitive activities\n- such as accessing device storage or sharing data with partners.  These controls are intended to serve as building blocks for privacy protection mechanisms, allowing module developers or publishers to directly specify what should be permitted or avoided in any given regulatory environment.",
       "properties": {
         "accessDevice": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-208950-209164-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-22353898888365%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209512-209726-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-22410098888365%3E",
           "description": "A component wants to use device storage.\n\nEffect when denied: Storage is disabled"
         },
         "enrichEids": {
@@ -15281,7 +15289,7 @@
           "description": "A Real-Time Data (RTD) submodule wants to add user first-party data to outgoing requests (`user.data` in ORTB)\n\nEffect when denied: User FPD is discarded"
         },
         "fetchBids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209164-209405-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209726-209967-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100187177090%3E",
           "description": "A bid adapter wants to participate in an auction\n\nEffect when denied: Bidder is removed from the auction"
         },
         "reportAnalytics": {
@@ -15289,23 +15297,23 @@
           "description": "An analytics adapter is being enabled through `pbjs.enableAnalytics`\n\nEffect when denied: Adapter remains disabled"
         },
         "syncUser": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-209405-209575-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-2235381149092559%26alias-248365657-209575-209708-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-2235381210238678)%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-209967-210137-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-2241001149092559%26alias-248365657-210137-210270-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-2241001210238678)%3E",
           "description": "A bid adapter wants to fetch a [user sync](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-Configure-User-Syncing)\n\nEffect when denied: User sync is skipped"
         },
         "transmitEids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209164-209405-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209726-209967-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user IDs to their endpoint.\n\nEffect when denied: User IDs are hidden from the component"
         },
         "transmitPreciseGeo": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209164-209405-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209726-209967-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit precise geolocation data to their endpoint.\n\nEffect when denied: Component is allowed only 2-digit precision for latitude and longitude"
         },
         "transmitTid": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209164-209405-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209726-209967-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit globally unique transaction IDs to their endpoint.\n\nEffect when denied: Transaction IDs are hidden from the component"
         },
         "transmitUfpd": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209164-209405-248365657-208369-214472-248365657-208254-214472-248365657-195-223537-248365657-168-223537-248365657-0-223538187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209726-209967-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user FPD to their endpoint.\n\nEffect when denied: User FPD is hidden from the component"
         }
       },
