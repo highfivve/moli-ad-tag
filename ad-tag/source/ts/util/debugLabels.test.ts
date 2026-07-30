@@ -32,6 +32,15 @@ describe('debugLabels', () => {
       dom.reconfigure({ url: 'https://example.com?moliLabels=%20foo%20,,bar%20,' });
       expect(getMoliLabelsFromQueryParam(jsWindow)).to.deep.equal(['foo', 'bar']);
     });
+
+    it('should return an empty array instead of throwing if window.location access throws', () => {
+      const throwingWindow = {
+        get location(): never {
+          throw new Error('SecurityError: access denied');
+        }
+      } as unknown as Window;
+      expect(getMoliLabelsFromQueryParam(throwingWindow)).to.deep.equal([]);
+    });
   });
 
   describe('getMoliLabelsFromStorage', () => {
@@ -55,6 +64,15 @@ describe('debugLabels', () => {
 
       jsWindow.localStorage.setItem(BrowserStorageKeys.moliLabels, JSON.stringify(['foo', 1]));
       expect(getMoliLabelsFromStorage(jsWindow)).to.deep.equal([]);
+    });
+
+    it('should return an empty array instead of throwing if window.localStorage access throws', () => {
+      const throwingWindow = {
+        get localStorage(): never {
+          throw new Error('SecurityError: access denied');
+        }
+      } as unknown as Window;
+      expect(getMoliLabelsFromStorage(throwingWindow)).to.deep.equal([]);
     });
   });
 

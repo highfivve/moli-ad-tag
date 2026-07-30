@@ -12,11 +12,16 @@ import { BrowserStorageKeys } from './browserStorageKeys';
  *
  * Comma-separated, each token trimmed, empty tokens dropped.
  */
-export const getMoliLabelsFromQueryParam = (window: Window): string[] =>
-  (parseQueryString(window.location.search).get(QueryParameters.moliLabels) ?? '')
-    .split(',')
-    .map(label => label.trim())
-    .filter(label => label.length > 0);
+export const getMoliLabelsFromQueryParam = (window: Window): string[] => {
+  try {
+    return (parseQueryString(window.location.search).get(QueryParameters.moliLabels) ?? '')
+      .split(',')
+      .map(label => label.trim())
+      .filter(label => label.length > 0);
+  } catch (e) {
+    return [];
+  }
+};
 
 const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every(entry => typeof entry === 'string');
@@ -27,11 +32,11 @@ const isStringArray = (value: unknown): value is string[] =>
  * Malformed JSON or an unexpected shape resolves to an empty array instead of throwing.
  */
 export const getMoliLabelsFromStorage = (window: Window): string[] => {
-  const raw = getBrowserStorageValue(BrowserStorageKeys.moliLabels, window.localStorage);
-  if (!raw) {
-    return [];
-  }
   try {
+    const raw = getBrowserStorageValue(BrowserStorageKeys.moliLabels, window.localStorage);
+    if (!raw) {
+      return [];
+    }
     const parsed = JSON.parse(raw);
     return isStringArray(parsed) ? parsed : [];
   } catch (e) {
