@@ -7,8 +7,11 @@ It contains terms and their precise meanings — no implementation details.
 
 ### Label
 A string tag that may be active during an ad pipeline run. Labels come from media-query
-size config, auto-detected device, geo/domain resolution, the `addLabel()` runtime API, and
-the `data-labels` script attribute. Labels are immutable within a single pipeline run.
+size config, auto-detected device, geo/domain resolution, the `addLabel()` runtime API, the
+`data-labels` script attribute, the `moliLabels` query parameter (comma-separated), and the
+`moli-labels` localStorage entry (JSON string array) — the latter two are debug-only inputs
+managed via the debug console's "Debug Labels" section. Labels are immutable within a single
+pipeline run.
 
 ### Label Condition
 A predicate over the active labels, expressed as exactly one of `labelAll` (every listed
