@@ -23,5 +23,9 @@ export const BrowserStorageKeys = {
   moliConsoleTheme: 'moli-console-theme',
   testSlotSize: (id: string) => `moli-test-slot-size-${id}`,
   debugDelay: 'moli-debug-delay',
-  abTest: 'moli-ab-test'
+  abTest: 'moli-ab-test',
+  /**
+   * The storage key for debug labels managed via the debug console.
+   */
+  moliLabels: 'moli-labels'
 };
