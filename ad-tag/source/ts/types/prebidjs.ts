@@ -2915,6 +2915,17 @@ export namespace prebidjs {
      */
     readonly enableTIDs?: boolean;
 
+    /**
+     * From version 10.9.0 - 10.13.0 transaction IDs are unique for each bidder and cannot be used to correlate requests
+     * from different sources, even when enableTIDs is set.
+     *
+     * From version 10.14.0+ when enableTIDs is set you can also pass consistentTIDs set to true to get transaction IDs
+     * behavior prior to version 10.9.0 (global vs bidder specific TIDs)
+     *
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#enable-sharing-of-transaction-ids
+     */
+    readonly consistentTIDs?: boolean;
+
     readonly allowActivities?: activitycontrols.IAllowActivities;
 
     /**
