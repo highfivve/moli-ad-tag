@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### 🐛 Bug Fixes
+
+- Fix `refreshInfiniteAdSlot` calls being silently dropped when they arrive while the ad tag is in
+  the `spa-requestAds` state. Such calls were batched into `runtimeConfig.refreshInfiniteSlots`, but
+  unlike `refreshSlots` and `refreshBuckets` that array was never flushed when the `requestAds()`
+  cycle finished - it was discarded with the runtime config reset, so the slot never loaded an ad.
+  In a single page application this affected any infinite ad slot that rendered while ads were being
+  requested, e.g. the first infinite listing slot of an already cached feed.
+
 ## 3.38.1
 
 - #6 Distinct IAB categories in prebid first party data module (thanks to @muuki88)

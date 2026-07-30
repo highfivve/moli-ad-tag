@@ -1947,6 +1947,54 @@ describe('moli', () => {
       const domIdOfNewInfiniteSlot = 'infinite-adslot-1';
       const idOfConfiguredInfiniteSlot = 'my-id';
 
+      it('should refresh infinite ad slots that were queued while requestAds() was still running', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
+
+        await adTag.configure({
+          ...defaultConfig,
+          slots: slots(),
+          spa: { enabled: true, validateLocation: 'href' }
+        });
+
+        // Add div with domIdOfNewInfiniteSlot to DOM
+        const div = jsDomWindow.document.createElement('div');
+        div.setAttribute('id', domIdOfNewInfiniteSlot);
+        div.setAttribute('class', 'ad-infinite');
+        jsDomWindow.document.body.append(div);
+
+        // initial requestAds cycle so the ad tag reaches the 'spa-finished' state
+        await adTag.requestAds();
+        expect(adTag.getState()).to.be.eq('spa-finished');
+
+        // navigate and start the next requestAds cycle without awaiting it, so the ad tag is in the
+        // 'spa-requestAds' state while the infinite ad slot is requested - this is what happens when
+        // a listing renders an infinite ad slot while the ad tag is still requesting ads
+        dom.reconfigure({ url: 'http://localhost/home' });
+        const requestAdsPromise = adTag.requestAds();
+        expect(adTag.getState()).to.be.eq('spa-requestAds');
+
+        const response = await adTag.refreshInfiniteAdSlot(
+          domIdOfNewInfiniteSlot,
+          idOfConfiguredInfiniteSlot
+        );
+        expect(response).to.be.eq('queued');
+
+        await requestAdsPromise;
+        // the refresh triggered at the end of the requestAds cycle is not awaited by the cycle
+        // itself, so give it a tick to reach googletag
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        // the queued slot must have been added to the config and actually refreshed, otherwise it
+        // would be dropped when the runtime config is reset and never load an ad
+        expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.include(domIdOfNewInfiniteSlot);
+
+        const refreshedDomIds = refreshSpy
+          .getCalls()
+          .flatMap(call => (call.args[0] || []).map(slot => slot.getSlotElementId()));
+        expect(refreshedDomIds).to.include(domIdOfNewInfiniteSlot);
+      });
+
       describe('with validateLocation: path', () => {
         it('should let refreshAdSlots fn to refresh slots until requestAds is called but prevent requestAds if the path remained the same', async () => {
           const adTag = createMoliTag(jsDomWindow);
