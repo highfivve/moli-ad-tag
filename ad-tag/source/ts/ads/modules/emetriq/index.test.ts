@@ -13,7 +13,7 @@ import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
 import { EmetriqWindow } from 'ad-tag/types/emetriq';
 import { Emetriq, createEmetriq } from 'ad-tag/ads/modules/emetriq/index';
-import { modules } from 'ad-tag/types/moliConfig';
+import { googleAdManager, modules } from 'ad-tag/types/moliConfig';
 import { prebidjs } from 'ad-tag/types/prebidjs';
 import { trackInApp } from 'ad-tag/ads/modules/emetriq/trackInApp';
 import { shouldTrackLoginEvent, trackLoginEvent } from 'ad-tag/ads/modules/emetriq/trackLoginEvent';
@@ -293,55 +293,105 @@ describe('Emetriq Module', () => {
         os: 'android',
         appId: 'com.highfivve.app',
         advertiserIdKey: 'advertiserId',
-        linkOrKeyword: {
-          keywords: 'pokemon'
-        }
+        keywordsKey: 'tags'
       };
 
-      it('should call the endpoint with keywords ', async () => {
-        await trackInApp(adPipelineContext(), appConfig, {}, {}, jsDomWindow.document);
+      // `link` is no longer configurable — the pixel always tracks the current page URL.
+      const linkParam = `&link=${encodeURIComponent(jsDomWindow.location.href)}`;
+
+      /**
+       * Build a context whose *static* targeting carries the given key-values. The `keywordsKey`
+       * lookup and the `device_id` lookup both read from the merged targeting map, so tests place
+       * their key-values here (or in `runtimeConfig__.keyValues` to exercise the runtime path).
+       */
+      const appContext = (
+        keyValues: googleAdManager.KeyValueMap = { tags: 'pokemon' }
+      ): AdPipelineContext => ({
+        ...adPipelineContext(),
+        config__: { ...emptyConfig, targeting: { keyValues } }
+      });
+
+      it('should call the endpoint with keywords looked up from the merged targeting', async () => {
+        await trackInApp(appContext(), appConfig, {}, {}, jsDomWindow.document);
         const img = getValidatedTrackingPixel();
         expect(img.src).to.be.eq(
-          `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
+          `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon${linkParam}&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
         );
+      });
+
+      it('should join multi-value keywords with a comma', async () => {
+        await trackInApp(
+          appContext({ tags: ['pokemon', 'digimon'] }),
+          appConfig,
+          {},
+          {},
+          jsDomWindow.document
+        );
+        const img = getValidatedTrackingPixel();
+        expect(img.src).to.be.eq(
+          `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon%2Cdigimon${linkParam}&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
+        );
+      });
+
+      it('should omit keywords when keywordsKey is not configured', async () => {
+        await trackInApp(
+          appContext({}),
+          { ...appConfig, keywordsKey: undefined },
+          {},
+          {},
+          jsDomWindow.document
+        );
+        const img = getValidatedTrackingPixel();
+        expect(img.src).to.be.eq(
+          `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app${linkParam}&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
+        );
+      });
+
+      it('should omit keywords when the configured key is absent from the targeting', async () => {
+        await trackInApp(appContext({}), appConfig, {}, {}, jsDomWindow.document);
+        const img = getValidatedTrackingPixel();
+        expect(img.src).to.be.eq(
+          `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app${linkParam}&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
+        );
+      });
+
+      it('should always send the current page url as link', async () => {
+        await trackInApp(appContext({}), appConfig, {}, {}, jsDomWindow.document);
+        const img = getValidatedTrackingPixel();
+        expect(img.src).to.contain(linkParam);
       });
 
       ['ios' as const, 'android' as const].forEach(os =>
         it(`should call the endpoint with the os parameter ${os}`, async () => {
-          await trackInApp(
-            adPipelineContext(),
-            { ...appConfig, os: os },
-            {},
-            {},
-            jsDomWindow.document
-          );
+          await trackInApp(appContext(), { ...appConfig, os: os }, {}, {}, jsDomWindow.document);
           const img = getValidatedTrackingPixel();
           expect(img.src).to.be.eq(
-            `https://aps.xplosion.de/data?sid=123&os=${os}&app_id=com.highfivve.app&keywords=pokemon&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
+            `https://aps.xplosion.de/data?sid=123&os=${os}&app_id=com.highfivve.app&keywords=pokemon${linkParam}&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
           );
         })
       );
 
-      it('should call the endpoint with link set ', async () => {
-        const appConfigWithLink = {
-          ...appConfig,
-          linkOrKeyword: {
-            link: 'https://www.example.com?param=foo'
-          }
-        };
-        await trackInApp(adPipelineContext(), appConfigWithLink, {}, {}, jsDomWindow.document);
-        const img = getValidatedTrackingPixel();
-        expect(img.src).to.be.eq(
-          `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&link=https%3A%2F%2Fwww.example.com%3Fparam%3Dfoo&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
-        );
-      });
-
       it('should call the endpoint with advertiserIdKey as device_id if provided ', async () => {
         const advertiserId = '8744bceb-91e5-4c20-8fe9-3fdddb13107f';
         await trackInApp(
+          appContext({ advertiserId, tags: 'pokemon' }),
+          appConfig,
+          {},
+          {},
+          jsDomWindow.document
+        );
+        const img = getValidatedTrackingPixel();
+        expect(img.src).to.be.eq(
+          `https://aps.xplosion.de/data?sid=123&device_id=${advertiserId}&os=android&app_id=com.highfivve.app&keywords=pokemon${linkParam}&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
+        );
+      });
+
+      it('should read device_id from runtime key-values set via setTargeting (bug fix)', async () => {
+        const advertiserId = '8744bceb-91e5-4c20-8fe9-3fdddb13107f';
+        await trackInApp(
           {
-            ...adPipelineContext(),
-            config__: { ...emptyConfig, targeting: { keyValues: { advertiserId } } }
+            ...appContext({}),
+            runtimeConfig__: { ...emptyRuntimeConfig, keyValues: { advertiserId } }
           },
           appConfig,
           {},
@@ -350,13 +400,30 @@ describe('Emetriq Module', () => {
         );
         const img = getValidatedTrackingPixel();
         expect(img.src).to.be.eq(
-          `https://aps.xplosion.de/data?sid=123&device_id=${advertiserId}&os=android&app_id=com.highfivve.app&keywords=pokemon&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
+          `https://aps.xplosion.de/data?sid=123&device_id=${advertiserId}&os=android&app_id=com.highfivve.app${linkParam}&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
         );
+      });
+
+      it('should let runtime key-values override static config for device_id', async () => {
+        const staticId = 'static-id';
+        const runtimeId = 'runtime-id';
+        await trackInApp(
+          {
+            ...appContext({ advertiserId: staticId }),
+            runtimeConfig__: { ...emptyRuntimeConfig, keyValues: { advertiserId: runtimeId } }
+          },
+          appConfig,
+          {},
+          {},
+          jsDomWindow.document
+        );
+        const img = getValidatedTrackingPixel();
+        expect(img.src).to.contain(`&device_id=${runtimeId}&`);
       });
 
       it('should call the endpoint with additional identifier params ', async () => {
         await trackInApp(
-          adPipelineContext(),
+          appContext(),
           {
             ...appConfig,
             additionalIdentifier: {
@@ -370,13 +437,13 @@ describe('Emetriq Module', () => {
         );
         const img = getValidatedTrackingPixel();
         expect(img.src).to.be.eq(
-          `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon&id_id5=20c0c6f5-b89a-42ff-ab34-24da7cccf9ff&id_sharedid=1c6e063f-feaa-40a0-8a86-b9be3c655c39&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
+          `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon${linkParam}&id_id5=20c0c6f5-b89a-42ff-ab34-24da7cccf9ff&id_sharedid=1c6e063f-feaa-40a0-8a86-b9be3c655c39&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
         );
       });
 
       it('should call the endpoint with additional custom params ', async () => {
         await trackInApp(
-          adPipelineContext(),
+          appContext(),
           {
             ...appConfig,
             additionalIdentifier: {}
@@ -390,7 +457,7 @@ describe('Emetriq Module', () => {
         );
         const img = getValidatedTrackingPixel();
         expect(img.src).to.be.eq(
-          `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon&c_iabV3Ids=12%2C34&c_awesome=yes&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
+          `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon${linkParam}&c_iabV3Ids=12%2C34&c_awesome=yes&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
         );
       });
 
@@ -399,7 +466,7 @@ describe('Emetriq Module', () => {
         const sharedId = '1c6e063f-feaa-40a0-8a86-b9be3c655c39';
         const liverampId = '303e3571-9f2a-47ec-b62d-457ebfb5f068';
         await trackInApp(
-          adPipelineContext(),
+          appContext(),
           {
             ...appConfig,
             additionalIdentifier: {
@@ -416,13 +483,13 @@ describe('Emetriq Module', () => {
         );
         const img = getValidatedTrackingPixel();
         expect(img.src).to.be.eq(
-          `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon&id_id5=${id5Id}&id_sharedid=${sharedId}&id_liveramp=${liverampId}&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
+          `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon${linkParam}&id_id5=${id5Id}&id_sharedid=${sharedId}&id_liveramp=${liverampId}&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
         );
       });
 
       it('should call endpoint when gdpr does not apply', async () => {
         await trackInApp(
-          { ...adPipelineContext(), tcData__: tcDataNoGdpr },
+          { ...appContext(), tcData__: tcDataNoGdpr },
           appConfig,
           {},
           {},
@@ -430,7 +497,7 @@ describe('Emetriq Module', () => {
         );
         const img = getValidatedTrackingPixel();
         expect(img.src).to.be.eq(
-          `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon&gdpr=0`
+          `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon${linkParam}&gdpr=0`
         );
       });
     });
@@ -521,7 +588,6 @@ describe('Emetriq Module', () => {
           sid: sid,
           appId: 'com.example.app',
           advertiserIdKey: 'advertiserId',
-          linkOrKeyword: { link: 'http://localhost' },
           login: loginConfig
         };
         await trackLoginEvent(
@@ -548,7 +614,6 @@ describe('Emetriq Module', () => {
           sid: sid,
           appId: 'com.example.app',
           advertiserIdKey: 'advertiserId',
-          linkOrKeyword: { link: 'http://localhost' },
           login: loginConfig
         };
         await trackLoginEvent(

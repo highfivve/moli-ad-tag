@@ -2871,9 +2871,16 @@ export namespace modules {
       readonly appId: string;
 
       /**
-       * At least one of the config properties `link` or `keywords` must be set.
+       * Optional key within the merged targeting key-values
+       * (`{ ...config.targeting.keyValues, ...runtime keyValues }`) whose value is sent as the
+       * `keywords` parameter. Omitted from the tracking pixel when the key is unset or absent.
+       *
+       * The `link` parameter is no longer configurable — the app pixel always uses the current
+       * page URL (`window.location.href`).
+       *
+       * @see the moli-ad-tag ADR `0008-emetriq-app-path-runtime-sourced-values`
        */
-      readonly linkOrKeyword: EmetriqAppKeywordOrLinkConfig;
+      readonly keywordsKey?: string;
 
       /**
        * Key within the moli config keyValues in which the advertising id can be found.
@@ -2910,24 +2917,6 @@ export namespace modules {
        */
       readonly _enqAdpParam: EmetriqParams;
     }
-
-    export type EmetriqAppKeywordOrLinkConfig =
-      | {
-          /** @see EmetriqAppKeywordOrLinkConfig docs */
-          readonly link: string;
-          /** @see EmetriqAppKeywordOrLinkConfig docs */
-          readonly keywords: string;
-        }
-      | {
-          /** @see EmetriqAppKeywordOrLinkConfig docs */
-          readonly link: string;
-          readonly keywords?: undefined;
-        }
-      | {
-          readonly link?: undefined;
-          /** @see EmetriqAppKeywordOrLinkConfig docs */
-          readonly keywords: string;
-        };
 
     export interface EmetriqLoginEventConfig {
       /**

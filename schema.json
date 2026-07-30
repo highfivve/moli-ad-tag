@@ -2125,13 +2125,13 @@
               "description": "If set to true the module will be enabled.",
               "type": "boolean"
             },
+            "keywordsKey": {
+              "description": "Optional key within the merged targeting key-values (`{ ...config.targeting.keyValues, ...runtime keyValues }`) whose value is sent as the `keywords` parameter. Omitted from the tracking pixel when the key is unset or absent.\n\nThe `link` parameter is no longer configurable — the app pixel always uses the current page URL (`window.location.href`).",
+              "type": "string"
+            },
             "labelCondition": {
               "$ref": "#/definitions/LabelCondition",
               "description": "Optional configuration to activate the module only if the specific label conditions are met."
-            },
-            "linkOrKeyword": {
-              "$ref": "#/definitions/modules.emetriq.EmetriqAppKeywordOrLinkConfig",
-              "description": "At least one of the config properties `link` or `keywords` must be set."
             },
             "login": {
               "$ref": "#/definitions/modules.emetriq.EmetriqLoginEventConfig",
@@ -2223,7 +2223,6 @@
             "advertiserIdKey",
             "appId",
             "enabled",
-            "linkOrKeyword",
             "os",
             "sid"
           ],
@@ -6748,13 +6747,13 @@
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
         },
+        "keywordsKey": {
+          "description": "Optional key within the merged targeting key-values (`{ ...config.targeting.keyValues, ...runtime keyValues }`) whose value is sent as the `keywords` parameter. Omitted from the tracking pixel when the key is unset or absent.\n\nThe `link` parameter is no longer configurable — the app pixel always uses the current page URL (`window.location.href`).",
+          "type": "string"
+        },
         "labelCondition": {
           "$ref": "#/definitions/LabelCondition",
           "description": "Optional configuration to activate the module only if the specific label conditions are met."
-        },
-        "linkOrKeyword": {
-          "$ref": "#/definitions/modules.emetriq.EmetriqAppKeywordOrLinkConfig",
-          "description": "At least one of the config properties `link` or `keywords` must be set."
         },
         "login": {
           "$ref": "#/definitions/modules.emetriq.EmetriqLoginEventConfig",
@@ -6781,61 +6780,10 @@
         "advertiserIdKey",
         "appId",
         "enabled",
-        "linkOrKeyword",
         "os",
         "sid"
       ],
       "type": "object"
-    },
-    "modules.emetriq.EmetriqAppKeywordOrLinkConfig": {
-      "anyOf": [
-        {
-          "additionalProperties": false,
-          "properties": {
-            "keywords": {
-              "type": "string"
-            },
-            "link": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "link",
-            "keywords"
-          ],
-          "type": "object"
-        },
-        {
-          "additionalProperties": false,
-          "properties": {
-            "keywords": {
-              "not": {}
-            },
-            "link": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "link"
-          ],
-          "type": "object"
-        },
-        {
-          "additionalProperties": false,
-          "properties": {
-            "keywords": {
-              "type": "string"
-            },
-            "link": {
-              "not": {}
-            }
-          },
-          "required": [
-            "keywords"
-          ],
-          "type": "object"
-        }
-      ]
     },
     "modules.emetriq.EmetriqLoginEventConfig": {
       "additionalProperties": false,
