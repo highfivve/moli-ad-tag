@@ -317,6 +317,52 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     return Promise.resolve(null);
   }
 
+  /**
+   * Refreshes the infinite ad slots that were queued while the ad tag was requesting ads.
+   *
+   * `refreshInfiniteAdSlot` calls that arrive during a `spa-requestAds` cycle are batched into
+   * `runtimeConfig.refreshInfiniteSlots`, mirroring how `refreshAdSlot` batches into
+   * `runtimeConfig.refreshSlots`. Both arrays are reset once the cycle finishes, so they must be
+   * flushed before that happens or the queued calls are lost without ever loading an ad.
+   *
+   * Unlike regular ad slots, infinite ad slots do not exist in the config yet - they are created by
+   * copying the configuration of an already configured `infinite` slot - so every queued slot has to
+   * be added to the config before it can be refreshed.
+   *
+   * @param config the current moli config
+   * @param runtimeConfig the runtime config holding the queued infinite ad slots
+   * @returns the config, extended by every queued infinite ad slot
+   */
+  function refreshQueuedInfiniteSlots(
+    config: MoliConfig,
+    runtimeConfig: MoliRuntime.MoliRuntimeConfig
+  ): MoliConfig {
+    const { refreshInfiniteSlots } = runtimeConfig;
+    if (refreshInfiniteSlots.length === 0) {
+      return config;
+    }
+
+    const log = getLogger(runtimeConfig, window);
+    const configWithInfiniteSlots = refreshInfiniteSlots.reduce(
+      (currentConfig, slot) =>
+        addNewInfiniteSlotToConfig(
+          currentConfig,
+          slot.idOfConfiguredSlot,
+          slot.artificialDomId,
+          log
+        ),
+      config
+    );
+
+    adService.refreshAdSlots(
+      refreshInfiniteSlots.map(slot => slot.artificialDomId),
+      configWithInfiniteSlots,
+      runtimeConfig
+    );
+
+    return configWithInfiniteSlots;
+  }
+
   function requestAds(): Promise<
     | MoliRuntime.state.IConfigurable
     | MoliRuntime.state.ISinglePageApp
@@ -507,7 +553,10 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
                 state.state === 'spa-requestAds' &&
                 allowRefreshAdSlot(validateLocation, state.href, window.location)
               ) {
-                const { config, runtimeConfig } = state;
+                const { runtimeConfig } = state;
+                // infinite ad slots queued during this cycle must be added to the config and
+                // refreshed before the runtime config is reset below
+                const config = refreshQueuedInfiniteSlots(state.config, runtimeConfig);
                 if (state.runtimeConfig.refreshSlots.length > 0) {
                   adService.refreshAdSlots(runtimeConfig.refreshSlots, config, runtimeConfig);
                 }
@@ -520,6 +569,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
                 afterRequestAds.forEach(hook => hook('spa-finished'));
                 const finishedState: MoliRuntime.state.ISinglePageApp = {
                   ...state,
+                  config,
                   state: 'spa-finished',
                   // reset the runtime config for the next requestAds() call cycle
                   nextRuntimeConfig: newEmptyRuntimeConfig(state.runtimeConfig),
@@ -651,10 +701,13 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             // For single page applications
             return adService.requestAds(config, nextRuntimeConfig).then(() => config);
           })
-          .then(config => {
+          .then(requestedConfig => {
             const runtimeConfig = state.runtimeConfig;
             // if there are refreshAdSlot calls while the requestAds() call is still resolving, there might be new
-            // refreshAdSlot calls being queued. Now we can refresh them
+            // refreshAdSlot or refreshInfiniteAdSlot calls being queued. Now we can refresh them.
+            // The infinite ones have to be added to the config first, so this must happen before the
+            // remaining refreshes and before the runtime config is reset.
+            const config = refreshQueuedInfiniteSlots(requestedConfig, runtimeConfig);
             if (state.runtimeConfig.refreshSlots.length > 0) {
               adService.refreshAdSlots(
                 state.runtimeConfig.refreshSlots,
