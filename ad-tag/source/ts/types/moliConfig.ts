@@ -3323,6 +3323,16 @@ export namespace modules {
     }
   }
 
+  export namespace styles {
+    export interface StylesConfig extends IModuleConfig {
+      /**
+       * Full, precomputed absolute URL to the publisher's stylesheet. moli-ad-tag injects this
+       * verbatim via a `<link rel="stylesheet">` - no URL-building logic happens here.
+       */
+      readonly href: string;
+    }
+  }
+
   export interface ModulesConfig {
     readonly adex?: Overridable<adex.AdexConfig>;
     readonly adReload?: Overridable<adreload.AdReloadModuleConfig>;
@@ -3347,6 +3357,7 @@ export namespace modules {
     readonly zeotap?: Overridable<zeotap.ZeotapModuleConfig>;
     readonly interstitial?: Overridable<interstitial.InterstitialModuleConfig>;
     readonly moliAnalytics?: Overridable<moliAnalytics.MoliAnalyticsConfig>;
+    readonly styles?: Overridable<styles.StylesConfig>;
   }
 }
 
