@@ -3435,6 +3435,94 @@
       ],
       "type": "object"
     },
+    "Overridable<modules.styles.StylesConfig>": {
+      "additionalProperties": false,
+      "description": "## Label-conditioned config overrides\n\nWraps a configuration `C` so a publisher can provide a default configuration plus an ordered list of label-conditioned `overrides`. At the first ad request the active labels select the **first matching** override, whose `config` **fully replaces** the default (no field-by-field merge). If no override matches, the default is used.\n\nThis wrapper is shared by two concepts: module configs (`modules.ModulesConfig`) and the first-level features of the Global Auction Context (`auction.GlobalAuctionContextConfig`).\n\nThe override selector (`labelAll` / `labelAny` / `labelNone`) picks *which* config. For modules it is orthogonal to the module activation gate (`labelCondition`); auction features have no separate activation gate, so an override `config` with `enabled: false` is the only way to disable a feature for its labels.\n\nOverride selection runs once, at configure / initialize time. SPA navigations do not re-resolve it; the configuration is fixed for the page lifetime. Implementations never see `overrides` — they receive an already-resolved configuration.\n\nThe override `config` is the bare config `C`, which has no `overrides` field, so nesting overrides is structurally impossible.",
+      "properties": {
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "href": {
+          "description": "Full, precomputed absolute URL to the publisher's stylesheet. moli-ad-tag injects this verbatim via a `<link rel=\"stylesheet\">` - no URL-building logic happens here.",
+          "type": "string"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
+        "overrides": {
+          "description": "Ordered list of label-conditioned configuration overrides. The first entry whose label condition matches the active labels fully replaces the default configuration. If none match, the default configuration is used.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "config": {
+                    "$ref": "#/definitions/modules.styles.StylesConfig"
+                  },
+                  "labelAll": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "config",
+                  "labelAll"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "config": {
+                    "$ref": "#/definitions/modules.styles.StylesConfig"
+                  },
+                  "labelAny": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "config",
+                  "labelAny"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "config": {
+                    "$ref": "#/definitions/modules.styles.StylesConfig"
+                  },
+                  "labelNone": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "config",
+                  "labelNone"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "enabled",
+        "href"
+      ],
+      "type": "object"
+    },
     "Overridable<modules.utiq.UtiqConfig>": {
       "additionalProperties": false,
       "description": "## Label-conditioned config overrides\n\nWraps a configuration `C` so a publisher can provide a default configuration plus an ordered list of label-conditioned `overrides`. At the first ad request the active labels select the **first matching** override, whose `config` **fully replaces** the default (no field-by-field merge). If no override matches, the default is used.\n\nThis wrapper is shared by two concepts: module configs (`modules.ModulesConfig`) and the first-level features of the Global Auction Context (`auction.GlobalAuctionContextConfig`).\n\nThe override selector (`labelAll` / `labelAny` / `labelNone`) picks *which* config. For modules it is orthogonal to the module activation gate (`labelCondition`); auction features have no separate activation gate, so an override `config` with `enabled: false` is the only way to disable a feature for its labels.\n\nOverride selection runs once, at configure / initialize time. SPA navigations do not re-resolve it; the configuration is fixed for the page lifetime. Implementations never see `overrides` — they receive an already-resolved configuration.\n\nThe override `config` is the bare config `C`, which has no `overrides` field, so nesting overrides is structurally impossible.",
@@ -5591,6 +5679,9 @@
         "stickyHeaderAd": {
           "$ref": "#/definitions/Overridable%3Cmodules.stickyHeaderAd.StickyHeaderAdConfig%3E"
         },
+        "styles": {
+          "$ref": "#/definitions/Overridable%3Cmodules.styles.StylesConfig%3E"
+        },
         "utiq": {
           "$ref": "#/definitions/Overridable%3Cmodules.utiq.UtiqConfig%3E"
         },
@@ -7662,6 +7753,28 @@
       },
       "required": [
         "selector"
+      ],
+      "type": "object"
+    },
+    "modules.styles.StylesConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "href": {
+          "description": "Full, precomputed absolute URL to the publisher's stylesheet. moli-ad-tag injects this verbatim via a `<link rel=\"stylesheet\">` - no URL-building logic happens here.",
+          "type": "string"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        }
+      },
+      "required": [
+        "enabled",
+        "href"
       ],
       "type": "object"
     },
