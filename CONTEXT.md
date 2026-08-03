@@ -183,7 +183,7 @@ in `auto`.
 
 ### Placement Label Condition
 A [Label Condition] on an [Inline AI Placement], evaluated against the ad pipeline's active
-Labels plus one extra synthetic label the module injects for this run: the active [Inline AI
-Integration Mode] itself (`'programmatic'` or `'hybrid'`). Lets a publisher scope a placement
-to one mode (`labelAll: ['hybrid']`) using the same mechanism as any other label-conditioned
+Labels. The module itself does **not** inject a mode label — if a publisher wants to scope a
+placement to one [Inline AI Integration Mode] (`labelAll: ['hybrid']`), that label is set up as
+a static label in the highfivve portal, the same mechanism as any other label-conditioned
 config, rather than a bespoke mode-only field.

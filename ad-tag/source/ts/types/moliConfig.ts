@@ -3477,9 +3477,10 @@ export namespace modules {
       readonly name: string;
 
       /**
-       * Scopes this placement to a subset of the ad pipeline's active labels, evaluated
-       * together with the synthetic {@link InlineAiIntegrationMode} label the module injects
-       * for `programmatic`/`hybrid` runs. Only consulted in those two modes - never in `auto`.
+       * Scopes this placement to a subset of the ad pipeline's active labels. To scope a
+       * placement to one {@link InlineAiIntegrationMode}, set up the mode name as a static
+       * label in the highfivve portal and reference it here (e.g. `{ labelAll: ['hybrid'] }`).
+       * Only consulted in `programmatic`/`hybrid` mode - never in `auto`.
        */
       readonly labelCondition?: LabelCondition;
     };

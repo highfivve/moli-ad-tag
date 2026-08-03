@@ -3,20 +3,17 @@
 Each Inline AI placement can carry a `labelCondition`, matched against the ad pipeline's
 active labels via the existing generic Label Condition mechanism
 (`labelConfigService__.isLabelConditionMet`). To let a publisher scope a placement to one
-Integration Mode (e.g. mount this placement only in `hybrid`, not `programmatic`), the
-module injects the active mode itself as a synthetic label via `labelConfigService__.addLabel()`
-before evaluating placements, rather than adding a dedicated `modes` field to the placement
-config.
+Integration Mode (e.g. mount this placement only in `hybrid`, not `programmatic`), the mode
+name is set up as a plain label (`'hybrid'`, `'programmatic'`) in the highfivve portal, the
+same as any other label, rather than adding a dedicated `modes` field to the placement config.
 
-We picked this over a bespoke field because `addLabel()` is already the documented,
-supported mechanism for pipeline steps that need to contribute labels dynamically during a
-run (see `LabelConfigService.addLabel`), and it lets a placement combine mode-scoping with
-any other existing label (device, geo, `labelCondition` overrides elsewhere) through one
-mechanism instead of two independent ones a publisher would have to reason about together.
+We picked this over a bespoke field because `labelCondition` is already the documented,
+supported mechanism for scoping a config by label, and it lets a placement combine
+mode-scoping with any other existing label (device, geo, `labelCondition` overrides
+elsewhere) through one mechanism instead of two independent ones a publisher would have to
+reason about together.
 
-The trade-off: the synthetic mode label (`'hybrid'`, `'programmatic'`) is added to the
-pipeline run's shared label set for its entire remaining duration, not scoped to Inline AI's
-own evaluation — a naming collision with an unrelated label used elsewhere in the same config
-would be a silent, hard-to-trace bug. We accept this because `addLabel` is scoped to a single
-pipeline run (a fresh `labelConfigService` instance per run), and the mode names are
-unlikely collision candidates.
+The module itself never injects a mode label via `labelConfigService__.addLabel()` — an
+earlier version of this decision did that, but a mode label is static per publisher setup,
+not something that needs to be computed at pipeline-run time, so it belongs in the portal
+config alongside a publisher's other labels rather than in module code.

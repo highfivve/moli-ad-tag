@@ -154,12 +154,10 @@ describe('inline-ai module', () => {
       });
       const ctx = context();
       sandbox.stub(ctx.assetLoaderService__, 'loadScript').resolves();
-      const addLabelSpy = sandbox.spy(ctx.labelConfigService__, 'addLabel');
 
       await initStep(ctx);
 
       expect(jsDomWindow.InlineAI).to.be.undefined;
-      expect(addLabelSpy).to.have.not.been.called;
     });
 
     it('still loads the script', async () => {
@@ -200,16 +198,6 @@ describe('inline-ai module', () => {
         ['mount', 'search-embed', 'search-box']
       ]);
     });
-
-    it('injects the mode as an active label', async () => {
-      const { initStep } = createAndConfigure({ ...baseConfig, mode: 'programmatic' });
-      const ctx = context();
-      sandbox.stub(ctx.assetLoaderService__, 'loadScript').resolves();
-
-      await initStep(ctx);
-
-      expect(ctx.labelConfigService__.getSupportedLabels()).to.include('programmatic');
-    });
   });
 
   describe('hybrid mode', () => {
@@ -233,16 +221,6 @@ describe('inline-ai module', () => {
       await initStep(ctx);
 
       expect(jsDomWindow.InlineAI.cmd).to.deep.equal([['mount', 'widget']]);
-    });
-
-    it('injects the mode as an active label', async () => {
-      const { initStep } = createAndConfigure({ ...baseConfig, mode: 'hybrid' });
-      const ctx = context();
-      sandbox.stub(ctx.assetLoaderService__, 'loadScript').resolves();
-
-      await initStep(ctx);
-
-      expect(ctx.labelConfigService__.getSupportedLabels()).to.include('hybrid');
     });
   });
 

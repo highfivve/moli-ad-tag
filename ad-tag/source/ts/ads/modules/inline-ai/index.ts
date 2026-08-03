@@ -63,12 +63,6 @@ export const createInlineAi = (): IModule => {
   const hasConsent = (context: AdPipelineContext): boolean =>
     !context.tcData__.gdprApplies || !!context.tcData__.purpose.consents['1'];
 
-  const pushCommand = (context: AdPipelineContext, command: InlineAiCommand): void => {
-    context.window__.InlineAI = context.window__.InlineAI || { cmd: [] };
-    context.window__.InlineAI.cmd = context.window__.InlineAI.cmd || [];
-    context.window__.InlineAI.cmd.push(command);
-  };
-
   const isPlacementActive = (
     context: AdPipelineContext,
     placement: modules.inlineAi.InlineAiPlacementConfig
@@ -100,15 +94,17 @@ export const createInlineAi = (): IModule => {
 
   const mountPlacements = (
     context: AdPipelineContext,
+    cmd: InlineAiCommand[],
     config: modules.inlineAi.InlineAiModuleConfig
   ): void => {
     (config.placements ?? [])
       .filter(placement => isPlacementActive(context, placement))
-      .forEach(placement => pushCommand(context, mountCommand(placement)));
+      .forEach(placement => cmd.push(mountCommand(placement)));
   };
 
   const applyMode = (
     context: AdPipelineContext,
+    cmd: InlineAiCommand[],
     config: modules.inlineAi.InlineAiModuleConfig
   ): void => {
     switch (config.mode) {
@@ -116,15 +112,13 @@ export const createInlineAi = (): IModule => {
       case 'auto':
         return;
       case 'programmatic':
-        pushCommand(context, ['init', { publisherId: config.publisherId }]);
-        context.labelConfigService__.addLabel(config.mode);
-        mountPlacements(context, config);
+        cmd.push(['init', { publisherId: config.publisherId }]);
+        mountPlacements(context, cmd, config);
         return;
       case 'hybrid':
         // never push init() here - that would flip the InlineAI SDK into programmatic mode
         // and disable its dashboard auto-rendering.
-        context.labelConfigService__.addLabel(config.mode);
-        mountPlacements(context, config);
+        mountPlacements(context, cmd, config);
         return;
     }
   };
@@ -143,7 +137,11 @@ export const createInlineAi = (): IModule => {
       return Promise.resolve();
     }
 
-    applyMode(context, config);
+    // auto mode never touches the command queue, so it stays uncreated in that mode.
+    if (config.mode !== 'auto') {
+      context.window__.InlineAI = context.window__.InlineAI || { cmd: [] };
+      applyMode(context, context.window__.InlineAI.cmd, config);
+    }
 
     const scriptUrl = config.scriptUrl ?? defaultScriptUrl;
     context.assetLoaderService__
