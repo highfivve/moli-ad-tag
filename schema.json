@@ -2533,6 +2533,110 @@
       ],
       "type": "object"
     },
+    "Overridable<modules.inlineAi.InlineAiModuleConfig>": {
+      "additionalProperties": false,
+      "description": "## Label-conditioned config overrides\n\nWraps a configuration `C` so a publisher can provide a default configuration plus an ordered list of label-conditioned `overrides`. At the first ad request the active labels select the **first matching** override, whose `config` **fully replaces** the default (no field-by-field merge). If no override matches, the default is used.\n\nThis wrapper is shared by two concepts: module configs (`modules.ModulesConfig`) and the first-level features of the Global Auction Context (`auction.GlobalAuctionContextConfig`).\n\nThe override selector (`labelAll` / `labelAny` / `labelNone`) picks *which* config. For modules it is orthogonal to the module activation gate (`labelCondition`); auction features have no separate activation gate, so an override `config` with `enabled: false` is the only way to disable a feature for its labels.\n\nOverride selection runs once, at configure / initialize time. SPA navigations do not re-resolve it; the configuration is fixed for the page lifetime. Implementations never see `overrides` — they receive an already-resolved configuration.\n\nThe override `config` is the bare config `C`, which has no `overrides` field, so nesting overrides is structurally impossible.",
+      "properties": {
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
+        "mode": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiIntegrationMode",
+          "description": "See CONTEXT.md glossary entry \"Inline AI Integration Mode\" for what each mode pushes onto the InlineAI command queue."
+        },
+        "overrides": {
+          "description": "Ordered list of label-conditioned configuration overrides. The first entry whose label condition matches the active labels fully replaces the default configuration. If none match, the default configuration is used.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "config": {
+                    "$ref": "#/definitions/modules.inlineAi.InlineAiModuleConfig"
+                  },
+                  "labelAll": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "config",
+                  "labelAll"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "config": {
+                    "$ref": "#/definitions/modules.inlineAi.InlineAiModuleConfig"
+                  },
+                  "labelAny": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "config",
+                  "labelAny"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "config": {
+                    "$ref": "#/definitions/modules.inlineAi.InlineAiModuleConfig"
+                  },
+                  "labelNone": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "config",
+                  "labelNone"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        "placements": {
+          "description": "Ignored entirely in `auto` mode - the InlineAI dashboard owns all rendering then.",
+          "items": {
+            "$ref": "#/definitions/modules.inlineAi.InlineAiPlacementConfig"
+          },
+          "type": "array"
+        },
+        "publisherId": {
+          "type": "string"
+        },
+        "scriptUrl": {
+          "default": "https://getinline.tech/default/assets/index.js",
+          "description": "Full URL override for the InlineAI SDK script. The module appends `?key={publisherId}`.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "mode",
+        "publisherId"
+      ],
+      "type": "object"
+    },
     "Overridable<modules.interstitial.InterstitialModuleConfig>": {
       "additionalProperties": false,
       "description": "## Label-conditioned config overrides\n\nWraps a configuration `C` so a publisher can provide a default configuration plus an ordered list of label-conditioned `overrides`. At the first ad request the active labels select the **first matching** override, whose `config` **fully replaces** the default (no field-by-field merge). If no override matches, the default is used.\n\nThis wrapper is shared by two concepts: module configs (`modules.ModulesConfig`) and the first-level features of the Global Auction Context (`auction.GlobalAuctionContextConfig`).\n\nThe override selector (`labelAll` / `labelAny` / `labelNone`) picks *which* config. For modules it is orthogonal to the module activation gate (`labelCondition`); auction features have no separate activation gate, so an override `config` with `enabled: false` is the only way to disable a feature for its labels.\n\nOverride selection runs once, at configure / initialize time. SPA navigations do not re-resolve it; the configuration is fixed for the page lifetime. Implementations never see `overrides` — they receive an already-resolved configuration.\n\nThe override `config` is the bare config `C`, which has no `overrides` field, so nesting overrides is structurally impossible.",
@@ -5652,6 +5756,9 @@
         "identitylink": {
           "$ref": "#/definitions/Overridable%3Cmodules.identitylink.IdentityLinkModuleConfig%3E"
         },
+        "inlineAi": {
+          "$ref": "#/definitions/Overridable%3Cmodules.inlineAi.InlineAiModuleConfig%3E"
+        },
         "interstitial": {
           "$ref": "#/definitions/Overridable%3Cmodules.interstitial.InterstitialModuleConfig%3E"
         },
@@ -7060,6 +7167,657 @@
         "enabled",
         "hashedEmailAddresses",
         "launchPadId"
+      ],
+      "type": "object"
+    },
+    "modules.inlineAi.InlineAiBasicEmbedPlacementConfig": {
+      "additionalProperties": false,
+      "description": "Generic AI content block rendered into a container.",
+      "properties": {
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Scopes this placement to a subset of the ad pipeline's active labels, evaluated together with the synthetic  {@link  InlineAiIntegrationMode }  label the module injects for `programmatic`/`hybrid` runs. Only consulted in those two modes - never in `auto`."
+        },
+        "name": {
+          "description": "Our own free-form log/debug identifier for this placement - distinct from moli's `domId`, since a placement's DOM target is the separate `target` field below.",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiPlacementTargetOrId"
+        },
+        "type": {
+          "const": "basic-embed",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "target",
+        "type"
+      ],
+      "type": "object"
+    },
+    "modules.inlineAi.InlineAiBreakpoint": {
+      "additionalProperties": false,
+      "description": "A single viewport-range override for a placement's container size.",
+      "properties": {
+        "height": {
+          "type": "string"
+        },
+        "maxViewportWidth": {
+          "type": "number"
+        },
+        "minViewportWidth": {
+          "type": "number"
+        },
+        "width": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "modules.inlineAi.InlineAiDynamicTarget": {
+      "additionalProperties": false,
+      "description": "Tag-name-plus-attribute matcher for targeting elements without a stable id or class.",
+      "properties": {
+        "attributeName": {
+          "description": "Omit to match any element with the given tag name.",
+          "type": "string"
+        },
+        "attributeValue": {
+          "description": "Required when `attributeName` is set. Exact match, not a substring match.",
+          "type": "string"
+        },
+        "elementIndex": {
+          "description": "Selects the Nth match (0-indexed). Defaults to `0`.",
+          "type": "number"
+        },
+        "tagName": {
+          "description": "The only required field - e.g. `'div'`, `'article'`.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tagName"
+      ],
+      "type": "object"
+    },
+    "modules.inlineAi.InlineAiFabHorizontalPosition": {
+      "enum": [
+        "left",
+        "right",
+        "center"
+      ],
+      "type": "string"
+    },
+    "modules.inlineAi.InlineAiFabPosition": {
+      "additionalProperties": false,
+      "properties": {
+        "bottomOffset": {
+          "type": "string"
+        },
+        "horizontalPosition": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiFabHorizontalPosition"
+        },
+        "leftOffset": {
+          "description": "Applies when `horizontalPosition` is `'left'` or `'center'`.",
+          "type": "string"
+        },
+        "maxWidth": {
+          "type": "string"
+        },
+        "rightOffset": {
+          "description": "Applies when `horizontalPosition` is `'right'` or `'center'`.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "modules.inlineAi.InlineAiInjectionLocation": {
+      "description": "Where a placement is inserted relative to its target element.",
+      "enum": [
+        "above",
+        "below",
+        "prepend",
+        "append"
+      ],
+      "type": "string"
+    },
+    "modules.inlineAi.InlineAiInjectionStrategy": {
+      "enum": [
+        "default",
+        "distribute-evenly"
+      ],
+      "type": "string"
+    },
+    "modules.inlineAi.InlineAiInputShape": {
+      "enum": [
+        "pill",
+        "rounded-rectangle"
+      ],
+      "type": "string"
+    },
+    "modules.inlineAi.InlineAiIntegrationMode": {
+      "description": "See CONTEXT.md glossary entry \"Inline AI Integration Mode\".",
+      "enum": [
+        "auto",
+        "programmatic",
+        "hybrid"
+      ],
+      "type": "string"
+    },
+    "modules.inlineAi.InlineAiKeyTakeawaysPlacementConfig": {
+      "additionalProperties": false,
+      "description": "AI-generated summary block for article content.",
+      "properties": {
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Scopes this placement to a subset of the ad pipeline's active labels, evaluated together with the synthetic  {@link  InlineAiIntegrationMode }  label the module injects for `programmatic`/`hybrid` runs. Only consulted in those two modes - never in `auto`."
+        },
+        "name": {
+          "description": "Our own free-form log/debug identifier for this placement - distinct from moli's `domId`, since a placement's DOM target is the separate `target` field below.",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiPlacementTargetOrId"
+        },
+        "type": {
+          "const": "key-takeaways",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "target",
+        "type"
+      ],
+      "type": "object"
+    },
+    "modules.inlineAi.InlineAiModuleConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
+        "mode": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiIntegrationMode",
+          "description": "See CONTEXT.md glossary entry \"Inline AI Integration Mode\" for what each mode pushes onto the InlineAI command queue."
+        },
+        "placements": {
+          "description": "Ignored entirely in `auto` mode - the InlineAI dashboard owns all rendering then.",
+          "items": {
+            "$ref": "#/definitions/modules.inlineAi.InlineAiPlacementConfig"
+          },
+          "type": "array"
+        },
+        "publisherId": {
+          "type": "string"
+        },
+        "scriptUrl": {
+          "default": "https://getinline.tech/default/assets/index.js",
+          "description": "Full URL override for the InlineAI SDK script. The module appends `?key={publisherId}`.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "mode",
+        "publisherId"
+      ],
+      "type": "object"
+    },
+    "modules.inlineAi.InlineAiOpenOverlayOn": {
+      "enum": [
+        "onQuerySubmit",
+        "onFocus"
+      ],
+      "type": "string"
+    },
+    "modules.inlineAi.InlineAiOverlayBreakpoint": {
+      "additionalProperties": false,
+      "description": "A single viewport-range override for the search overlay's appearance.",
+      "properties": {
+        "backdropOpacity": {
+          "type": "number"
+        },
+        "maxViewportWidth": {
+          "type": "number"
+        },
+        "minViewportWidth": {
+          "type": "number"
+        },
+        "openOverlayOn": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiOpenOverlayOn"
+        },
+        "overlayType": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiOverlayType"
+        }
+      },
+      "type": "object"
+    },
+    "modules.inlineAi.InlineAiOverlayType": {
+      "enum": [
+        "modal",
+        "drawer"
+      ],
+      "type": "string"
+    },
+    "modules.inlineAi.InlineAiPlacementConfig": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiWidgetPlacementConfig"
+        },
+        {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiSearchFabPlacementConfig"
+        },
+        {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiSearchEmbedPlacementConfig"
+        },
+        {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiSearchIconPlacementConfig"
+        },
+        {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiKeyTakeawaysPlacementConfig"
+        },
+        {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiSingleQuestionPlacementConfig"
+        },
+        {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiBasicEmbedPlacementConfig"
+        }
+      ],
+      "description": "Discriminated on `type`, using the InlineAI SDK's own literal string placement values."
+    },
+    "modules.inlineAi.InlineAiPlacementTarget": {
+      "additionalProperties": false,
+      "description": "Where and how large a targeted placement renders. Exactly one of `containerId`, `selector`, or `dynamic` should be set; the plain string shorthand on  {@link  InlineAiPlacementTargetOrId }  is equivalent to `{ containerId }`.",
+      "properties": {
+        "breakpoints": {
+          "description": "The placement only renders when at least one entry matches the current viewport.",
+          "items": {
+            "$ref": "#/definitions/modules.inlineAi.InlineAiBreakpoint"
+          },
+          "type": "array"
+        },
+        "containerId": {
+          "type": "string"
+        },
+        "dynamic": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiDynamicTarget"
+        },
+        "height": {
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiInjectionLocation"
+        },
+        "maxHeight": {
+          "type": "string"
+        },
+        "maxWidth": {
+          "type": "string"
+        },
+        "selector": {
+          "type": "string"
+        },
+        "width": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "modules.inlineAi.InlineAiPlacementTargetOrId": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiPlacementTarget"
+        }
+      ],
+      "description": "String shorthand is equivalent to `{ containerId: string }`."
+    },
+    "modules.inlineAi.InlineAiSearchEmbedOptions": {
+      "additionalProperties": false,
+      "properties": {
+        "backdropOpacity": {
+          "type": "number"
+        },
+        "openOverlayOn": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiOpenOverlayOn"
+        },
+        "overlayBreakpoints": {
+          "description": "The most specific (narrowest range) matching entry wins.",
+          "items": {
+            "$ref": "#/definitions/modules.inlineAi.InlineAiOverlayBreakpoint"
+          },
+          "type": "array"
+        },
+        "overlayType": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiOverlayType"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "shape": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiInputShape"
+        },
+        "shouldShowSuggestedQuestions": {
+          "type": "boolean"
+        },
+        "suggestedQuestionsMode": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiSuggestedQuestionsMode"
+        },
+        "typographySource": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiTypographySource"
+        }
+      },
+      "type": "object"
+    },
+    "modules.inlineAi.InlineAiSearchEmbedPlacementConfig": {
+      "additionalProperties": false,
+      "description": "Full-width search input bar rendered inside a container.",
+      "properties": {
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Scopes this placement to a subset of the ad pipeline's active labels, evaluated together with the synthetic  {@link  InlineAiIntegrationMode }  label the module injects for `programmatic`/`hybrid` runs. Only consulted in those two modes - never in `auto`."
+        },
+        "name": {
+          "description": "Our own free-form log/debug identifier for this placement - distinct from moli's `domId`, since a placement's DOM target is the separate `target` field below.",
+          "type": "string"
+        },
+        "options": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiSearchEmbedOptions"
+        },
+        "target": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiPlacementTargetOrId"
+        },
+        "type": {
+          "const": "search-embed",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "target",
+        "type"
+      ],
+      "type": "object"
+    },
+    "modules.inlineAi.InlineAiSearchFabOptions": {
+      "additionalProperties": false,
+      "properties": {
+        "backdropOpacity": {
+          "type": "number"
+        },
+        "fabPosition": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiFabPosition"
+        },
+        "openOverlayOn": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiOpenOverlayOn"
+        },
+        "overlayBreakpoints": {
+          "description": "The most specific (narrowest range) matching entry wins.",
+          "items": {
+            "$ref": "#/definitions/modules.inlineAi.InlineAiOverlayBreakpoint"
+          },
+          "type": "array"
+        },
+        "overlayType": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiOverlayType"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "shape": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiInputShape"
+        },
+        "shouldShowSuggestedQuestions": {
+          "type": "boolean"
+        },
+        "suggestedQuestionsMode": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiSuggestedQuestionsMode"
+        },
+        "typographySource": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiTypographySource"
+        }
+      },
+      "type": "object"
+    },
+    "modules.inlineAi.InlineAiSearchFabPlacementConfig": {
+      "additionalProperties": false,
+      "description": "Floating search action button. Body-level: no target.",
+      "properties": {
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Scopes this placement to a subset of the ad pipeline's active labels, evaluated together with the synthetic  {@link  InlineAiIntegrationMode }  label the module injects for `programmatic`/`hybrid` runs. Only consulted in those two modes - never in `auto`."
+        },
+        "name": {
+          "description": "Our own free-form log/debug identifier for this placement - distinct from moli's `domId`, since a placement's DOM target is the separate `target` field below.",
+          "type": "string"
+        },
+        "options": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiSearchFabOptions"
+        },
+        "type": {
+          "const": "search-fab",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "modules.inlineAi.InlineAiSearchIconOptions": {
+      "additionalProperties": false,
+      "properties": {
+        "backdropOpacity": {
+          "type": "number"
+        },
+        "buttonHeight": {
+          "type": "string"
+        },
+        "buttonWidth": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "maxHeight": {
+          "type": "string"
+        },
+        "maxWidth": {
+          "type": "string"
+        },
+        "openOverlayOn": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiOpenOverlayOn"
+        },
+        "overlayBreakpoints": {
+          "description": "The most specific (narrowest range) matching entry wins.",
+          "items": {
+            "$ref": "#/definitions/modules.inlineAi.InlineAiOverlayBreakpoint"
+          },
+          "type": "array"
+        },
+        "overlayType": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiOverlayType"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "shouldShowIcon": {
+          "description": "Defaults to showing the icon.",
+          "type": "boolean"
+        },
+        "shouldShowSuggestedQuestions": {
+          "type": "boolean"
+        },
+        "suggestedQuestionsMode": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiSuggestedQuestionsMode"
+        },
+        "typographySource": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiTypographySource"
+        }
+      },
+      "type": "object"
+    },
+    "modules.inlineAi.InlineAiSearchIconPlacementConfig": {
+      "additionalProperties": false,
+      "description": "Compact icon/button that opens the search overlay.",
+      "properties": {
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Scopes this placement to a subset of the ad pipeline's active labels, evaluated together with the synthetic  {@link  InlineAiIntegrationMode }  label the module injects for `programmatic`/`hybrid` runs. Only consulted in those two modes - never in `auto`."
+        },
+        "name": {
+          "description": "Our own free-form log/debug identifier for this placement - distinct from moli's `domId`, since a placement's DOM target is the separate `target` field below.",
+          "type": "string"
+        },
+        "options": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiSearchIconOptions"
+        },
+        "target": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiPlacementTargetOrId"
+        },
+        "type": {
+          "const": "search-icon",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "target",
+        "type"
+      ],
+      "type": "object"
+    },
+    "modules.inlineAi.InlineAiSingleQuestionPlacementConfig": {
+      "additionalProperties": false,
+      "description": "In-content question pills distributed across paragraphs.",
+      "properties": {
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Scopes this placement to a subset of the ad pipeline's active labels, evaluated together with the synthetic  {@link  InlineAiIntegrationMode }  label the module injects for `programmatic`/`hybrid` runs. Only consulted in those two modes - never in `auto`."
+        },
+        "name": {
+          "description": "Our own free-form log/debug identifier for this placement - distinct from moli's `domId`, since a placement's DOM target is the separate `target` field below.",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/definitions/modules.inlineAi.InlineAiSingleQuestionTarget"
+        },
+        "type": {
+          "const": "single-question",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "target",
+        "type"
+      ],
+      "type": "object"
+    },
+    "modules.inlineAi.InlineAiSingleQuestionTarget": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "breakpoints": {
+              "description": "The placement only renders when at least one entry matches the current viewport.",
+              "items": {
+                "$ref": "#/definitions/modules.inlineAi.InlineAiBreakpoint"
+              },
+              "type": "array"
+            },
+            "containerId": {
+              "type": "string"
+            },
+            "dynamic": {
+              "$ref": "#/definitions/modules.inlineAi.InlineAiDynamicTarget"
+            },
+            "height": {
+              "type": "string"
+            },
+            "injectionLimit": {
+              "description": "Maximum number of question pills to inject, regardless of article length.",
+              "type": "number"
+            },
+            "injectionSelectorOffset": {
+              "description": "`1` skips the first paragraph and starts injecting from the second.",
+              "type": "number"
+            },
+            "injectionStrategy": {
+              "$ref": "#/definitions/modules.inlineAi.InlineAiInjectionStrategy"
+            },
+            "location": {
+              "$ref": "#/definitions/modules.inlineAi.InlineAiInjectionLocation"
+            },
+            "maxHeight": {
+              "type": "string"
+            },
+            "maxWidth": {
+              "type": "string"
+            },
+            "selector": {
+              "type": "string"
+            },
+            "typographySource": {
+              "$ref": "#/definitions/modules.inlineAi.InlineAiTypographySource"
+            },
+            "width": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      ],
+      "description": "Extra target fields accepted only by the `single-question` placement."
+    },
+    "modules.inlineAi.InlineAiSuggestedQuestionsMode": {
+      "enum": [
+        "animated",
+        "static"
+      ],
+      "type": "string"
+    },
+    "modules.inlineAi.InlineAiTypographySource": {
+      "enum": [
+        "inherit-from-website",
+        "inherit-from-theme"
+      ],
+      "type": "string"
+    },
+    "modules.inlineAi.InlineAiWidgetPlacementConfig": {
+      "additionalProperties": false,
+      "description": "Sticky sidebar panel with a floating trigger. Body-level: no target.",
+      "properties": {
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Scopes this placement to a subset of the ad pipeline's active labels, evaluated together with the synthetic  {@link  InlineAiIntegrationMode }  label the module injects for `programmatic`/`hybrid` runs. Only consulted in those two modes - never in `auto`."
+        },
+        "name": {
+          "description": "Our own free-form log/debug identifier for this placement - distinct from moli's `domId`, since a placement's DOM target is the separate `target` field below.",
+          "type": "string"
+        },
+        "type": {
+          "const": "widget",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
       ],
       "type": "object"
     },
