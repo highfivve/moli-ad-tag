@@ -1,8 +1,13 @@
 /**
  * # [Inline AI](https://getinline.tech)
  *
- * Loads the InlineAI widget SDK on ad pipeline init and drives placement rendering via
- * InlineAI's own command queue (`window.InlineAI.cmd`), gated on TCF Purpose 1 consent.
+ * Loads the InlineAI widget SDK and drives placement rendering via InlineAI's own command
+ * queue (`window.InlineAI.cmd`), gated on TCF Purpose 1 consent.
+ *
+ * On non-SPA setups this runs once, on ad pipeline init. On SPA setups (`spa.enabled` in the
+ * moli config) it re-runs once per `requestAds()` cycle instead, tearing down the previous
+ * run with `destroy()` before re-applying the mode for the new page - see
+ * docs/inline/init.md.
  *
  * @see docs/adr/0010-inline-ai-placement-mode-scoping-via-labels.md
  *
@@ -29,7 +34,13 @@
  */
 import { IModule } from 'ad-tag/types/module';
 import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
-import { AdPipelineContext, InitStep, mkInitStep } from 'ad-tag/ads/adPipeline';
+import {
+  AdPipelineContext,
+  ConfigureStep,
+  InitStep,
+  mkConfigureStepOncePerRequestAdsCycle,
+  mkInitStep
+} from 'ad-tag/ads/adPipeline';
 import { modules } from 'ad-tag/types/moliConfig';
 
 const name = 'inline-ai';
@@ -51,6 +62,7 @@ declare global {
 
 export const createInlineAi = (): IModule => {
   let inlineAiConfig: modules.inlineAi.InlineAiModuleConfig | null = null;
+  let scriptLoaded = false;
 
   const config__ = (): Object | null => inlineAiConfig;
 
@@ -123,7 +135,29 @@ export const createInlineAi = (): IModule => {
     }
   };
 
-  const loadInlineAi = (
+  // the InlineAI script itself is loaded exactly once, regardless of how often
+  // runInlineAi runs on SPA navigations.
+  const loadScript = (
+    context: AdPipelineContext,
+    config: modules.inlineAi.InlineAiModuleConfig
+  ): void => {
+    if (scriptLoaded) {
+      return;
+    }
+    scriptLoaded = true;
+    context.assetLoaderService__
+      .loadScript({
+        name,
+        loadMethod: AssetLoadMethod.TAG,
+        assetUrl: `${config.scriptUrl}?key=${config.publisherId}`,
+        type: 'module'
+      })
+      .catch(error => context.logger__.error(name, 'failed to load InlineAI script', error));
+  };
+
+  const isFirstRun = (context: AdPipelineContext): boolean => context.requestAdsCalls__ === 1;
+
+  const runInlineAi = (
     context: AdPipelineContext,
     config: modules.inlineAi.InlineAiModuleConfig
   ): Promise<void> => {
@@ -140,23 +174,42 @@ export const createInlineAi = (): IModule => {
     // auto mode never touches the command queue, so it stays uncreated in that mode.
     if (config.mode !== 'auto') {
       context.window__.InlineAI = context.window__.InlineAI || { cmd: [] };
-      applyMode(context, context.window__.InlineAI.cmd, config);
+      const cmd = context.window__.InlineAI.cmd;
+      // on SPA navigations after the first run, tear down the previous run before
+      // re-applying the mode - see docs/inline/init.md.
+      if (!isFirstRun(context)) {
+        cmd.push(['destroy']);
+      }
+      applyMode(context, cmd, config);
     }
 
-    context.assetLoaderService__
-      .loadScript({
-        name,
-        loadMethod: AssetLoadMethod.TAG,
-        assetUrl: `${config.scriptUrl}?key=${config.publisherId}`,
-        type: 'module'
-      })
-      .catch(error => context.logger__.error(name, 'failed to load InlineAI script', error));
+    loadScript(context, config);
     return Promise.resolve();
   };
 
+  // Non-SPA ad setups: run once, on ad pipeline init.
   const initSteps__ = (): InitStep[] => {
     const config = inlineAiConfig;
-    return config ? [mkInitStep('inline-ai-init', ctx => loadInlineAi(ctx, config))] : [];
+    return config
+      ? [
+          mkInitStep('inline-ai-init', context =>
+            context.config__.spa?.enabled ? Promise.resolve() : runInlineAi(context, config)
+          )
+        ]
+      : [];
+  };
+
+  // SPA ad setups: re-run once per requestAds cycle, since placements need to be
+  // re-mounted for the new page.
+  const configureSteps__ = (): ConfigureStep[] => {
+    const config = inlineAiConfig;
+    return config
+      ? [
+          mkConfigureStepOncePerRequestAdsCycle('inline-ai-configure', context =>
+            context.config__.spa?.enabled ? runInlineAi(context, config) : Promise.resolve()
+          )
+        ]
+      : [];
   };
 
   return {
@@ -167,7 +220,7 @@ export const createInlineAi = (): IModule => {
     config__,
     configure__,
     initSteps__,
-    configureSteps__: () => [],
+    configureSteps__,
     prepareRequestAdsSteps__: () => []
   };
 };

@@ -37,6 +37,19 @@ not inject a mode label itself.
 or an object with injection/breakpoint options). See the
 [placement showcase](https://www.getinline.io/platform/placements) for what each type renders.
 
+## Single page applications
+
+On a regular page the module runs once, on ad pipeline init. On a [single page app](./single-page-app.md)
+(`spa.enabled` in the moli config) it instead re-runs once per `requestAds()` call, since
+placements need to be re-mounted for every new page:
+
+- the first `requestAds()` call queues `['init', ...]`/`['mount', ...]` straight away.
+- every later call first queues `['destroy']` to tear down the previous page's placements,
+  then re-applies the mode for the new page.
+
+The InlineAI script itself is only ever loaded once, no matter how many pages are visited. No
+extra module configuration is needed - this follows automatically from the global `spa` setting.
+
 ## Examples
 
 ### Auto mode

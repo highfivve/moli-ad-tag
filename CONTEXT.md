@@ -187,3 +187,12 @@ Labels. The module itself does **not** inject a mode label — if a publisher wa
 placement to one [Inline AI Integration Mode] (`labelAll: ['hybrid']`), that label is set up as
 a static label in the highfivve portal, the same mechanism as any other label-conditioned
 config, rather than a bespoke mode-only field.
+
+### Inline AI SPA Re-run
+On non-SPA setups the module applies its [Inline AI Integration Mode] once, in an init step.
+On SPA setups (`spa.enabled` in the moli config) it instead uses a configure step that re-runs
+once per `requestAds()` cycle, since placements need to be re-mounted for the new page. The
+first cycle (`requestAdsCalls__ === 1`) pushes `['init', ...]`/`['mount', ...]` straight away;
+every later cycle first pushes `['destroy']` to tear down the previous run's placements before
+re-applying the mode - see `docs/inline/init.md`. The InlineAI script itself still loads only
+once, regardless of how many cycles run.
