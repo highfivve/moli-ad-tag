@@ -655,6 +655,12 @@ const MoliAnalyticsModule: React.FC<{ config: modules.moliAnalytics.MoliAnalytic
   </>
 );
 
+const StylesModule: React.FC<{ config: modules.styles.StylesConfig }> = ({ config }) => (
+  <Row label="Stylesheet">
+    <Tag>{config.href}</Tag>
+  </Row>
+);
+
 /** generic key/value dump used for modules without a dedicated component */
 const GenericModule: React.FC<{ config: object; subEntry?: boolean }> = ({ config, subEntry }) => (
   <>
@@ -705,6 +711,7 @@ const moduleComponents: {
   identitylink: IdentityLinkModule,
   pubstack: PubstackModule,
   skin: SkinModule,
+  styles: StylesModule,
   stickyHeaderAd: StickyHeaderAdModule,
   utiq: UtiqModule,
   prebidFirstPartyData: PrebidFirstPartyDataModule,
