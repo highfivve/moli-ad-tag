@@ -18,6 +18,7 @@
  *     "inlineAi": {
  *       "enabled": true,
  *       "publisherId": "YOUR_PUBLISHER_ID",
+ *       "scriptUrl": "https://getinline.tech/default/assets/index.js",
  *       "mode": "auto"
  *     }
  *   }
@@ -32,7 +33,6 @@ import { AdPipelineContext, InitStep, mkInitStep } from 'ad-tag/ads/adPipeline';
 import { modules } from 'ad-tag/types/moliConfig';
 
 const name = 'inline-ai';
-const defaultScriptUrl = 'https://getinline.tech/default/assets/index.js';
 
 type InlineAiCommand = readonly [string, ...unknown[]];
 
@@ -143,12 +143,11 @@ export const createInlineAi = (): IModule => {
       applyMode(context, context.window__.InlineAI.cmd, config);
     }
 
-    const scriptUrl = config.scriptUrl ?? defaultScriptUrl;
     context.assetLoaderService__
       .loadScript({
         name,
         loadMethod: AssetLoadMethod.TAG,
-        assetUrl: `${scriptUrl}?key=${config.publisherId}`,
+        assetUrl: `${config.scriptUrl}?key=${config.publisherId}`,
         type: 'module'
       })
       .catch(error => context.logger__.error(name, 'failed to load InlineAI script', error));

@@ -48,6 +48,7 @@ modules: {
   inlineAi: {
     enabled: true,
     publisherId: 'YOUR_PUBLISHER_ID',
+    scriptUrl: 'https://getinline.tech/default/assets/index.js',
     mode: 'auto'
   }
 }
@@ -60,6 +61,7 @@ modules: {
   inlineAi: {
     enabled: true,
     publisherId: 'YOUR_PUBLISHER_ID',
+    scriptUrl: 'https://getinline.tech/default/assets/index.js',
     mode: 'programmatic',
     placements: [
       { name: 'sidebar-widget', type: 'widget' },
@@ -84,6 +86,7 @@ modules: {
   inlineAi: {
     enabled: true,
     publisherId: 'YOUR_PUBLISHER_ID',
+    scriptUrl: 'https://getinline.tech/default/assets/index.js',
     mode: 'hybrid',
     placements: [
       {

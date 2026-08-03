@@ -2625,15 +2625,15 @@
           "type": "string"
         },
         "scriptUrl": {
-          "default": "https://getinline.tech/default/assets/index.js",
-          "description": "Full URL override for the InlineAI SDK script. The module appends `?key={publisherId}`.",
+          "description": "URL of the InlineAI SDK script. The module appends `?key={publisherId}`.",
           "type": "string"
         }
       },
       "required": [
         "enabled",
         "mode",
-        "publisherId"
+        "publisherId",
+        "scriptUrl"
       ],
       "type": "object"
     },
@@ -7359,15 +7359,15 @@
           "type": "string"
         },
         "scriptUrl": {
-          "default": "https://getinline.tech/default/assets/index.js",
-          "description": "Full URL override for the InlineAI SDK script. The module appends `?key={publisherId}`.",
+          "description": "URL of the InlineAI SDK script. The module appends `?key={publisherId}`.",
           "type": "string"
         }
       },
       "required": [
         "enabled",
         "mode",
-        "publisherId"
+        "publisherId",
+        "scriptUrl"
       ],
       "type": "object"
     },

@@ -28,6 +28,7 @@ describe('inline-ai module', () => {
   const baseConfig: modules.inlineAi.InlineAiModuleConfig = {
     enabled: true,
     publisherId: 'pub-123',
+    scriptUrl: 'https://getinline.tech/default/assets/index.js',
     mode: 'auto'
   };
 
@@ -70,22 +71,7 @@ describe('inline-ai module', () => {
       expect(spy).to.have.not.been.called;
     });
 
-    it('should load the default script url with the publisher id as a query param', async () => {
-      const { initStep } = createAndConfigure(baseConfig);
-      const ctx = context();
-      const spy = sandbox.stub(ctx.assetLoaderService__, 'loadScript').resolves();
-
-      await initStep(ctx);
-
-      expect(spy).to.have.been.calledOnceWithExactly({
-        name: 'inline-ai',
-        loadMethod: AssetLoadMethod.TAG,
-        assetUrl: 'https://getinline.tech/default/assets/index.js?key=pub-123',
-        type: 'module'
-      });
-    });
-
-    it('should use a configured scriptUrl override', async () => {
+    it('should load the configured scriptUrl with the publisher id as a query param', async () => {
       const { initStep } = createAndConfigure({
         ...baseConfig,
         scriptUrl: 'https://example.com/custom.js'

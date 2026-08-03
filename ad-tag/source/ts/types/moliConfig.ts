@@ -3550,11 +3550,9 @@ export namespace modules {
       readonly mode: InlineAiIntegrationMode;
 
       /**
-       * Full URL override for the InlineAI SDK script. The module appends `?key={publisherId}`.
-       *
-       * @default 'https://getinline.tech/default/assets/index.js'
+       * URL of the InlineAI SDK script. The module appends `?key={publisherId}`.
        */
-      readonly scriptUrl?: string;
+      readonly scriptUrl: string;
 
       /**
        * Ignored entirely in `auto` mode - the InlineAI dashboard owns all rendering then.

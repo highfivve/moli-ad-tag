@@ -672,7 +672,7 @@ const InlineAiModule: React.FC<{ config: modules.inlineAi.InlineAiModuleConfig }
       <Tag>{config.mode}</Tag>
     </Row>
     <Row label="Script URL">
-      <Tag variant="grey">{config.scriptUrl ?? 'default'}</Tag>
+      <Tag variant="grey">{config.scriptUrl}</Tag>
     </Row>
     <Row label="Placements">
       <ListTags values={config.placements?.map(placement => placement.name)} />
