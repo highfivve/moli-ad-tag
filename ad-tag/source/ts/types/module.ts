@@ -13,6 +13,7 @@ export type ModuleType =
   | 'yield'
   | 'creatives'
   | 'lazy-load'
+  | 'engagement'
   | string;
 
 export interface IModule {

@@ -3333,6 +3333,234 @@ export namespace modules {
     }
   }
 
+  /**
+   * ## Inline AI
+   *
+   * Loads the [Inline AI](https://getinline.tech) widget SDK and drives its placement rendering
+   * via the SDK's own command queue (`window.InlineAI.cmd`), gated on TCF Purpose 1 consent.
+   *
+   * @see docs/adr/0010-inline-ai-placement-mode-scoping-via-labels.md for why per-placement mode
+   *      scoping reuses {@link LabelCondition} instead of a bespoke `modes` field.
+   */
+  export namespace inlineAi {
+    /**
+     * See CONTEXT.md glossary entry "Inline AI Integration Mode".
+     */
+    export type InlineAiIntegrationMode = 'auto' | 'programmatic' | 'hybrid';
+
+    /**
+     * Where a placement is inserted relative to its target element.
+     */
+    export type InlineAiInjectionLocation = 'above' | 'below' | 'prepend' | 'append';
+
+    /** A single viewport-range override for a placement's container size. */
+    export type InlineAiBreakpoint = {
+      readonly minViewportWidth?: number;
+      readonly maxViewportWidth?: number;
+      readonly width?: string;
+      readonly height?: string;
+    };
+
+    export type InlineAiOverlayType = 'modal' | 'drawer';
+    export type InlineAiOpenOverlayOn = 'onQuerySubmit' | 'onFocus';
+
+    /** A single viewport-range override for the search overlay's appearance. */
+    export type InlineAiOverlayBreakpoint = {
+      readonly minViewportWidth?: number;
+      readonly maxViewportWidth?: number;
+      readonly overlayType?: InlineAiOverlayType;
+      readonly backdropOpacity?: number;
+      readonly openOverlayOn?: InlineAiOpenOverlayOn;
+    };
+
+    export type InlineAiInputShape = 'pill' | 'rounded-rectangle';
+    export type InlineAiSuggestedQuestionsMode = 'animated' | 'static';
+    export type InlineAiTypographySource = 'inherit-from-website' | 'inherit-from-theme';
+    export type InlineAiInjectionStrategy = 'default' | 'distribute-evenly';
+    export type InlineAiFabHorizontalPosition = 'left' | 'right' | 'center';
+
+    /**
+     * Tag-name-plus-attribute matcher for targeting elements without a stable id or class.
+     */
+    export type InlineAiDynamicTarget = {
+      /** The only required field - e.g. `'div'`, `'article'`. */
+      readonly tagName: string;
+      /** Omit to match any element with the given tag name. */
+      readonly attributeName?: string;
+      /** Required when `attributeName` is set. Exact match, not a substring match. */
+      readonly attributeValue?: string;
+      /** Selects the Nth match (0-indexed). Defaults to `0`. */
+      readonly elementIndex?: number;
+    };
+
+    /**
+     * Where and how large a targeted placement renders. Exactly one of `containerId`,
+     * `selector`, or `dynamic` should be set; the plain string shorthand on
+     * {@link InlineAiPlacementTargetOrId} is equivalent to `{ containerId }`.
+     */
+    export type InlineAiPlacementTarget = {
+      readonly containerId?: string;
+      readonly selector?: string;
+      readonly dynamic?: InlineAiDynamicTarget;
+      readonly location?: InlineAiInjectionLocation;
+      readonly width?: string;
+      readonly maxWidth?: string;
+      readonly height?: string;
+      readonly maxHeight?: string;
+      /** The placement only renders when at least one entry matches the current viewport. */
+      readonly breakpoints?: InlineAiBreakpoint[];
+    };
+
+    /** String shorthand is equivalent to `{ containerId: string }`. */
+    export type InlineAiPlacementTargetOrId = string | InlineAiPlacementTarget;
+
+    /** Extra target fields accepted only by the `single-question` placement. */
+    export type InlineAiSingleQuestionTarget =
+      | string
+      | (InlineAiPlacementTarget & {
+          /** Maximum number of question pills to inject, regardless of article length. */
+          readonly injectionLimit?: number;
+          readonly injectionStrategy?: InlineAiInjectionStrategy;
+          /** `1` skips the first paragraph and starts injecting from the second. */
+          readonly injectionSelectorOffset?: number;
+          readonly typographySource?: InlineAiTypographySource;
+        });
+
+    export type InlineAiFabPosition = {
+      readonly horizontalPosition?: InlineAiFabHorizontalPosition;
+      /** Applies when `horizontalPosition` is `'left'` or `'center'`. */
+      readonly leftOffset?: string;
+      /** Applies when `horizontalPosition` is `'right'` or `'center'`. */
+      readonly rightOffset?: string;
+      readonly bottomOffset?: string;
+      readonly maxWidth?: string;
+    };
+
+    /** Options shared by every placement that can open the search overlay. */
+    export type InlineAiSearchOverlayOptions = {
+      readonly placeholder?: string;
+      readonly overlayType?: InlineAiOverlayType;
+      readonly backdropOpacity?: number;
+      readonly openOverlayOn?: InlineAiOpenOverlayOn;
+      readonly shouldShowSuggestedQuestions?: boolean;
+      readonly suggestedQuestionsMode?: InlineAiSuggestedQuestionsMode;
+      readonly typographySource?: InlineAiTypographySource;
+      /** The most specific (narrowest range) matching entry wins. */
+      readonly overlayBreakpoints?: InlineAiOverlayBreakpoint[];
+    };
+
+    export type InlineAiSearchFabOptions = InlineAiSearchOverlayOptions & {
+      readonly fabPosition?: InlineAiFabPosition;
+      readonly shape?: InlineAiInputShape;
+    };
+
+    export type InlineAiSearchEmbedOptions = InlineAiSearchOverlayOptions & {
+      readonly shape?: InlineAiInputShape;
+    };
+
+    export type InlineAiSearchIconOptions = InlineAiSearchOverlayOptions & {
+      readonly label?: string;
+      /** Defaults to showing the icon. */
+      readonly shouldShowIcon?: boolean;
+      readonly buttonWidth?: string;
+      readonly buttonHeight?: string;
+      readonly maxWidth?: string;
+      readonly maxHeight?: string;
+    };
+
+    /** Fields shared by every placement, regardless of type. */
+    export type InlineAiPlacementConfigBase = {
+      /**
+       * Our own free-form log/debug identifier for this placement - distinct from moli's
+       * `domId`, since a placement's DOM target is the separate `target` field below.
+       */
+      readonly name: string;
+
+      /**
+       * Scopes this placement to a subset of the ad pipeline's active labels. To scope a
+       * placement to one {@link InlineAiIntegrationMode}, set up the mode name as a static
+       * label in the highfivve portal and reference it here (e.g. `{ labelAll: ['hybrid'] }`).
+       * Only consulted in `programmatic`/`hybrid` mode - never in `auto`.
+       */
+      readonly labelCondition?: LabelCondition;
+    };
+
+    /** Sticky sidebar panel with a floating trigger. Body-level: no target. */
+    export type InlineAiWidgetPlacementConfig = InlineAiPlacementConfigBase & {
+      readonly type: 'widget';
+    };
+
+    /** Floating search action button. Body-level: no target. */
+    export type InlineAiSearchFabPlacementConfig = InlineAiPlacementConfigBase & {
+      readonly type: 'search-fab';
+      readonly options?: InlineAiSearchFabOptions;
+    };
+
+    /** Full-width search input bar rendered inside a container. */
+    export type InlineAiSearchEmbedPlacementConfig = InlineAiPlacementConfigBase & {
+      readonly type: 'search-embed';
+      readonly target: InlineAiPlacementTargetOrId;
+      readonly options?: InlineAiSearchEmbedOptions;
+    };
+
+    /** Compact icon/button that opens the search overlay. */
+    export type InlineAiSearchIconPlacementConfig = InlineAiPlacementConfigBase & {
+      readonly type: 'search-icon';
+      readonly target: InlineAiPlacementTargetOrId;
+      readonly options?: InlineAiSearchIconOptions;
+    };
+
+    /** AI-generated summary block for article content. */
+    export type InlineAiKeyTakeawaysPlacementConfig = InlineAiPlacementConfigBase & {
+      readonly type: 'key-takeaways';
+      readonly target: InlineAiPlacementTargetOrId;
+    };
+
+    /** In-content question pills distributed across paragraphs. */
+    export type InlineAiSingleQuestionPlacementConfig = InlineAiPlacementConfigBase & {
+      readonly type: 'single-question';
+      readonly target: InlineAiSingleQuestionTarget;
+    };
+
+    /** Generic AI content block rendered into a container. */
+    export type InlineAiBasicEmbedPlacementConfig = InlineAiPlacementConfigBase & {
+      readonly type: 'basic-embed';
+      readonly target: InlineAiPlacementTargetOrId;
+    };
+
+    /**
+     * Discriminated on `type`, using the InlineAI SDK's own literal string placement values.
+     */
+    export type InlineAiPlacementConfig =
+      | InlineAiWidgetPlacementConfig
+      | InlineAiSearchFabPlacementConfig
+      | InlineAiSearchEmbedPlacementConfig
+      | InlineAiSearchIconPlacementConfig
+      | InlineAiKeyTakeawaysPlacementConfig
+      | InlineAiSingleQuestionPlacementConfig
+      | InlineAiBasicEmbedPlacementConfig;
+
+    export interface InlineAiModuleConfig extends IModuleConfig {
+      readonly publisherId: string;
+
+      /**
+       * See CONTEXT.md glossary entry "Inline AI Integration Mode" for what each mode pushes
+       * onto the InlineAI command queue.
+       */
+      readonly mode: InlineAiIntegrationMode;
+
+      /**
+       * URL of the InlineAI SDK script. The module appends `?key={publisherId}`.
+       */
+      readonly scriptUrl: string;
+
+      /**
+       * Ignored entirely in `auto` mode - the InlineAI dashboard owns all rendering then.
+       */
+      readonly placements?: InlineAiPlacementConfig[];
+    }
+  }
+
   export interface ModulesConfig {
     readonly adex?: Overridable<adex.AdexConfig>;
     readonly adReload?: Overridable<adreload.AdReloadModuleConfig>;
@@ -3345,6 +3573,7 @@ export namespace modules {
     readonly emetriq?: Overridable<emetriq.EmetriqModuleConfig>;
     readonly geoedge?: Overridable<geoedge.GeoEdgeModuleConfig>;
     readonly identitylink?: Overridable<identitylink.IdentityLinkModuleConfig>;
+    readonly inlineAi?: Overridable<inlineAi.InlineAiModuleConfig>;
     readonly pubstack?: Overridable<pubstack.PubstackConfig>;
     readonly skin?: Overridable<skin.SkinModuleConfig>;
     readonly stickyHeaderAd?: Overridable<stickyHeaderAd.StickyHeaderAdConfig>;

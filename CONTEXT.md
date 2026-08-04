@@ -147,3 +147,52 @@ entry replaces, it does not blend with the others.
 A predicate on a single Viewability Override entry, currently only a `format` field compared
 against the slot's live Format Targeting Value. Multiple fields on one condition are ANDed
 together; OR is expressed by adding another entry to the list, not by the condition itself.
+
+### Inline AI Integration Mode
+One of `auto`, `programmatic`, or `hybrid` — configured explicitly on the InlineAI module
+config, mirroring the three integration modes the InlineAI SDK itself supports. Determines
+whether the module touches the [Inline AI Placement] list at all:
+- **auto**: hard bypass. The module only loads the InlineAI script. It never reads the
+  placements list, evaluates a [Placement Label Condition], or pushes any command queue
+  entries — the InlineAI dashboard owns all rendering.
+- **programmatic**: pushes `['init', { publisherId }]` onto the InlineAI command queue, then
+  pushes a `['mount', ...]` entry for every placement whose Placement Label Condition matches.
+- **hybrid**: does **not** push `init()` (that would flip the InlineAI SDK itself into
+  programmatic mode and disable its dashboard auto-rendering). Still pushes `['mount', ...]`
+  for every matching placement, layering explicit placements on top of the dashboard's
+  auto-rendered ones.
+_Avoid_: confusing this with the InlineAI SDK's own mode detection (which mode it ends up in
+is a side effect of what the module pushes, not a separate switch) — see [Inline AI Command
+Queue].
+
+### Inline AI Command Queue
+The `window.InlineAI.cmd` array the module sets up (`window.InlineAI = window.InlineAI || {};
+window.InlineAI.cmd = window.InlineAI.cmd || [];`) before loading the InlineAI script, then
+pushes entries onto per the active [Inline AI Integration Mode]. Distinct from moli's own
+command queue (`window.moli.que`, drained by `moliGlobal.ts`) — the InlineAI script drains its
+*own* queue itself once loaded; the module never drains anything.
+
+### Inline AI Placement
+One entry in the module's configured placements list: one of the seven InlineAI placement
+types (`widget`, `search-fab`, `search-embed`, `search-icon`, `key-takeaways`,
+`single-question`, `basic-embed`), each with its own `name` (our own free-form identifier for
+logging/debugging — distinct from moli's `domId`, since a placement's DOM target is a separate
+`containerId`/`selector`/`dynamic` field, not an id we assign) and an optional [Placement Label
+Condition]. Only consulted in `programmatic` and `hybrid` [Inline AI Integration Mode] — never
+in `auto`.
+
+### Placement Label Condition
+A [Label Condition] on an [Inline AI Placement], evaluated against the ad pipeline's active
+Labels. The module itself does **not** inject a mode label — if a publisher wants to scope a
+placement to one [Inline AI Integration Mode] (`labelAll: ['hybrid']`), that label is set up as
+a static label in the highfivve portal, the same mechanism as any other label-conditioned
+config, rather than a bespoke mode-only field.
+
+### Inline AI SPA Re-run
+On non-SPA setups the module applies its [Inline AI Integration Mode] once, in an init step.
+On SPA setups (`spa.enabled` in the moli config) it instead uses a configure step that re-runs
+once per `requestAds()` cycle, since placements need to be re-mounted for the new page. The
+first cycle (`requestAdsCalls__ === 1`) pushes `['init', ...]`/`['mount', ...]` straight away;
+every later cycle first pushes `['destroy']` to tear down the previous run's placements before
+re-applying the mode - see `docs/inline/init.md`. The InlineAI script itself still loads only
+once, regardless of how many cycles run.

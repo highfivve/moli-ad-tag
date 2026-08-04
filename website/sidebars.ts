@@ -35,7 +35,8 @@ const sidebars: SidebarsConfig = {
         'features/ad-unit-path-variables',
         'features/events',
         'features/rewarded-ad',
-        'features/out-of-page-ads'
+        'features/out-of-page-ads',
+        'features/inline-ai'
       ],
       collapsed: false
     },
