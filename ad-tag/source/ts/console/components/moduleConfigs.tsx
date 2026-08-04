@@ -661,6 +661,25 @@ const StylesModule: React.FC<{ config: modules.styles.StylesConfig }> = ({ confi
   </Row>
 );
 
+const InlineAiModule: React.FC<{ config: modules.inlineAi.InlineAiModuleConfig }> = ({
+  config
+}) => (
+  <>
+    <Row label="Publisher ID">
+      <Tag>{config.publisherId}</Tag>
+    </Row>
+    <Row label="Mode">
+      <Tag>{config.mode}</Tag>
+    </Row>
+    <Row label="Script URL">
+      <Tag variant="grey">{config.scriptUrl}</Tag>
+    </Row>
+    <Row label="Placements">
+      <ListTags values={config.placements?.map(placement => placement.name)} />
+    </Row>
+  </>
+);
+
 /** generic key/value dump used for modules without a dedicated component */
 const GenericModule: React.FC<{ config: object; subEntry?: boolean }> = ({ config, subEntry }) => (
   <>
@@ -709,6 +728,7 @@ const moduleComponents: {
   emetriq: EmetriqModule,
   geoedge: GeoEdgeModule,
   identitylink: IdentityLinkModule,
+  inlineAi: InlineAiModule,
   pubstack: PubstackModule,
   skin: SkinModule,
   styles: StylesModule,
