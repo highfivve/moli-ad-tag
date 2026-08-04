@@ -2215,6 +2215,7 @@ describe('moli', () => {
           await adTag.requestAds();
           await tick();
 
+          // these two windows copy the slot into config.slots, so refreshAdSlots can resolve it
           expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.include(
             artificialInfiniteSlotDomId
           );
@@ -2246,6 +2247,7 @@ describe('moli', () => {
           await requestAdsPromise;
           await tick();
 
+          // these two windows copy the slot into config.slots, so refreshAdSlots can resolve it
           expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.include(
             artificialInfiniteSlotDomId
           );
@@ -2275,7 +2277,9 @@ describe('moli', () => {
           await adTag.requestAds();
           await tick();
 
-          expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.include(
+          // the slot is derived from the configured template inside adService, so it is loaded
+          // without config.slots ever being altered
+          expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.not.include(
             artificialInfiniteSlotDomId
           );
           expect(loadedDomIds()).to.include(manualSlotDomId);
