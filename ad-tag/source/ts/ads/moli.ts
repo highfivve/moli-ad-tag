@@ -678,14 +678,14 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         };
 
         return initialized
-          .then(initializedConfig => {
+          .then(config => {
             // don't use the config from the initialized method as we need to alter the config
             // here to allow different key-values for multiple pages
-            const validation = initializedConfig.spa?.validateLocation ?? 'href';
+            const validation = config.spa?.validateLocation ?? 'href';
             if (!allowRequestAds(validation, href, window.location)) {
               state = {
                 state: 'spa-finished',
-                config: initializedConfig,
+                config: config,
                 initialized,
                 modules,
                 href: window.location.href,
@@ -701,12 +701,6 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
                 `You are trying to refresh ads on the same page, which is not allowed. Using ${validation} for validation.`
               );
             }
-
-            // infinite ad slots queued in the 'spa-finished' state after the user navigated live in
-            // nextRuntimeConfig. They must be added to the config before requesting ads, otherwise
-            // config.slots only holds the configured template slot and adService can never match
-            // their artificialDomId.
-            const config = addQueuedInfiniteSlotsToConfig(initializedConfig, nextRuntimeConfig);
 
             // For single page applications
             return adService.requestAds(config, nextRuntimeConfig).then(() => config);

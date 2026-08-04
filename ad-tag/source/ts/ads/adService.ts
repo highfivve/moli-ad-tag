@@ -37,7 +37,8 @@ import {
   a9ClearTargetingStep,
   a9PublisherAudiences
 } from './a9';
-import { flatten, isNotNull } from '../util/arrayUtils';
+import { flatten } from '../util/arrayUtils';
+import { mkInfiniteSlot } from '../util/addNewInfiniteSlotToConfig';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
@@ -351,26 +352,27 @@ export class AdService {
     this.eventService.emit('beforeRequestAds', { runtimeConfig: runtimeConfig });
     try {
       const immediatelyLoadedSlots: AdSlot[] = config.slots
-        .map(slot => {
+        .flatMap(slot => {
           if (isManualSlot(slot)) {
             // only load the slot immediately if it's available in the refreshSlots array
             return refreshSlots.includes(slot.domId) || refreshSlotsFromBuckets.includes(slot.domId)
-              ? slot
-              : null;
+              ? [slot]
+              : [];
           } else if (isInfiniteSlot(slot)) {
-            return refreshInfiniteSlots.some(
-              infiniteSlot => infiniteSlot.artificialDomId === slot.domId
-            )
-              ? slot
-              : null;
+            // A configured `infinite` slot is only a template - it is never requested under its own
+            // domId. Every queued refreshInfiniteAdSlot call names this template and the artificial
+            // domId it should be copied to, so the slots to load are derived here instead of being
+            // written into config.slots. One template can serve any number of queued slots.
+            return refreshInfiniteSlots
+              .filter(infiniteSlot => infiniteSlot.idOfConfiguredSlot === slot.domId)
+              .map(infiniteSlot => mkInfiniteSlot(slot, infiniteSlot.artificialDomId));
           } else if (isBackfillSlot(slot)) {
             // backfill slots must never be eagerly loaded
-            return null;
+            return [];
           } else {
-            return slot;
+            return [slot];
           }
         })
-        .filter(isNotNull)
         .filter(isSlotAvailable(this.window));
 
       if (config.buckets?.enabled) {

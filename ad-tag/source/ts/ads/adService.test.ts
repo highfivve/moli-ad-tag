@@ -493,17 +493,64 @@ describe('AdService', () => {
       expect(result).to.be.deep.equals([slot1]);
     });
 
-    it('should return all infinite slots if present in the refreshSlots array', async () => {
-      const slot1 = infiniteSlot();
-      const slots = [slot1];
-      addToDom(slots);
-      createDomElementAndAddToDOM('another-id');
+    it('should return a copy of the configured infinite slot for every queued artificial domId', async () => {
+      const configuredSlot = infiniteSlot();
+      const slots = [configuredSlot];
+      // only the artificial element exists - the configured slot is a template and needs no DOM
+      // element of its own, because availability is checked on the copy
+      createDomElementAndAddToDOM('artificial-infinite-1');
+
       const result = await requestAds(
         slots,
         [],
-        [{ artificialDomId: slot1.domId, idOfConfiguredSlot: 'another-id' }]
+        [{ artificialDomId: 'artificial-infinite-1', idOfConfiguredSlot: configuredSlot.domId }]
       );
-      expect(result).to.be.deep.equals([slot1]);
+
+      // the configured slot is only a template - it is never requested under its own domId
+      expect(result).to.be.deep.equals([{ ...configuredSlot, domId: 'artificial-infinite-1' }]);
+    });
+
+    it('should return one slot per queued artificial domId of the same configured infinite slot', async () => {
+      const configuredSlot = infiniteSlot();
+      const slots = [configuredSlot];
+      createDomElementAndAddToDOM('artificial-infinite-1');
+      createDomElementAndAddToDOM('artificial-infinite-2');
+
+      const result = await requestAds(
+        slots,
+        [],
+        [
+          { artificialDomId: 'artificial-infinite-1', idOfConfiguredSlot: configuredSlot.domId },
+          { artificialDomId: 'artificial-infinite-2', idOfConfiguredSlot: configuredSlot.domId }
+        ]
+      );
+
+      expect(result).to.be.deep.equals([
+        { ...configuredSlot, domId: 'artificial-infinite-1' },
+        { ...configuredSlot, domId: 'artificial-infinite-2' }
+      ]);
+    });
+
+    it('should not return an infinite slot whose configured slot is missing from the config', async () => {
+      const configuredSlot = infiniteSlot();
+      const slots = [configuredSlot];
+      createDomElementAndAddToDOM('artificial-infinite-1');
+
+      const result = await requestAds(
+        slots,
+        [],
+        [{ artificialDomId: 'artificial-infinite-1', idOfConfiguredSlot: 'not-in-the-config' }]
+      );
+
+      expect(result).to.be.deep.equals([]);
+    });
+
+    it('should not return a configured infinite slot if no infinite slot is queued', async () => {
+      const slots = [infiniteSlot()];
+      // the element exists, so this asserts the template is skipped for lack of a queued call
+      addToDom(slots);
+      const result = await requestAds(slots, [], []);
+      expect(result).to.be.deep.equals([]);
     });
 
     describe('slot buckets', () => {
