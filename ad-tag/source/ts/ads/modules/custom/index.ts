@@ -19,13 +19,15 @@ const hasConsent = (
   context: AdPipelineContext,
   scriptConfig: modules.custom.CustomScriptConfig
 ): boolean => {
-  // always assume consent in test mode or if no consent config is provided
+  // always assume consent in test mode or if no consent config is provided.
+  // Consentmanager-blocked scripts (cmpBlocking) carry no `consent` block and are gated by the CMP itself, so they
+  // fall through here and must be injected — the ad tag must not also filter them out.
   if (context.env__ === 'test' || !scriptConfig.consent) {
     return true;
   }
   switch (scriptConfig.consent.cmpApi) {
     case 'tcf':
-      return (
+      return Boolean(
         !context.tcData__.gdprApplies ||
         context.tcData__.vendor.consents[scriptConfig.consent.vendorId]
       );
@@ -63,12 +65,24 @@ export const customModule = (): IModule => {
         .forEach(scriptConfig => {
           try {
             const script = context.window__.document.createElement('script');
-            script.type = 'text/javascript';
-            script.src = scriptConfig.src;
+            // Publisher attributes are applied first so the Consentmanager-blocked markup below cannot be
+            // overwritten by a colliding attribute (e.g. `class`, `type`, `data-cmp-*`).
             if (scriptConfig.attributes) {
               Object.entries(scriptConfig.attributes).forEach(([key, value]) => {
                 script.setAttribute(key, value);
               });
+            }
+            if (scriptConfig.cmpBlocking) {
+              // Consentmanager-blocked: inject inert markup and let the CMP unblock it once consent is granted.
+              // No `script.src` — the real URL lives in `data-cmp-src`.
+              script.className = 'cmplazyload';
+              script.type = 'text/plain';
+              script.async = true;
+              script.setAttribute('data-cmp-src', scriptConfig.src);
+              script.setAttribute('data-cmp-vendor', scriptConfig.cmpBlocking.vendorId);
+            } else {
+              script.type = 'text/javascript';
+              script.src = scriptConfig.src;
             }
             context.window__.document.head.appendChild(script);
             context.logger__?.info(name, `Injected script from URL: ${scriptConfig.src}`);

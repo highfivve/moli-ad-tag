@@ -3297,6 +3297,23 @@ export namespace modules {
          */
         vendorId: string;
       };
+
+      /**
+       * Consentmanager (non-IAB) vendor gating.
+       *
+       * Semantically distinct from {@link consent}: the ad tag does **not** check `tcData` here. Instead it injects
+       * the script in Consentmanager's blocked `cmplazyload` form (`type="text/plain"`, no `src`, the real URL in
+       * `data-cmp-src`) and lets the CMP unblock it once consent for `vendorId` is granted. The CMP is the single
+       * source of truth for custom vendors, so `hasConsent` must let these scripts through unconditionally.
+       *
+       * Mutually exclusive with {@link consent} — the portal maps a script to at most one of them.
+       */
+      readonly cmpBlocking?: {
+        /**
+         * A Consentmanager custom vendor id, e.g. `s98`.
+         */
+        vendorId: string;
+      };
     }
 
     /**

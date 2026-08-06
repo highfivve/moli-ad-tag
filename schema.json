@@ -6817,6 +6817,20 @@
           "description": "Additional attributes for the script tag.",
           "type": "object"
         },
+        "cmpBlocking": {
+          "additionalProperties": false,
+          "description": "Consentmanager (non-IAB) vendor gating.\n\nSemantically distinct from  {@link  consent } : the ad tag does **not** check `tcData` here. Instead it injects the script in Consentmanager's blocked `cmplazyload` form (`type=\"text/plain\"`, no `src`, the real URL in `data-cmp-src`) and lets the CMP unblock it once consent for `vendorId` is granted. The CMP is the single source of truth for custom vendors, so `hasConsent` must let these scripts through unconditionally.\n\nMutually exclusive with  {@link  consent }  — the portal maps a script to at most one of them.",
+          "properties": {
+            "vendorId": {
+              "description": "A Consentmanager custom vendor id, e.g. `s98`.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "vendorId"
+          ],
+          "type": "object"
+        },
         "consent": {
           "additionalProperties": false,
           "description": "Consent requirements for loading the script.",
