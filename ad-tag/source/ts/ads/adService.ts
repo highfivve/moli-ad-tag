@@ -37,7 +37,7 @@ import {
   a9ClearTargetingStep,
   a9PublisherAudiences
 } from './a9';
-import { flatten } from '../util/arrayUtils';
+import { flatten, isNotNull } from '../util/arrayUtils';
 import { mkInfiniteSlot } from '../util/addNewInfiniteSlotToConfig';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
@@ -351,28 +351,38 @@ export class AdService {
     );
     this.eventService.emit('beforeRequestAds', { runtimeConfig: runtimeConfig });
     try {
+      // Infinite ad slots are derived from the queue, not from the config. Every queued call names
+      // exactly one configured slot to copy, but one configured slot can serve any number of queued
+      // calls, so this has to be driven by refreshInfiniteSlots to not lose slots.
+      const queuedInfiniteSlots: AdSlot[] = refreshInfiniteSlots
+        .map(({ idOfConfiguredSlot, artificialDomId }) => {
+          const configuredSlot = config.slots.find(
+            slot => slot.domId === idOfConfiguredSlot && isInfiniteSlot(slot)
+          );
+          return configuredSlot ? mkInfiniteSlot(configuredSlot, artificialDomId) : null;
+        })
+        .filter(isNotNull);
+
       const immediatelyLoadedSlots: AdSlot[] = config.slots
-        .flatMap(slot => {
+        .map(slot => {
           if (isManualSlot(slot)) {
             // only load the slot immediately if it's available in the refreshSlots array
             return refreshSlots.includes(slot.domId) || refreshSlotsFromBuckets.includes(slot.domId)
-              ? [slot]
-              : [];
+              ? slot
+              : null;
           } else if (isInfiniteSlot(slot)) {
-            // A configured `infinite` slot is only a template - it is never requested under its own
-            // domId. Every queued refreshInfiniteAdSlot call names this template and the artificial
-            // domId it should be copied to, so the slots to load are derived here instead of being
-            // written into config.slots. One template can serve any number of queued slots.
-            return refreshInfiniteSlots
-              .filter(infiniteSlot => infiniteSlot.idOfConfiguredSlot === slot.domId)
-              .map(infiniteSlot => mkInfiniteSlot(slot, infiniteSlot.artificialDomId));
+            // a configured infinite slot is only a template and is never requested under its own
+            // domId - the slots to load were derived from the queue above
+            return null;
           } else if (isBackfillSlot(slot)) {
             // backfill slots must never be eagerly loaded
-            return [];
+            return null;
           } else {
-            return [slot];
+            return slot;
           }
         })
+        .filter(isNotNull)
+        .concat(queuedInfiniteSlots)
         .filter(isSlotAvailable(this.window));
 
       if (config.buckets?.enabled) {
