@@ -19,13 +19,15 @@ const hasConsent = (
   context: AdPipelineContext,
   scriptConfig: modules.custom.CustomScriptConfig
 ): boolean => {
-  // always assume consent in test mode or if no consent config is provided
+  // always assume consent in test mode or if no consent config is provided.
+  // Scripts gated by the CMP itself (no `consent` block — e.g. a Consentmanager-blocked cmplazyload tag) fall
+  // through here and must be injected; the ad tag must not also filter them out.
   if (context.env__ === 'test' || !scriptConfig.consent) {
     return true;
   }
   switch (scriptConfig.consent.cmpApi) {
     case 'tcf':
-      return (
+      return Boolean(
         !context.tcData__.gdprApplies ||
         context.tcData__.vendor.consents[scriptConfig.consent.vendorId]
       );
@@ -63,15 +65,23 @@ export const customModule = (): IModule => {
         .forEach(scriptConfig => {
           try {
             const script = context.window__.document.createElement('script');
-            script.type = 'text/javascript';
-            script.src = scriptConfig.src;
+            // A script with `src` is injected as a normal executable tag. Without `src` the tag is driven entirely
+            // by `attributes` (e.g. a Consentmanager-blocked `type="text/plain"` cmplazyload tag whose real URL
+            // lives in `data-cmp-src`). Leaving `src` unset avoids an empty src resolving against the page URL.
+            if (scriptConfig.src) {
+              script.type = 'text/javascript';
+              script.src = scriptConfig.src;
+            }
             if (scriptConfig.attributes) {
               Object.entries(scriptConfig.attributes).forEach(([key, value]) => {
                 script.setAttribute(key, value);
               });
             }
             context.window__.document.head.appendChild(script);
-            context.logger__?.info(name, `Injected script from URL: ${scriptConfig.src}`);
+            context.logger__?.info(
+              name,
+              `Injected script from URL: ${scriptConfig.src ?? '(attribute-driven)'}`
+            );
           } catch (e) {
             context.logger__?.error(name, 'Failed to inject script from config', scriptConfig, e);
           }
