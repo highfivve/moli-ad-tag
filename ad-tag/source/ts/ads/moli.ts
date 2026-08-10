@@ -1,7 +1,6 @@
 import { MoliRuntime } from '../types/moliRuntime';
 import { AssetLoadMethod, createAssetLoaderService } from '../util/assetLoaderService';
 import { getLogger } from '../util/logging';
-import { addNewInfiniteSlotToConfig } from '../util/addNewInfiniteSlotToConfig';
 import { IModule } from '../types/module';
 import { AdService } from './adService';
 import { createEventService } from './eventService';
@@ -317,68 +316,6 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     return Promise.resolve(null);
   }
 
-  /**
-   * Adds every queued infinite ad slot of the given runtime config to the moli config.
-   *
-   * Unlike regular ad slots, infinite ad slots do not exist in the config yet - they are created by
-   * copying the configuration of an already configured `infinite` slot. Until that copy exists,
-   * `config.slots` only holds the template slot, so nothing can match the `artificialDomId` a
-   * `refreshInfiniteAdSlot` call was made with - neither `adService.requestAds` nor
-   * `adService.refreshAdSlots`.
-   *
-   * @param config the current moli config
-   * @param runtimeConfig the runtime config holding the queued infinite ad slots
-   * @returns the config, extended by every queued infinite ad slot
-   */
-  function addQueuedInfiniteSlotsToConfig(
-    config: MoliConfig,
-    runtimeConfig: MoliRuntime.MoliRuntimeConfig
-  ): MoliConfig {
-    const log = getLogger(runtimeConfig, window);
-    return runtimeConfig.refreshInfiniteSlots.reduce(
-      (currentConfig, slot) =>
-        addNewInfiniteSlotToConfig(
-          currentConfig,
-          slot.idOfConfiguredSlot,
-          slot.artificialDomId,
-          log
-        ),
-      config
-    );
-  }
-
-  /**
-   * Refreshes the infinite ad slots that were queued while the ad tag was requesting ads.
-   *
-   * `refreshInfiniteAdSlot` calls that arrive during a `spa-requestAds` cycle are batched into
-   * `runtimeConfig.refreshInfiniteSlots`, mirroring how `refreshAdSlot` batches into
-   * `runtimeConfig.refreshSlots`. Both arrays are reset once the cycle finishes, so they must be
-   * flushed before that happens or the queued calls are lost without ever loading an ad.
-   *
-   * @param config the current moli config
-   * @param runtimeConfig the runtime config holding the queued infinite ad slots
-   * @returns the config, extended by every queued infinite ad slot
-   */
-  function refreshQueuedInfiniteSlots(
-    config: MoliConfig,
-    runtimeConfig: MoliRuntime.MoliRuntimeConfig
-  ): MoliConfig {
-    const { refreshInfiniteSlots } = runtimeConfig;
-    if (refreshInfiniteSlots.length === 0) {
-      return config;
-    }
-
-    const configWithInfiniteSlots = addQueuedInfiniteSlotsToConfig(config, runtimeConfig);
-
-    adService.refreshAdSlots(
-      refreshInfiniteSlots.map(slot => slot.artificialDomId),
-      configWithInfiniteSlots,
-      runtimeConfig
-    );
-
-    return configWithInfiniteSlots;
-  }
-
   function requestAds(): Promise<
     | MoliRuntime.state.IConfigurable
     | MoliRuntime.state.ISinglePageApp
@@ -504,8 +441,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             }
           });
 
-        // if there are infinite ad slots available in the refreshInfiniteSlots array, they need to be added to the config
-        const config = addQueuedInfiniteSlotsToConfig(state.config, state.runtimeConfig);
+        const config = state.config;
 
         const log = getLogger(state.runtimeConfig, window);
 
@@ -557,10 +493,15 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
                 state.state === 'spa-requestAds' &&
                 allowRefreshAdSlot(validateLocation, state.href, window.location)
               ) {
-                const { runtimeConfig } = state;
-                // infinite ad slots queued during this cycle must be added to the config and
-                // refreshed before the runtime config is reset below
-                const config = refreshQueuedInfiniteSlots(state.config, runtimeConfig);
+                const { runtimeConfig, config } = state;
+                // refreshInfiniteAdSlot calls that arrived during this cycle were batched into
+                // runtimeConfig.refreshInfiniteSlots, which is reset below - so they have to be
+                // refreshed now or they are lost without ever loading an ad
+                adService.refreshInfiniteAdSlots(
+                  runtimeConfig.refreshInfiniteSlots,
+                  config,
+                  runtimeConfig
+                );
                 if (state.runtimeConfig.refreshSlots.length > 0) {
                   adService.refreshAdSlots(runtimeConfig.refreshSlots, config, runtimeConfig);
                 }
@@ -707,11 +648,15 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
           })
           .then(requestedConfig => {
             const runtimeConfig = state.runtimeConfig;
+            const config = requestedConfig;
             // if there are refreshAdSlot calls while the requestAds() call is still resolving, there might be new
             // refreshAdSlot or refreshInfiniteAdSlot calls being queued. Now we can refresh them.
-            // The infinite ones have to be added to the config first, so this must happen before the
-            // remaining refreshes and before the runtime config is reset.
-            const config = refreshQueuedInfiniteSlots(requestedConfig, runtimeConfig);
+            // This must happen before the runtime config is reset.
+            adService.refreshInfiniteAdSlots(
+              runtimeConfig.refreshInfiniteSlots,
+              config,
+              runtimeConfig
+            );
             if (state.runtimeConfig.refreshSlots.length > 0) {
               adService.refreshAdSlots(
                 state.runtimeConfig.refreshSlots,
@@ -840,17 +785,12 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         // user hasn't navigated yet so we directly refresh the slot
         const validateLocation = state.config.spa?.validateLocation ?? 'href';
         if (allowRefreshAdSlot(validateLocation, state.href, window.location)) {
-          state = {
-            ...state,
-            config: addNewInfiniteSlotToConfig(
-              state.config,
-              idOfConfiguredSlot,
-              domId,
-              getLogger(state.runtimeConfig, window)
-            )
-          };
           return adService
-            .refreshAdSlots([domId], state.config, state.runtimeConfig)
+            .refreshInfiniteAdSlots(
+              [{ artificialDomId: domId, idOfConfiguredSlot: idOfConfiguredSlot }],
+              state.config,
+              state.runtimeConfig
+            )
             .then(() => 'refreshed');
         } else {
           // requestAds() hasn't been called yet, but some ad slot is already ready to be requested.
@@ -868,17 +808,12 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       // slots can be refreshed immediately
       case 'finished':
       case 'requestAds': {
-        state = {
-          ...state,
-          config: addNewInfiniteSlotToConfig(
-            state.config,
-            idOfConfiguredSlot,
-            domId,
-            getLogger(state.runtimeConfig, window)
-          )
-        };
         return adService
-          .refreshAdSlots([domId], state.config, state.runtimeConfig)
+          .refreshInfiniteAdSlots(
+            [{ artificialDomId: domId, idOfConfiguredSlot: idOfConfiguredSlot }],
+            state.config,
+            state.runtimeConfig
+          )
           .then(() => 'refreshed');
       }
       default: {

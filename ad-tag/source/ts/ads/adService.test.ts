@@ -1198,6 +1198,112 @@ describe('AdService', () => {
     });
   });
 
+  describe('refreshInfiniteAdSlots', () => {
+    const configuredInfiniteSlot = (): AdSlot => infiniteSlot();
+
+    it('should do nothing if there are no infinite ad slots', async () => {
+      const adService = makeAdService();
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshInfiniteAdSlots([], emptyConfig, emptyRuntimeConfig);
+      expect(runSpy).to.not.have.been.called;
+    });
+
+    it('should run the ad pipeline with a copy of the configured slot', async () => {
+      const adService = makeAdService();
+      const configuredSlot = configuredInfiniteSlot();
+      const config: MoliConfig = { ...emptyConfig, slots: [configuredSlot] };
+      // the configured slot is a template and needs no DOM element of its own
+      createDomElementAndAddToDOM('artificial-infinite-1');
+
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshInfiniteAdSlots(
+        [{ artificialDomId: 'artificial-infinite-1', idOfConfiguredSlot: configuredSlot.domId }],
+        config,
+        emptyRuntimeConfig
+      );
+
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        Sinon.match.array.deepEquals([{ ...configuredSlot, domId: 'artificial-infinite-1' }]),
+        config,
+        emptyRuntimeConfig,
+        Sinon.match.number
+      );
+    });
+
+    it('should run the ad pipeline with one slot per entry of the same configured slot', async () => {
+      const adService = makeAdService();
+      const configuredSlot = configuredInfiniteSlot();
+      const config: MoliConfig = { ...emptyConfig, slots: [configuredSlot] };
+      createDomElementAndAddToDOM('artificial-infinite-1');
+      createDomElementAndAddToDOM('artificial-infinite-2');
+
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshInfiniteAdSlots(
+        [
+          { artificialDomId: 'artificial-infinite-1', idOfConfiguredSlot: configuredSlot.domId },
+          { artificialDomId: 'artificial-infinite-2', idOfConfiguredSlot: configuredSlot.domId }
+        ],
+        config,
+        emptyRuntimeConfig
+      );
+
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        Sinon.match.array.deepEquals([
+          { ...configuredSlot, domId: 'artificial-infinite-1' },
+          { ...configuredSlot, domId: 'artificial-infinite-2' }
+        ]),
+        config,
+        emptyRuntimeConfig,
+        Sinon.match.number
+      );
+    });
+
+    it('should skip and log entries without a configured infinite slot', async () => {
+      const adService = makeAdService();
+      const errorStub = sandbox.stub();
+      adService.setLogger({ ...noopLogger, error: errorStub });
+      const config: MoliConfig = { ...emptyConfig, slots: [configuredInfiniteSlot()] };
+      createDomElementAndAddToDOM('artificial-infinite-1');
+
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshInfiniteAdSlots(
+        [{ artificialDomId: 'artificial-infinite-1', idOfConfiguredSlot: 'not-in-the-config' }],
+        config,
+        emptyRuntimeConfig
+      );
+
+      expect(errorStub).to.have.been.called;
+      expect(runSpy).to.have.been.calledWithExactly(
+        Sinon.match.array.deepEquals([]),
+        config,
+        emptyRuntimeConfig,
+        Sinon.match.number
+      );
+    });
+
+    it('should skip slots that are not in the DOM', async () => {
+      const adService = makeAdService();
+      const configuredSlot = configuredInfiniteSlot();
+      const config: MoliConfig = { ...emptyConfig, slots: [configuredSlot] };
+
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshInfiniteAdSlots(
+        [{ artificialDomId: 'not-in-the-dom', idOfConfiguredSlot: configuredSlot.domId }],
+        config,
+        emptyRuntimeConfig
+      );
+
+      expect(runSpy).to.have.been.calledWithExactly(
+        Sinon.match.array.deepEquals([]),
+        config,
+        emptyRuntimeConfig,
+        Sinon.match.number
+      );
+    });
+  });
+
   describe('refresh bucket', () => {
     const withBucket = (adSlot: AdSlot, bucket: string): AdSlot => ({
       ...adSlot,

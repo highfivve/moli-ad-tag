@@ -1882,8 +1882,9 @@ describe('moli', () => {
       }
     ];
 
-    it('should add a new infinite slot to the config', async () => {
+    it('should refresh a new infinite slot without adding it to the config', async () => {
       const adTag = createMoliTag(jsDomWindow);
+      const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
       const slots: AdSlot[] = [
         ...defaultSlots,
         { ...mkAdSlotInDOM(), behaviour: { loaded: 'infinite' } }
@@ -1891,12 +1892,24 @@ describe('moli', () => {
 
       await adTag.configure({ ...defaultConfig, slots: slots });
 
+      // the artificial element the new infinite ad slot is rendered into
+      const div = jsDomWindow.document.createElement('div');
+      div.setAttribute('id', 'infinite-adslot-1');
+      jsDomWindow.document.body.append(div);
+
       await adTag.requestAds();
       await adTag.refreshInfiniteAdSlot('infinite-adslot-1', 'dom-id-2');
 
       expect(adTag.getState()).to.be.equal('finished');
-      expect(adTag.getConfig()?.slots).to.have.length(3);
-      expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.include('infinite-adslot-1');
+
+      // the slot is created from the configured slot on the fly, so the config is left untouched
+      expect(adTag.getConfig()?.slots).to.have.length(2);
+      expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.not.include('infinite-adslot-1');
+
+      const refreshedDomIds = refreshSpy
+        .getCalls()
+        .flatMap(call => (call.args[0] || []).map(slot => slot.getSlotElementId()));
+      expect(refreshedDomIds).to.include('infinite-adslot-1');
     });
 
     it('should refresh the new infinite adslot if given configured slot id is available in the config', async () => {
@@ -1985,9 +1998,8 @@ describe('moli', () => {
         // itself, so give it a tick to reach googletag
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        // the queued slot must have been added to the config and actually refreshed, otherwise it
-        // would be dropped when the runtime config is reset and never load an ad
-        expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.include(domIdOfNewInfiniteSlot);
+        // the queued slot must have been refreshed, otherwise it would be dropped when the runtime
+        // config is reset and never load an ad
 
         const refreshedDomIds = refreshSpy
           .getCalls()
@@ -2215,8 +2227,9 @@ describe('moli', () => {
           await adTag.requestAds();
           await tick();
 
-          // these two windows copy the slot into config.slots, so refreshAdSlots can resolve it
-          expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.include(
+          // infinite ad slots are created from the configured slot when they are refreshed, so
+          // config.slots is never altered
+          expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.not.include(
             artificialInfiniteSlotDomId
           );
           expect(loadedDomIds()).to.include(manualSlotDomId);
@@ -2247,8 +2260,9 @@ describe('moli', () => {
           await requestAdsPromise;
           await tick();
 
-          // these two windows copy the slot into config.slots, so refreshAdSlots can resolve it
-          expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.include(
+          // infinite ad slots are created from the configured slot when they are refreshed, so
+          // config.slots is never altered
+          expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.not.include(
             artificialInfiniteSlotDomId
           );
           expect(loadedDomIds()).to.include(manualSlotDomId);
@@ -2277,8 +2291,8 @@ describe('moli', () => {
           await adTag.requestAds();
           await tick();
 
-          // the slot is derived from the configured template inside adService, so it is loaded
-          // without config.slots ever being altered
+          // infinite ad slots are created from the configured slot when they are refreshed, so
+          // config.slots is never altered
           expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.not.include(
             artificialInfiniteSlotDomId
           );
