@@ -208,4 +208,59 @@ describe('customModule', () => {
       expect(scripts[0].src).to.equal('https://example.com/test.js');
     });
   });
+
+  describe('attribute-driven scripts (no src)', () => {
+    // e.g. a Consentmanager-blocked cmplazyload tag: the portal emits no `src`, only attributes.
+    const cmpAttributes = {
+      class: 'cmplazyload',
+      type: 'text/plain',
+      async: 'true',
+      'data-cmp-src': 'https://example.com/vendor-loader.js',
+      'data-cmp-vendor': 'cm-vendor-1'
+    };
+
+    it('should inject a src-less tag driven entirely by attributes', async () => {
+      // deny all consent — a script with no `consent` block is gated by the CMP, not the ad tag
+      const context: AdPipelineContext = {
+        ...newAdPipelineContext(jsDomWindow),
+        tcData__: fullConsent({})
+      };
+      const config: modules.custom.CustomModuleConfig = {
+        enabled: true,
+        scripts: [{ attributes: cmpAttributes }]
+      };
+      const { initStep } = createAndConfigureCustomModule(config);
+      await initStep(context);
+      const scripts = jsDomWindow.document.getElementsByTagName('script');
+      expect(scripts).to.have.lengthOf(1);
+      const script: HTMLScriptElement = scripts[0];
+      expect(script.getAttribute('class')).to.equal('cmplazyload');
+      expect(script.getAttribute('type')).to.equal('text/plain');
+      expect(script.getAttribute('data-cmp-src')).to.equal('https://example.com/vendor-loader.js');
+      expect(script.getAttribute('data-cmp-vendor')).to.equal('cm-vendor-1');
+      // must NOT set src at all — an empty src resolves against the document URL
+      expect(script.hasAttribute('src')).to.equal(false);
+      expect(script.src).to.equal('');
+    });
+
+    it('should still apply label filtering to src-less scripts', async () => {
+      const labelConfigService = createLabelConfigService([], ['foo'], jsDomWindow);
+      const context: AdPipelineContext = {
+        ...newAdPipelineContext(jsDomWindow),
+        labelConfigService__: labelConfigService
+      };
+      const config: modules.custom.CustomModuleConfig = {
+        enabled: true,
+        scripts: [
+          { attributes: { 'data-cmp-src': 'https://example.com/allowed.js' }, labelAll: ['foo'] },
+          { attributes: { 'data-cmp-src': 'https://example.com/blocked.js' }, labelAll: ['bar'] }
+        ]
+      };
+      const { initStep } = createAndConfigureCustomModule(config);
+      await initStep(context);
+      const scripts = jsDomWindow.document.getElementsByTagName('script');
+      expect(scripts).to.have.lengthOf(1);
+      expect(scripts[0].getAttribute('data-cmp-src')).to.equal('https://example.com/allowed.js');
+    });
+  });
 });

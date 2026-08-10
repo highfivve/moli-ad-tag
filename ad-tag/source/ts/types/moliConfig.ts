@@ -3259,9 +3259,14 @@ export namespace modules {
       readonly labelAny?: string[];
 
       /**
-       * URL of an external script to be loaded.
+       * URL of an external script to be loaded, injected as `<script src>`.
+       *
+       * Optional: omit `src` to inject a tag with no `src` attribute at all, driven entirely by {@link attributes}
+       * — e.g. a Consentmanager-blocked `type="text/plain"` `cmplazyload` tag whose real URL lives in
+       * `data-cmp-src`, which the CMP unblocks once consent is granted. An empty `src` is deliberately avoided: it
+       * resolves against the document URL and can trigger a spurious request for the page itself.
        */
-      readonly src: string;
+      readonly src?: string;
 
       /**
        * Additional attributes for the script tag.
