@@ -20,8 +20,8 @@ const hasConsent = (
   scriptConfig: modules.custom.CustomScriptConfig
 ): boolean => {
   // always assume consent in test mode or if no consent config is provided.
-  // Consentmanager-blocked scripts (cmpBlocking) carry no `consent` block and are gated by the CMP itself, so they
-  // fall through here and must be injected — the ad tag must not also filter them out.
+  // Scripts gated by the CMP itself (no `consent` block — e.g. a Consentmanager-blocked cmplazyload tag) fall
+  // through here and must be injected; the ad tag must not also filter them out.
   if (context.env__ === 'test' || !scriptConfig.consent) {
     return true;
   }
@@ -65,27 +65,23 @@ export const customModule = (): IModule => {
         .forEach(scriptConfig => {
           try {
             const script = context.window__.document.createElement('script');
-            // Publisher attributes are applied first so the Consentmanager-blocked markup below cannot be
-            // overwritten by a colliding attribute (e.g. `class`, `type`, `data-cmp-*`).
+            // A script with `src` is injected as a normal executable tag. Without `src` the tag is driven entirely
+            // by `attributes` (e.g. a Consentmanager-blocked `type="text/plain"` cmplazyload tag whose real URL
+            // lives in `data-cmp-src`). Leaving `src` unset avoids an empty src resolving against the page URL.
+            if (scriptConfig.src) {
+              script.type = 'text/javascript';
+              script.src = scriptConfig.src;
+            }
             if (scriptConfig.attributes) {
               Object.entries(scriptConfig.attributes).forEach(([key, value]) => {
                 script.setAttribute(key, value);
               });
             }
-            if (scriptConfig.cmpBlocking) {
-              // Consentmanager-blocked: inject inert markup and let the CMP unblock it once consent is granted.
-              // No `script.src` — the real URL lives in `data-cmp-src`.
-              script.className = 'cmplazyload';
-              script.type = 'text/plain';
-              script.async = true;
-              script.setAttribute('data-cmp-src', scriptConfig.src);
-              script.setAttribute('data-cmp-vendor', scriptConfig.cmpBlocking.vendorId);
-            } else {
-              script.type = 'text/javascript';
-              script.src = scriptConfig.src;
-            }
             context.window__.document.head.appendChild(script);
-            context.logger__?.info(name, `Injected script from URL: ${scriptConfig.src}`);
+            context.logger__?.info(
+              name,
+              `Injected script from URL: ${scriptConfig.src ?? '(attribute-driven)'}`
+            );
           } catch (e) {
             context.logger__?.error(name, 'Failed to inject script from config', scriptConfig, e);
           }

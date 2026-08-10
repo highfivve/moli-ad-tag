@@ -3259,9 +3259,14 @@ export namespace modules {
       readonly labelAny?: string[];
 
       /**
-       * URL of an external script to be loaded.
+       * URL of an external script to be loaded, injected as `<script src>`.
+       *
+       * Optional: omit `src` to inject a tag with no `src` attribute at all, driven entirely by {@link attributes}
+       * — e.g. a Consentmanager-blocked `type="text/plain"` `cmplazyload` tag whose real URL lives in
+       * `data-cmp-src`, which the CMP unblocks once consent is granted. An empty `src` is deliberately avoided: it
+       * resolves against the document URL and can trigger a spurious request for the page itself.
        */
-      readonly src: string;
+      readonly src?: string;
 
       /**
        * Additional attributes for the script tag.
@@ -3294,23 +3299,6 @@ export namespace modules {
          * A valid GVL vendor id.
          * @see https://vendorlist.consensu.org/v3/vendor-list.json
          * @see https://iabeurope.eu/vendor-list-tcf/
-         */
-        vendorId: string;
-      };
-
-      /**
-       * Consentmanager (non-IAB) vendor gating.
-       *
-       * Semantically distinct from {@link consent}: the ad tag does **not** check `tcData` here. Instead it injects
-       * the script in Consentmanager's blocked `cmplazyload` form (`type="text/plain"`, no `src`, the real URL in
-       * `data-cmp-src`) and lets the CMP unblock it once consent for `vendorId` is granted. The CMP is the single
-       * source of truth for custom vendors, so `hasConsent` must let these scripts through unconditionally.
-       *
-       * Mutually exclusive with {@link consent} — the portal maps a script to at most one of them.
-       */
-      readonly cmpBlocking?: {
-        /**
-         * A Consentmanager custom vendor id, e.g. `s98`.
          */
         vendorId: string;
       };

@@ -209,56 +209,41 @@ describe('customModule', () => {
     });
   });
 
-  describe('Consentmanager blocking (cmpBlocking)', () => {
-    const vendorId = 'cm-vendor-1';
-    const cmpBlockingConfig: modules.custom.CustomModuleConfig = {
-      enabled: true,
-      scripts: [{ src: 'https://example.com/vendor-loader.js', cmpBlocking: { vendorId } }]
+  describe('attribute-driven scripts (no src)', () => {
+    // e.g. a Consentmanager-blocked cmplazyload tag: the portal emits no `src`, only attributes.
+    const cmpAttributes = {
+      class: 'cmplazyload',
+      type: 'text/plain',
+      async: 'true',
+      'data-cmp-src': 'https://example.com/vendor-loader.js',
+      'data-cmp-vendor': 'cm-vendor-1'
     };
 
-    it('should emit blocked cmplazyload markup regardless of consent state', async () => {
-      // deny all consent — the CMP owns the gate, so the tag must still be injected (inert)
+    it('should inject a src-less tag driven entirely by attributes', async () => {
+      // deny all consent — a script with no `consent` block is gated by the CMP, not the ad tag
       const context: AdPipelineContext = {
         ...newAdPipelineContext(jsDomWindow),
         tcData__: fullConsent({})
       };
-      const { initStep } = createAndConfigureCustomModule(cmpBlockingConfig);
+      const config: modules.custom.CustomModuleConfig = {
+        enabled: true,
+        scripts: [{ attributes: cmpAttributes }]
+      };
+      const { initStep } = createAndConfigureCustomModule(config);
       await initStep(context);
       const scripts = jsDomWindow.document.getElementsByTagName('script');
       expect(scripts).to.have.lengthOf(1);
       const script: HTMLScriptElement = scripts[0];
       expect(script.getAttribute('class')).to.equal('cmplazyload');
       expect(script.getAttribute('type')).to.equal('text/plain');
-      expect(script.async).to.equal(true);
       expect(script.getAttribute('data-cmp-src')).to.equal('https://example.com/vendor-loader.js');
-      expect(script.getAttribute('data-cmp-vendor')).to.equal(vendorId);
+      expect(script.getAttribute('data-cmp-vendor')).to.equal('cm-vendor-1');
       // must NOT set src at all — an empty src resolves against the document URL
       expect(script.hasAttribute('src')).to.equal(false);
       expect(script.src).to.equal('');
     });
 
-    it('should apply publisher attributes without overwriting the cmp markup', async () => {
-      const context = newAdPipelineContext(jsDomWindow);
-      const config: modules.custom.CustomModuleConfig = {
-        enabled: true,
-        scripts: [
-          {
-            src: 'https://example.com/vendor-loader.js',
-            cmpBlocking: { vendorId },
-            // a colliding `type` must not win over the blocked `text/plain`
-            attributes: { 'data-test': '123', type: 'text/javascript' }
-          }
-        ]
-      };
-      const { initStep } = createAndConfigureCustomModule(config);
-      await initStep(context);
-      const script: HTMLScriptElement = jsDomWindow.document.getElementsByTagName('script')[0];
-      expect(script.getAttribute('type')).to.equal('text/plain');
-      expect(script.getAttribute('data-test')).to.equal('123');
-      expect(script.hasAttribute('src')).to.equal(false);
-    });
-
-    it('should still apply label filtering to cmpBlocking scripts', async () => {
+    it('should still apply label filtering to src-less scripts', async () => {
       const labelConfigService = createLabelConfigService([], ['foo'], jsDomWindow);
       const context: AdPipelineContext = {
         ...newAdPipelineContext(jsDomWindow),
@@ -267,8 +252,8 @@ describe('customModule', () => {
       const config: modules.custom.CustomModuleConfig = {
         enabled: true,
         scripts: [
-          { src: 'https://example.com/allowed.js', cmpBlocking: { vendorId }, labelAll: ['foo'] },
-          { src: 'https://example.com/blocked.js', cmpBlocking: { vendorId }, labelAll: ['bar'] }
+          { attributes: { 'data-cmp-src': 'https://example.com/allowed.js' }, labelAll: ['foo'] },
+          { attributes: { 'data-cmp-src': 'https://example.com/blocked.js' }, labelAll: ['bar'] }
         ]
       };
       const { initStep } = createAndConfigureCustomModule(config);
