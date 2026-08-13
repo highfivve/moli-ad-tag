@@ -1882,8 +1882,9 @@ describe('moli', () => {
       }
     ];
 
-    it('should add a new infinite slot to the config', async () => {
+    it('should refresh a new infinite slot without adding it to the config', async () => {
       const adTag = createMoliTag(jsDomWindow);
+      const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
       const slots: AdSlot[] = [
         ...defaultSlots,
         { ...mkAdSlotInDOM(), behaviour: { loaded: 'infinite' } }
@@ -1891,12 +1892,24 @@ describe('moli', () => {
 
       await adTag.configure({ ...defaultConfig, slots: slots });
 
+      // the artificial element the new infinite ad slot is rendered into
+      const div = jsDomWindow.document.createElement('div');
+      div.setAttribute('id', 'infinite-adslot-1');
+      jsDomWindow.document.body.append(div);
+
       await adTag.requestAds();
       await adTag.refreshInfiniteAdSlot('infinite-adslot-1', 'dom-id-2');
 
       expect(adTag.getState()).to.be.equal('finished');
-      expect(adTag.getConfig()?.slots).to.have.length(3);
-      expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.include('infinite-adslot-1');
+
+      // the slot is created from the configured slot on the fly, so the config is left untouched
+      expect(adTag.getConfig()?.slots).to.have.length(2);
+      expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.not.include('infinite-adslot-1');
+
+      const refreshedDomIds = refreshSpy
+        .getCalls()
+        .flatMap(call => (call.args[0] || []).map(slot => slot.getSlotElementId()));
+      expect(refreshedDomIds).to.include('infinite-adslot-1');
     });
 
     it('should refresh the new infinite adslot if given configured slot id is available in the config', async () => {
@@ -1985,9 +1998,8 @@ describe('moli', () => {
         // itself, so give it a tick to reach googletag
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        // the queued slot must have been added to the config and actually refreshed, otherwise it
-        // would be dropped when the runtime config is reset and never load an ad
-        expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.include(domIdOfNewInfiniteSlot);
+        // the queued slot must have been refreshed, otherwise it would be dropped when the runtime
+        // config is reset and never load an ad
 
         const refreshedDomIds = refreshSpy
           .getCalls()
@@ -2132,6 +2144,160 @@ describe('moli', () => {
 
           expect(response).to.be.eq('refreshed');
           expect(allowRefreshAdSlotSpy).to.have.been.called;
+        });
+      });
+
+      // `refreshAdSlot` and `refreshInfiniteAdSlot` must behave identically in every window in
+      // which a call can only be queued. The two APIs diverged twice - once in 'spa-requestAds'
+      // (GD-10241) and once in 'spa-finished' after a navigation (GD-10246) - and both times the
+      // infinite slot was silently dropped while the regular slot survived. These tests assert the
+      // two APIs side by side so a future divergence fails here.
+      describe('parity between refreshAdSlot and refreshInfiniteAdSlot', () => {
+        const manualSlotDomId = 'manual-adslot';
+        const configuredInfiniteSlotDomId = 'configured-infinite-slot';
+        const artificialInfiniteSlotDomId = 'artificial-infinite-slot-1';
+
+        const appendDiv = (domId: string): void => {
+          const div = jsDomWindow.document.createElement('div');
+          div.id = domId;
+          jsDomWindow.document.body.appendChild(div);
+        };
+
+        const mkSlot = (domId: string, behaviour: AdSlot['behaviour']): AdSlot => {
+          appendDiv(domId);
+          return {
+            domId,
+            adUnitPath: `/123/${domId}`,
+            sizes: [],
+            position: 'in-page',
+            sizeConfig: [],
+            behaviour
+          };
+        };
+
+        /**
+         * Configures an ad tag with a `manual` and an `infinite` slot and returns everything the
+         * tests need to assert which slots actually reached googletag.
+         */
+        const setup = async (): Promise<{
+          adTag: MoliTag;
+          loadedDomIds: () => string[];
+        }> => {
+          const adTag = createMoliTag(jsDomWindow);
+          const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
+
+          const slots = [
+            mkSlot(manualSlotDomId, { loaded: 'manual' }),
+            mkSlot(configuredInfiniteSlotDomId, { loaded: 'infinite' })
+          ];
+          // the artificial infinite slot only exists in the DOM - it is copied into the config from
+          // the configured infinite slot above
+          appendDiv(artificialInfiniteSlotDomId);
+
+          await adTag.configure({
+            ...defaultConfig,
+            slots,
+            spa: { enabled: true, validateLocation: 'path' }
+          });
+
+          return {
+            adTag,
+            loadedDomIds: () =>
+              refreshSpy
+                .getCalls()
+                .flatMap(call => (call.args[0] || []).map(slot => slot.getSlotElementId()))
+          };
+        };
+
+        // refreshes triggered at the end of a requestAds cycle are not awaited by the cycle itself
+        const tick = (): Promise<unknown> => new Promise(resolve => setTimeout(resolve, 0));
+
+        it('should load both slots when they are queued in the configured state', async () => {
+          const { adTag, loadedDomIds } = await setup();
+          expect(adTag.getState()).to.be.eq('configured');
+
+          expect(await adTag.refreshAdSlot(manualSlotDomId)).to.be.eq('queued');
+          expect(
+            await adTag.refreshInfiniteAdSlot(
+              artificialInfiniteSlotDomId,
+              configuredInfiniteSlotDomId
+            )
+          ).to.be.eq('queued');
+
+          await adTag.requestAds();
+          await tick();
+
+          // infinite ad slots are created from the configured slot when they are refreshed, so
+          // config.slots is never altered
+          expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.not.include(
+            artificialInfiniteSlotDomId
+          );
+          expect(loadedDomIds()).to.include(manualSlotDomId);
+          expect(loadedDomIds()).to.include(artificialInfiniteSlotDomId);
+        });
+
+        it('should load both slots when they are queued while requestAds() is still running', async () => {
+          const { adTag, loadedDomIds } = await setup();
+
+          // initial cycle so the ad tag reaches the 'spa-finished' state
+          await adTag.requestAds();
+          expect(adTag.getState()).to.be.eq('spa-finished');
+
+          // navigate and start the next cycle without awaiting it, so both calls arrive while the
+          // ad tag is in the 'spa-requestAds' state
+          dom.reconfigure({ url: 'http://localhost/page-1' });
+          const requestAdsPromise = adTag.requestAds();
+          expect(adTag.getState()).to.be.eq('spa-requestAds');
+
+          expect(await adTag.refreshAdSlot(manualSlotDomId)).to.be.eq('queued');
+          expect(
+            await adTag.refreshInfiniteAdSlot(
+              artificialInfiniteSlotDomId,
+              configuredInfiniteSlotDomId
+            )
+          ).to.be.eq('queued');
+
+          await requestAdsPromise;
+          await tick();
+
+          // infinite ad slots are created from the configured slot when they are refreshed, so
+          // config.slots is never altered
+          expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.not.include(
+            artificialInfiniteSlotDomId
+          );
+          expect(loadedDomIds()).to.include(manualSlotDomId);
+          expect(loadedDomIds()).to.include(artificialInfiniteSlotDomId);
+        });
+
+        it('should load both slots when they are queued in the spa-finished state after the user navigated', async () => {
+          const { adTag, loadedDomIds } = await setup();
+
+          // initial cycle so the ad tag reaches the 'spa-finished' state
+          await adTag.requestAds();
+          expect(adTag.getState()).to.be.eq('spa-finished');
+
+          // the user navigated, but requestAds() has not been called yet - this is the window in
+          // which a SPA delays requestAds() while components are already mounting ad slots
+          dom.reconfigure({ url: 'http://localhost/page-1' });
+
+          expect(await adTag.refreshAdSlot(manualSlotDomId)).to.be.eq('queued');
+          expect(
+            await adTag.refreshInfiniteAdSlot(
+              artificialInfiniteSlotDomId,
+              configuredInfiniteSlotDomId
+            )
+          ).to.be.eq('queued');
+
+          await adTag.requestAds();
+          await tick();
+
+          // infinite ad slots are created from the configured slot when they are refreshed, so
+          // config.slots is never altered
+          expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.not.include(
+            artificialInfiniteSlotDomId
+          );
+          expect(loadedDomIds()).to.include(manualSlotDomId);
+          expect(loadedDomIds()).to.include(artificialInfiniteSlotDomId);
         });
       });
     });

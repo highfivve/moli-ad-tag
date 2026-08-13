@@ -38,6 +38,7 @@ import {
   a9PublisherAudiences
 } from './a9';
 import { flatten, isNotNull } from '../util/arrayUtils';
+import { mkInfiniteSlot } from '../util/mkInfiniteSlot';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
@@ -350,6 +351,11 @@ export class AdService {
     );
     this.eventService.emit('beforeRequestAds', { runtimeConfig: runtimeConfig });
     try {
+      // Infinite ad slots are derived from the queue, not from the config. Every queued call names
+      // exactly one configured slot to copy, but one configured slot can serve any number of queued
+      // calls, so this has to be driven by refreshInfiniteSlots to not lose slots.
+      const queuedInfiniteSlots = this.resolveInfiniteSlots(refreshInfiniteSlots, config);
+
       const immediatelyLoadedSlots: AdSlot[] = config.slots
         .map(slot => {
           if (isManualSlot(slot)) {
@@ -358,11 +364,9 @@ export class AdService {
               ? slot
               : null;
           } else if (isInfiniteSlot(slot)) {
-            return refreshInfiniteSlots.some(
-              infiniteSlot => infiniteSlot.artificialDomId === slot.domId
-            )
-              ? slot
-              : null;
+            // a configured infinite slot is only a template and is never requested under its own
+            // domId - the slots to load were derived from the queue above
+            return null;
           } else if (isBackfillSlot(slot)) {
             // backfill slots must never be eagerly loaded
             return null;
@@ -371,6 +375,7 @@ export class AdService {
           }
         })
         .filter(isNotNull)
+        .concat(queuedInfiniteSlots)
         .filter(isSlotAvailable(this.window));
 
       if (config.buckets?.enabled) {
@@ -419,6 +424,65 @@ export class AdService {
       return Promise.reject(e);
     }
   };
+
+  /**
+   * Create the ad slots for the given `refreshInfiniteAdSlot` calls.
+   *
+   * Infinite ad slots never exist in `config.slots`. Each call names the configured `infinite` slot
+   * whose configuration should be copied and the artificial domId of the element to fill, which is
+   * everything needed to create the slot here.
+   *
+   * @param infiniteSlots the queued or requested infinite ad slots
+   * @param config the moli config, which must contain the configured `infinite` slots being copied
+   * @returns one ad slot per entry, skipping those without a configured `infinite` slot
+   */
+  private resolveInfiniteSlots = (
+    infiniteSlots: ReadonlyArray<MoliRuntime.IRefreshInfiniteSlot>,
+    config: MoliConfig
+  ): AdSlot[] =>
+    infiniteSlots
+      .map(({ idOfConfiguredSlot, artificialDomId }) => {
+        const configuredSlot = config.slots.find(
+          slot => slot.domId === idOfConfiguredSlot && isInfiniteSlot(slot)
+        );
+        if (!configuredSlot) {
+          this.logger.error(
+            'AdService',
+            `no ad slot with an 'infinite' loading behaviour configured for domId ${idOfConfiguredSlot}`
+          );
+          return null;
+        }
+        return mkInfiniteSlot(configuredSlot, artificialDomId);
+      })
+      .filter(isNotNull);
+
+  /**
+   * Refresh infinite ad slots.
+   *
+   * This is the infinite ad slot counterpart to `refreshAdSlots`. That method resolves the given
+   * domIds in `config.slots`, which can never work for infinite ad slots as they are not configured
+   * individually - so they are created from their configured slot instead.
+   *
+   * @param infiniteSlots the infinite ad slots to refresh
+   * @param config the moli config, which must contain the configured `infinite` slots being copied
+   * @param runtimeConfig
+   */
+  public refreshInfiniteAdSlots(
+    infiniteSlots: ReadonlyArray<MoliRuntime.IRefreshInfiniteSlot>,
+    config: MoliConfig,
+    runtimeConfig: MoliRuntime.MoliRuntimeConfig
+  ): Promise<void> {
+    if (infiniteSlots.length === 0) {
+      return Promise.resolve();
+    }
+
+    const availableSlots = this.resolveInfiniteSlots(infiniteSlots, config).filter(
+      isSlotAvailable(this.window)
+    );
+
+    this.logger.debug('AdService', 'refresh infinite ad slots', availableSlots);
+    return this.adPipeline.run(availableSlots, config, runtimeConfig, this.requestAdsCalls);
+  }
 
   public refreshAdSlots(
     domIds: string[],
