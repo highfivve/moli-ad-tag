@@ -400,6 +400,42 @@ describe('AdPipeline', () => {
     });
   });
 
+  describe('ad volume', () => {
+    it('should merge adVolume labels into extraLabels', async () => {
+      const moliConfig: MoliConfig = {
+        ...emptyConfig,
+        targeting: { keyValues: {}, adVolume: 3 }
+      };
+      let supportedLabels: string[] = [];
+      const configureStep: ConfigureStep[] = [
+        context => {
+          supportedLabels = context.labelConfigService__.getSupportedLabels();
+          return Promise.resolve();
+        }
+      ];
+      const pipeline = newAdPipeline({ ...emptyPipelineConfig, configure: configureStep });
+      await pipeline.run([adSlot], moliConfig, emptyRuntimeConfig, 1);
+
+      expect(supportedLabels).to.contain('av1');
+      expect(supportedLabels).to.contain('av2');
+      expect(supportedLabels).to.contain('av3');
+    });
+
+    it('should not add any av* labels if adVolume is not set', async () => {
+      let supportedLabels: string[] = [];
+      const configureStep: ConfigureStep[] = [
+        context => {
+          supportedLabels = context.labelConfigService__.getSupportedLabels();
+          return Promise.resolve();
+        }
+      ];
+      const pipeline = newAdPipeline({ ...emptyPipelineConfig, configure: configureStep });
+      await pipeline.run([adSlot], emptyConfig, emptyRuntimeConfig, 1);
+
+      expect(supportedLabels.filter(label => label.startsWith('av'))).to.deep.equal([]);
+    });
+  });
+
   describe('mkConfigureStepOnce', () => {
     it('should run the configure step on the first requestAds call with requestId 1', async () => {
       const stubFn = sandbox.stub().resolves();

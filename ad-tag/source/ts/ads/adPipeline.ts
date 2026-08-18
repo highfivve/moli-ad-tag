@@ -12,6 +12,7 @@ import { AdSlot, bucket, consent, Environment, MoliConfig } from '../types/moliC
 import { IAssetLoaderService, createAssetLoaderService } from '../util/assetLoaderService';
 import { uuidV4 } from '../util/uuid';
 import { getMoliLabelsFromQueryParam, getMoliLabelsFromStorage } from '../util/debugLabels';
+import { adVolumeToLabels } from '../util/adVolume';
 
 export interface IAdPipelineRunOptions {
   /**
@@ -362,6 +363,7 @@ export class AdPipeline {
     return this.tcData.then(consentData => {
       const extraLabels = [
         ...(config.targeting?.labels || []),
+        ...adVolumeToLabels(config.targeting?.adVolume),
         ...runtimeConfig.labels,
         ...getMoliLabelsFromQueryParam(this.window),
         ...getMoliLabelsFromStorage(this.window)
