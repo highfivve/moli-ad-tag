@@ -434,6 +434,26 @@ describe('AdPipeline', () => {
 
       expect(supportedLabels.filter(label => label.startsWith('av'))).to.deep.equal([]);
     });
+
+    it('runtimeConfig.adVolume should override targeting.adVolume', async () => {
+      const moliConfig: MoliConfig = {
+        ...emptyConfig,
+        targeting: { keyValues: {}, adVolume: 3 }
+      };
+      const runtimeConfig = { ...emptyRuntimeConfig, adVolume: 6 };
+      let supportedLabels: string[] = [];
+      const configureStep: ConfigureStep[] = [
+        context => {
+          supportedLabels = context.labelConfigService__.getSupportedLabels();
+          return Promise.resolve();
+        }
+      ];
+      const pipeline = newAdPipeline({ ...emptyPipelineConfig, configure: configureStep });
+      await pipeline.run([adSlot], moliConfig, runtimeConfig, 1);
+
+      expect(supportedLabels).to.contain('av6');
+      expect(supportedLabels).to.not.contain('av7');
+    });
   });
 
   describe('mkConfigureStepOnce', () => {

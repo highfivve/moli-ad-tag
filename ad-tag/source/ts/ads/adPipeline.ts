@@ -363,7 +363,8 @@ export class AdPipeline {
     return this.tcData.then(consentData => {
       const extraLabels = [
         ...(config.targeting?.labels || []),
-        ...adVolumeToLabels(config.targeting?.adVolume),
+        // runtimeConfig.adVolume (set via setConfig()) overrides the static config value
+        ...adVolumeToLabels(runtimeConfig.adVolume ?? config.targeting?.adVolume),
         ...runtimeConfig.labels,
         ...getMoliLabelsFromQueryParam(this.window),
         ...getMoliLabelsFromStorage(this.window)

@@ -1045,6 +1045,70 @@ describe('moli', () => {
     });
   });
 
+  describe('setConfig', () => {
+    it('should override adVolume in the runtime config', () => {
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setConfig({ adVolume: 7 });
+      expect(adTag.getRuntimeConfig().adVolume).to.equal(7);
+    });
+
+    it('should let the last setConfig() call win', () => {
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setConfig({ adVolume: 3 });
+      adTag.setConfig({ adVolume: 9 });
+      expect(adTag.getRuntimeConfig().adVolume).to.equal(9);
+    });
+
+    it('should ignore NaN adVolume, log a warning and keep the prior value', () => {
+      const adTag = createMoliTag(jsDomWindow);
+      const warnSpy = sandbox.spy();
+      adTag.setLogger({ ...newNoopLogger(), warn: warnSpy });
+      adTag.setConfig({ adVolume: 5 });
+      adTag.setConfig({ adVolume: NaN });
+      expect(adTag.getRuntimeConfig().adVolume).to.equal(5);
+      expect(warnSpy).to.have.been.calledOnce;
+    });
+
+    it('should ignore out-of-range adVolume, log a warning and keep the prior value', () => {
+      const adTag = createMoliTag(jsDomWindow);
+      const warnSpy = sandbox.spy();
+      adTag.setLogger({ ...newNoopLogger(), warn: warnSpy });
+      adTag.setConfig({ adVolume: 4 });
+      adTag.setConfig({ adVolume: 11 });
+      adTag.setConfig({ adVolume: 0 });
+      expect(adTag.getRuntimeConfig().adVolume).to.equal(4);
+      expect(warnSpy).to.have.been.calledTwice;
+    });
+
+    it('should override the config-supplied ad volume end-to-end: setConfig({adVolume: 7}) + requestAds() activates av1..av7', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+      const config: MoliConfig = {
+        ...defaultConfig,
+        targeting: { keyValues: {}, adVolume: 2 },
+        modules: { custom: { enabled: true } }
+      };
+      let supportedLabels: string[] = [];
+      const module: IModule = {
+        ...fakeModule,
+        name: 'custom',
+        configureSteps__: () => [
+          mkConfigureStep('label-spy', context => {
+            supportedLabels = context.labelConfigService__.getSupportedLabels();
+            return Promise.resolve();
+          })
+        ]
+      };
+
+      adTag.setConfig({ adVolume: 7 });
+      adTag.registerModule(module);
+      await adTag.configure(config);
+      await adTag.requestAds();
+
+      const avLabels = supportedLabels.filter(label => label.startsWith('av'));
+      expect(avLabels).to.have.members(['av1', 'av2', 'av3', 'av4', 'av5', 'av6', 'av7']);
+    });
+  });
+
   describe('setAdUnitPathVariables', () => {
     it('should add adUnitPath variables to the config', () => {
       const adTag = createMoliTag(jsDomWindow);

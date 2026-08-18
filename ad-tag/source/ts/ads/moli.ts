@@ -1019,6 +1019,54 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   }
 
   /**
+   * Validates and applies a `setConfig()` partial - see ADR 0011. Invalid fields are dropped
+   * (logged as a warning) rather than throwing, so one bad field never blocks the rest of the
+   * overlay.
+   *
+   * @param partial the raw overlay passed to `setConfig()`
+   */
+  function validateConfigOverrides(
+    partial: MoliRuntime.MoliRuntimeConfigOverrides
+  ): MoliRuntime.MoliRuntimeConfigOverrides {
+    const validated: MoliRuntime.MoliRuntimeConfigOverrides = {};
+    if (partial.adVolume !== undefined) {
+      if (Number.isInteger(partial.adVolume) && partial.adVolume >= 1 && partial.adVolume <= 10) {
+        validated.adVolume = partial.adVolume;
+      } else {
+        getLogger(state.runtimeConfig, window).warn(
+          'MoliGlobal',
+          `Ignoring invalid adVolume in setConfig(): ${partial.adVolume}. Must be an integer between 1 and 10.`
+        );
+      }
+    }
+    return validated;
+  }
+
+  function setConfig(partial: MoliRuntime.MoliRuntimeConfigOverrides): void {
+    const validated = validateConfigOverrides(partial);
+    switch (state.state) {
+      case 'configurable':
+      case 'configured': {
+        Object.assign(state.runtimeConfig, validated);
+        break;
+      }
+
+      case 'spa-finished':
+      case 'spa-requestAds': {
+        Object.assign(state.nextRuntimeConfig, validated);
+        break;
+      }
+      default: {
+        getLogger(state.runtimeConfig, window).error(
+          'MoliGlobal',
+          `Setting config after configuration: ${JSON.stringify(partial)}`
+        );
+        break;
+      }
+    }
+  }
+
+  /**
    * This functions creates a new runtime configuration from the previous one, if one exists.
    * It's important to note that some state is persistent across multiple requestAds() calls, because they are only set
    * once and use for the entire session time. This includes
@@ -1105,6 +1153,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     getState: getState,
     openConsole: openConsole,
     setAudience: setAudience,
+    setConfig: setConfig,
     addEventListener: eventService.addEventListener,
     removeEventListener: eventService.removeEventListener
   };
