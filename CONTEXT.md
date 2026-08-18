@@ -13,6 +13,15 @@ size config, auto-detected device, geo/domain resolution, the `addLabel()` runti
 managed via the debug console's "Debug Labels" section. Labels are immutable within a single
 pipeline run.
 
+### Ad Volume
+A publisher/page-level ad density setting configured in `Targeting`, overridable per pageview
+via the public API or a script attribute. Purely a targeting signal — moli does not interpret
+the value itself; it only emits it as [Label]s and GAM key-value targeting for ad ops to build
+GAM line-item rules against. Has no relationship to consent, ad-blocking, or any ad-free state.
+_Avoid_: confusing with gutefrage's identically-named, identically-labeled (GD-10087) per-user
+concept — that one is an admin-set, login-based control that also overrides an ad-free
+calculation; this one is page-level config with no user identity and no such override.
+
 ### Label Condition
 A predicate over the active labels, expressed as exactly one of `labelAll` (every listed
 label active), `labelAny` (at least one active), or `labelNone` (none active).

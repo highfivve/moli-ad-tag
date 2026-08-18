@@ -141,6 +141,21 @@ export namespace MoliRuntime {
     setAudience(audience: AudienceTargeting): void;
 
     /**
+     * Generic runtime override for `MoliRuntimeConfig` fields that don't need dedicated,
+     * verb-shaped setters of their own - see ADR 0011. Merges `partial` into the runtime
+     * config; unset fields are left untouched. Later calls win over earlier ones - there is
+     * no priority system beyond ordinary call order, matching `setTargeting`/`addLabel`.
+     *
+     * @example
+     * window.moli.que.push(function(moli) {
+     *   moli.setConfig({ adVolume: 7 });
+     * });
+     *
+     * @param partial fields to overlay onto the runtime config
+     */
+    setConfig(partial: MoliRuntimeConfigOverrides): void;
+
+    /**
      * Resolves an ad unit path by replacing the ad unit path variables.
      * Optionally the networkChildId can be removed.
      *
@@ -445,6 +460,7 @@ export namespace MoliRuntime {
    *
    * - `addLabel`
    * - `setTargeting`
+   * - `setConfig`
    * - `addInitStep`
    * - `addConfigureStep`
    * - `addPrepareRequestAdsStep`
@@ -505,6 +521,14 @@ export namespace MoliRuntime {
     audience?: AudienceTargeting;
 
     /**
+     * Runtime override for `Targeting.adVolume` (1-10, no 0), set via `setConfig({ adVolume })`.
+     * When set, it takes precedence over `Targeting.adVolume` from the static config. Invalid
+     * values (`NaN`, out of range) are logged as a warning and ignored - the previous value, if
+     * any, is kept. See ADR 0011.
+     */
+    adVolume?: number;
+
+    /**
      * A list of ad slots that should be refreshed
      */
     readonly refreshSlots: string[];
@@ -526,6 +550,15 @@ export namespace MoliRuntime {
      */
     logger?: MoliLogger;
   }
+
+  /**
+   * ## Runtime Config Overrides
+   *
+   * Partial overlay accepted by `setConfig()` - see ADR 0011. A `Pick` of `MoliRuntimeConfig`
+   * so each field's doc and type live in one place; grow this by adding keys here as more
+   * fields prove they don't need a dedicated setter.
+   */
+  export type MoliRuntimeConfigOverrides = Pick<MoliRuntimeConfig, 'adVolume'>;
 
   /**
    * ## Refresh Ad Slot Options
