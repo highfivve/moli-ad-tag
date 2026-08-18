@@ -455,6 +455,16 @@ export namespace googleAdManager {
      * If not set, both values are detected automatically from the browser timezone.
      */
     readonly geo?: GeoConfig;
+
+    /**
+     * Publisher/page-level ad density setting, in the range 1-10 (no 0).
+     *
+     * Purely a targeting signal — moli does not interpret the value itself. It is emitted
+     * as cumulative `av1..avN` labels for ad ops to build GAM line-item rules against.
+     *
+     * If not set, no `av*` labels are emitted and no default is assumed.
+     */
+    readonly adVolume?: number;
   }
 }
 

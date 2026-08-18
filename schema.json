@@ -5074,6 +5074,10 @@
           "$ref": "#/definitions/AdUnitPathVariables",
           "description": "ad unit path variables"
         },
+        "adVolume": {
+          "description": "Publisher/page-level ad density setting, in the range 1-10 (no 0).\n\nPurely a targeting signal — moli does not interpret the value itself. It is emitted as cumulative `av1..avN` labels for ad ops to build GAM line-item rules against.\n\nIf not set, no `av*` labels are emitted and no default is assumed.",
+          "type": "number"
+        },
         "geo": {
           "$ref": "#/definitions/googleAdManager.GeoConfig",
           "description": "Optional geo configuration. Country and continent are added as labels for targeting. If not set, both values are detected automatically from the browser timezone."
