@@ -521,8 +521,10 @@ export namespace MoliRuntime {
     audience?: AudienceTargeting;
 
     /**
-     * Runtime override for `Targeting.adVolume`, set via `setConfig({ adVolume })`. When set,
-     * it takes precedence over `Targeting.adVolume` from the static config. See ADR 0011.
+     * Runtime override for `Targeting.adVolume` (1-10, no 0), set via `setConfig({ adVolume })`.
+     * When set, it takes precedence over `Targeting.adVolume` from the static config. Invalid
+     * values (`NaN`, out of range) are logged as a warning and ignored - the previous value, if
+     * any, is kept. See ADR 0011.
      */
     adVolume?: number;
 
@@ -552,17 +554,11 @@ export namespace MoliRuntime {
   /**
    * ## Runtime Config Overrides
    *
-   * Partial overlay accepted by `setConfig()` - see ADR 0011. Grows to cover more
-   * `MoliRuntimeConfig` fields over time as they prove they don't need a dedicated setter.
+   * Partial overlay accepted by `setConfig()` - see ADR 0011. A `Pick` of `MoliRuntimeConfig`
+   * so each field's doc and type live in one place; grow this by adding keys here as more
+   * fields prove they don't need a dedicated setter.
    */
-  export interface MoliRuntimeConfigOverrides {
-    /**
-     * Overrides `Targeting.adVolume` (1-10, no 0) for the current page view. Invalid values
-     * (`NaN`, out of range) are logged as a warning and ignored - the previous value, if any,
-     * is kept.
-     */
-    adVolume?: number;
-  }
+  export type MoliRuntimeConfigOverrides = Pick<MoliRuntimeConfig, 'adVolume'>;
 
   /**
    * ## Refresh Ad Slot Options
