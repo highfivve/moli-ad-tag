@@ -142,13 +142,17 @@ export namespace MoliRuntime {
 
     /**
      * Generic runtime override for `MoliRuntimeConfig` fields that don't need dedicated,
-     * verb-shaped setters of their own - see ADR 0011. Merges `partial` into the runtime
-     * config; unset fields are left untouched. Later calls win over earlier ones - there is
-     * no priority system beyond ordinary call order, matching `setTargeting`/`addLabel`.
+     * verb-shaped setters of their own - see ADR 0011. Applies `partial` onto the runtime
+     * config field-by-field; unset fields are left untouched. Each field has its own merge
+     * semantics - see `MoliRuntimeConfigOverrides` - `labels` append (matching `addLabel`),
+     * `targeting` merges per-key (matching `setTargeting`), `audience`/`adUnitPathVariables`
+     * fully replace (matching `setAudience`/`setAdUnitPathVariables`). Across multiple
+     * `setConfig()` calls there is no priority system beyond ordinary call order: later calls
+     * win for the full-replace fields, and add on top for the additive/merging ones.
      *
      * @example
      * window.moli.que.push(function(moli) {
-     *   moli.setConfig({ adVolume: 7 });
+     *   moli.setConfig({ adVolume: 7, labels: ['foo'], targeting: { key: 'value' } });
      * });
      *
      * @param partial fields to overlay onto the runtime config
@@ -554,11 +558,41 @@ export namespace MoliRuntime {
   /**
    * ## Runtime Config Overrides
    *
-   * Partial overlay accepted by `setConfig()` - see ADR 0011. A `Pick` of `MoliRuntimeConfig`
-   * so each field's doc and type live in one place; grow this by adding keys here as more
-   * fields prove they don't need a dedicated setter.
+   * Partial overlay accepted by `setConfig()` - see ADR 0011. Fields that map 1:1 onto a
+   * `MoliRuntimeConfig` field of the same name and semantics (`adVolume`, `audience`) are
+   * `Pick`ed so their doc and type live in one place; fields with a different public name or
+   * merge behaviour (`labels`, `targeting`, `adUnitPathVariables`) are declared explicitly
+   * below with their own doc. Grow this by adding keys here as more fields prove they don't
+   * need a dedicated setter.
+   *
+   * Per-field merge semantics applied by `setConfig()`:
+   *
+   * - `adVolume` - validated, full replace (see `MoliRuntimeConfig.adVolume`)
+   * - `audience` - full replace
+   * - `labels` - append onto the existing `runtimeConfig.labels`
+   * - `targeting` - merged per-key into the existing `runtimeConfig.keyValues`
+   * - `adUnitPathVariables` - full replace
    */
-  export type MoliRuntimeConfigOverrides = Pick<MoliRuntimeConfig, 'adVolume'>;
+  export type MoliRuntimeConfigOverrides = Pick<MoliRuntimeConfig, 'adVolume' | 'audience'> & {
+    /**
+     * Labels to append onto `runtimeConfig.labels`. Additive across multiple `setConfig()`
+     * calls, matching `addLabel()`'s append semantics - never replaces previously set labels.
+     */
+    labels?: string[];
+
+    /**
+     * Key-values to merge into `runtimeConfig.keyValues`, one key at a time. Same per-key
+     * overwrite semantics as `setTargeting()`, but for several keys at once - existing keys
+     * not present in this object are left untouched. Named `targeting` (not `keyValues`) to
+     * match the public `MoliConfig.targeting.keyValues` naming.
+     */
+    targeting?: googleAdManager.KeyValueMap;
+
+    /**
+     * Ad unit path variables - full replace, matching `setAdUnitPathVariables()`'s semantics.
+     */
+    adUnitPathVariables?: AdUnitPathVariables;
+  };
 
   /**
    * ## Refresh Ad Slot Options

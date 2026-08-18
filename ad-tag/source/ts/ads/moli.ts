@@ -1021,14 +1021,20 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   /**
    * Validates and applies a `setConfig()` partial - see ADR 0011. Invalid fields are dropped
    * (logged as a warning) rather than throwing, so one bad field never blocks the rest of the
-   * overlay.
+   * overlay. Fields other than `adVolume` have no validation - they're passed through as-is,
+   * matching the current dedicated setters' behavior.
    *
    * @param partial the raw overlay passed to `setConfig()`
    */
   function validateConfigOverrides(
     partial: MoliRuntime.MoliRuntimeConfigOverrides
   ): MoliRuntime.MoliRuntimeConfigOverrides {
-    const validated: MoliRuntime.MoliRuntimeConfigOverrides = {};
+    const validated: MoliRuntime.MoliRuntimeConfigOverrides = {
+      labels: partial.labels,
+      targeting: partial.targeting,
+      audience: partial.audience,
+      adUnitPathVariables: partial.adUnitPathVariables
+    };
     if (partial.adVolume !== undefined) {
       if (Number.isInteger(partial.adVolume) && partial.adVolume >= 1 && partial.adVolume <= 10) {
         validated.adVolume = partial.adVolume;
@@ -1042,18 +1048,48 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     return validated;
   }
 
+  /**
+   * Applies a validated `setConfig()` overlay onto a runtime config, one field at a time, using
+   * each field's own merge semantics - see `MoliRuntime.MoliRuntimeConfigOverrides`. Unlike a
+   * blanket `Object.assign`, this preserves `labels`' append and `targeting`'s per-key merge
+   * behavior instead of clobbering the existing arrays/objects.
+   *
+   * @param target the `runtimeConfig`/`nextRuntimeConfig` to apply the overlay onto
+   * @param validated the validated overlay - see `validateConfigOverrides`
+   */
+  function applyConfigOverrides(
+    target: MoliRuntime.MoliRuntimeConfig,
+    validated: MoliRuntime.MoliRuntimeConfigOverrides
+  ): void {
+    if (validated.adVolume !== undefined) {
+      target.adVolume = validated.adVolume;
+    }
+    if (validated.labels !== undefined) {
+      target.labels.push(...validated.labels);
+    }
+    if (validated.targeting !== undefined) {
+      Object.assign(target.keyValues, validated.targeting);
+    }
+    if (validated.audience !== undefined) {
+      target.audience = validated.audience;
+    }
+    if (validated.adUnitPathVariables !== undefined) {
+      target.adUnitPathVariables = validated.adUnitPathVariables;
+    }
+  }
+
   function setConfig(partial: MoliRuntime.MoliRuntimeConfigOverrides): void {
     const validated = validateConfigOverrides(partial);
     switch (state.state) {
       case 'configurable':
       case 'configured': {
-        Object.assign(state.runtimeConfig, validated);
+        applyConfigOverrides(state.runtimeConfig, validated);
         break;
       }
 
       case 'spa-finished':
       case 'spa-requestAds': {
-        Object.assign(state.nextRuntimeConfig, validated);
+        applyConfigOverrides(state.nextRuntimeConfig, validated);
         break;
       }
       default: {
