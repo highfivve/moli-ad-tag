@@ -1080,6 +1080,146 @@ describe('moli', () => {
       expect(warnSpy).to.have.been.calledTwice;
     });
 
+    it('should append labels across multiple setConfig() calls', () => {
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setConfig({ labels: ['foo'] });
+      adTag.setConfig({ labels: ['bar', 'baz'] });
+      expect(adTag.getRuntimeConfig().labels).to.be.deep.equal(['foo', 'bar', 'baz']);
+    });
+
+    it('should append labels set via setConfig() after configure()', () => {
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setConfig({ labels: ['pre'] });
+      adTag.configure(defaultConfig);
+      adTag.setConfig({ labels: ['post'] });
+      expect(adTag.getRuntimeConfig().labels).to.be.deep.equal(['pre', 'post']);
+    });
+
+    it('should persist labels set via setConfig() in spa mode across requestAds() calls', async () => {
+      dom.reconfigure({ url: 'https://localhost/1' });
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setConfig({ labels: ['pre'] });
+      await adTag.configure({
+        slots: defaultSlots,
+        spa: { enabled: true, validateLocation: 'href' },
+        targeting: { keyValues: {} },
+        schain: { supplyChainStartNode: dummySupplyChainNode }
+      });
+      const state = await adTag.requestAds();
+      expect(state.state).to.be.eq('spa-finished');
+      const spaState: ISinglePageApp = state as ISinglePageApp;
+      expect(spaState.runtimeConfig.labels).to.include('pre');
+      expect(spaState.nextRuntimeConfig.labels).to.be.empty;
+
+      dom.reconfigure({ url: 'https://localhost/2' });
+      adTag.setConfig({ labels: ['next1'] });
+      adTag.setConfig({ labels: ['next2'] });
+      expect(spaState.nextRuntimeConfig.labels).to.be.deep.equal(['next1', 'next2']);
+
+      const state2 = await adTag.requestAds();
+      const spaState2: ISinglePageApp = state2 as ISinglePageApp;
+      expect(spaState2.runtimeConfig.labels).to.contain.all.members(['next1', 'next2']);
+      expect(spaState2.nextRuntimeConfig.labels).to.be.empty;
+    });
+
+    it('should merge targeting per-key without clobbering previously set keys', () => {
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setTargeting('kept', 'value');
+      adTag.setConfig({ targeting: { foo: 'bar' } });
+      adTag.setConfig({ targeting: { baz: 'qux' } });
+      expect(adTag.getRuntimeConfig().keyValues).to.be.deep.equal({
+        kept: 'value',
+        foo: 'bar',
+        baz: 'qux'
+      });
+    });
+
+    it('should let setConfig() targeting override a key set by an earlier setConfig()/setTargeting() call', () => {
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setTargeting('foo', 'initial');
+      adTag.setConfig({ targeting: { foo: 'overridden' } });
+      expect(adTag.getRuntimeConfig().keyValues).to.be.deep.equal({ foo: 'overridden' });
+    });
+
+    it('should persist targeting set via setConfig() in spa mode across requestAds() calls', async () => {
+      dom.reconfigure({ url: 'https://localhost/1' });
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setConfig({ targeting: { pre: 'value' } });
+      await adTag.configure({
+        slots: defaultSlots,
+        spa: { enabled: true, validateLocation: 'href' },
+        targeting: { keyValues: {} },
+        schain: { supplyChainStartNode: dummySupplyChainNode }
+      });
+      const state = await adTag.requestAds();
+      const spaState: ISinglePageApp = state as ISinglePageApp;
+      expect(spaState.runtimeConfig.keyValues).to.include({ pre: 'value' });
+      expect(spaState.nextRuntimeConfig.keyValues).to.be.deep.equal({});
+
+      dom.reconfigure({ url: 'https://localhost/2' });
+      adTag.setConfig({ targeting: { next: 'value' } });
+      expect(spaState.nextRuntimeConfig.keyValues).to.be.deep.equal({ next: 'value' });
+
+      const state2 = await adTag.requestAds();
+      const spaState2: ISinglePageApp = state2 as ISinglePageApp;
+      expect(spaState2.runtimeConfig.keyValues).to.include({ next: 'value' });
+    });
+
+    it('should fully replace audience via setConfig(), matching setAudience()', () => {
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setConfig({ audience: { userId: 'first' } });
+      adTag.setConfig({ audience: { userId: 'second' } });
+      expect(adTag.getRuntimeConfig().audience).to.be.deep.equal({ userId: 'second' });
+    });
+
+    it('should write audience onto nextRuntimeConfig in spa mode, matching setAudience()', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+      await adTag.configure({
+        slots: defaultSlots,
+        spa: { enabled: true, validateLocation: 'href' },
+        targeting: { keyValues: {} },
+        schain: { supplyChainStartNode: dummySupplyChainNode }
+      });
+      const state = await adTag.requestAds();
+      const spaState: ISinglePageApp = state as ISinglePageApp;
+
+      // note: like setAudience(), the runtime config's audience field isn't carried forward
+      // across spa cycles by newEmptyRuntimeConfig() - only labels/keyValues/adUnitPathVariables
+      // are. setConfig({ audience }) matches that existing behavior rather than changing it.
+      adTag.setConfig({ audience: { userId: 'next' } });
+      expect(spaState.nextRuntimeConfig.audience).to.be.deep.equal({ userId: 'next' });
+    });
+
+    it('should fully replace adUnitPathVariables via setConfig(), matching setAdUnitPathVariables()', () => {
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setConfig({ adUnitPathVariables: { foo: 'value' } });
+      adTag.setConfig({ adUnitPathVariables: { bar: 'value2' } });
+      expect(adTag.getRuntimeConfig().adUnitPathVariables).to.be.deep.equal({ bar: 'value2' });
+    });
+
+    it('should persist adUnitPathVariables set via setConfig() in spa mode across requestAds() calls', async () => {
+      dom.reconfigure({ url: 'https://localhost/1' });
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setConfig({ adUnitPathVariables: { foo: 'pre' } });
+      await adTag.configure({
+        slots: defaultSlots,
+        spa: { enabled: true, validateLocation: 'href' },
+        targeting: { keyValues: {} },
+        schain: { supplyChainStartNode: dummySupplyChainNode }
+      });
+      const state = await adTag.requestAds();
+      const spaState: ISinglePageApp = state as ISinglePageApp;
+      expect(spaState.runtimeConfig.adUnitPathVariables).to.be.deep.equal({ foo: 'pre' });
+
+      dom.reconfigure({ url: 'https://localhost/2' });
+      adTag.setConfig({ adUnitPathVariables: { foo: 'next' } });
+      expect(spaState.nextRuntimeConfig.adUnitPathVariables).to.be.deep.equal({ foo: 'next' });
+
+      const state2 = await adTag.requestAds();
+      const spaState2: ISinglePageApp = state2 as ISinglePageApp;
+      expect(spaState2.runtimeConfig.adUnitPathVariables).to.be.deep.equal({ foo: 'next' });
+    });
+
     it('should override the config-supplied ad volume end-to-end: setConfig({adVolume: 7}) + requestAds() activates av1..av7', async () => {
       const adTag = createMoliTag(jsDomWindow);
       const config: MoliConfig = {

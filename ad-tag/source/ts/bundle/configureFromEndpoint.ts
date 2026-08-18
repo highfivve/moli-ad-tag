@@ -99,9 +99,9 @@ if (currentScript) {
   if (labels.length > 0) {
     // add labels to before each requestAds call. This ensures that even in single page applications
     // the labels are persistent across all ad requests. This also means that the labels are not
-    // meant to be page specific. Use the moli.addLabel() API if you need to add page specific labels.
+    // meant to be page specific. Use the moli.setConfig({ labels }) API if you need to add page specific labels.
     window.moli.que.push(moli => {
-      moli.beforeRequestAds(() => labels.forEach(label => moli.addLabel(label)));
+      moli.beforeRequestAds(() => moli.setConfig({ labels }));
     });
   }
 

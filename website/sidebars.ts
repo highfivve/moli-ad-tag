@@ -24,6 +24,8 @@ const sidebars: SidebarsConfig = {
         'features/consent',
         'features/targeting',
         'features/labels',
+        'features/ad-volume',
+        'features/set-config',
         'features/module-config-overrides',
         'features/buckets',
         'features/single-page-app',

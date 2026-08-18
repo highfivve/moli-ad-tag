@@ -44,74 +44,25 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     modules: []
   } as MoliRuntime.state.IConfigurable;
 
+  /**
+   * @deprecated use `setConfig({ targeting: { [key]: value } })` instead
+   */
   function setTargeting(key: string, value: string | string[]): void {
-    switch (state.state) {
-      case 'configurable':
-      case 'configured': {
-        state.runtimeConfig.keyValues[key] = value;
-        break;
-      }
-
-      case 'spa-finished':
-      case 'spa-requestAds': {
-        state.nextRuntimeConfig.keyValues[key] = value;
-        break;
-      }
-      default: {
-        getLogger(state.runtimeConfig, window).error(
-          'MoliGlobal',
-          `Setting key-value after configuration: ${key} : ${value}`
-        );
-        break;
-      }
-    }
+    setConfig({ targeting: { [key]: value } });
   }
 
+  /**
+   * @deprecated use `setConfig({ labels: [label] })` instead
+   */
   function addLabel(label: string): void {
-    switch (state.state) {
-      case 'configurable':
-      case 'configured': {
-        state.runtimeConfig.labels.push(label);
-        break;
-      }
-
-      // labels can be pushed in both spa states
-      case 'spa-requestAds':
-      case 'spa-finished': {
-        state.nextRuntimeConfig.labels.push(label);
-        break;
-      }
-      default: {
-        getLogger(state.runtimeConfig, window).error(
-          'MoliGlobal',
-          `Adding label after configure: ${label}`
-        );
-        break;
-      }
-    }
+    setConfig({ labels: [label] });
   }
 
+  /**
+   * @deprecated use `setConfig({ adUnitPathVariables: variables })` instead
+   */
   function setAdUnitPathVariables(variables: AdUnitPathVariables): void {
-    switch (state.state) {
-      case 'configurable':
-      case 'configured': {
-        state.runtimeConfig.adUnitPathVariables = variables;
-        break;
-      }
-      case 'spa-requestAds':
-      case 'spa-finished': {
-        state.nextRuntimeConfig.adUnitPathVariables = variables;
-        break;
-      }
-
-      default: {
-        getLogger(state.runtimeConfig, window).error(
-          'MoliGlobal',
-          `Setting unit path variables after configuration: ${variables}`
-        );
-        break;
-      }
-    }
+    setConfig({ adUnitPathVariables: variables });
   }
 
   function getAdUnitPathVariables(): adUnitPath.AdUnitPathVariables | undefined {
@@ -967,7 +918,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     const abTestValue =
       abTestValues.length > 0 ? Number(abTestValues[0].value) : Math.floor(Math.random() * 100) + 1;
 
-    setTargeting(QueryParameters.abTest, abTestValue.toString());
+    setConfig({ targeting: { [QueryParameters.abTest]: abTestValue.toString() } });
   }
 
   function addDomainLabel(domainFromConfig?: string): void {
@@ -976,59 +927,42 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     const domain =
       domainFromConfig || extractTopPrivateDomainFromHostname(window.location.hostname);
     if (domain) {
-      addLabel(domain);
+      setConfig({ labels: [domain] });
     }
   }
 
   function addGeoLabels(geoFromConfig?: googleAdManager.GeoConfig): void {
     const { country, continent } = geoFromConfig ?? detectGeoFromBrowser();
-    if (country) {
-      addLabel(country);
-    }
-    if (continent) {
-      addLabel(continent);
+    const labels = [country, continent].filter((label): label is string => !!label);
+    if (labels.length > 0) {
+      setConfig({ labels });
     }
   }
 
   /**
-   * Provide additional targeting insights about the user.
-   *
-   * @param audience contains information about the user
+   * @deprecated use `setConfig({ audience })` instead
    */
   function setAudience(audience: MoliRuntime.AudienceTargeting): void {
-    switch (state.state) {
-      case 'configurable':
-      case 'configured': {
-        state.runtimeConfig.audience = audience;
-        break;
-      }
-
-      case 'spa-finished':
-      case 'spa-requestAds': {
-        state.nextRuntimeConfig.audience = audience;
-        break;
-      }
-      default: {
-        getLogger(state.runtimeConfig, window).error(
-          'MoliGlobal',
-          `Setting audience targeting after configuration: ${JSON.stringify(audience)}`
-        );
-        break;
-      }
-    }
+    setConfig({ audience: audience });
   }
 
   /**
    * Validates and applies a `setConfig()` partial - see ADR 0011. Invalid fields are dropped
    * (logged as a warning) rather than throwing, so one bad field never blocks the rest of the
-   * overlay.
+   * overlay. Fields other than `adVolume` have no validation - they're passed through as-is,
+   * matching the current dedicated setters' behavior.
    *
    * @param partial the raw overlay passed to `setConfig()`
    */
   function validateConfigOverrides(
     partial: MoliRuntime.MoliRuntimeConfigOverrides
   ): MoliRuntime.MoliRuntimeConfigOverrides {
-    const validated: MoliRuntime.MoliRuntimeConfigOverrides = {};
+    const validated: MoliRuntime.MoliRuntimeConfigOverrides = {
+      labels: partial.labels,
+      targeting: partial.targeting,
+      audience: partial.audience,
+      adUnitPathVariables: partial.adUnitPathVariables
+    };
     if (partial.adVolume !== undefined) {
       if (Number.isInteger(partial.adVolume) && partial.adVolume >= 1 && partial.adVolume <= 10) {
         validated.adVolume = partial.adVolume;
@@ -1042,18 +976,48 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     return validated;
   }
 
+  /**
+   * Applies a validated `setConfig()` overlay onto a runtime config, one field at a time, using
+   * each field's own merge semantics - see `MoliRuntime.MoliRuntimeConfigOverrides`. Unlike a
+   * blanket `Object.assign`, this preserves `labels`' append and `targeting`'s per-key merge
+   * behavior instead of clobbering the existing arrays/objects.
+   *
+   * @param target the `runtimeConfig`/`nextRuntimeConfig` to apply the overlay onto
+   * @param validated the validated overlay - see `validateConfigOverrides`
+   */
+  function applyConfigOverrides(
+    target: MoliRuntime.MoliRuntimeConfig,
+    validated: MoliRuntime.MoliRuntimeConfigOverrides
+  ): void {
+    if (validated.adVolume !== undefined) {
+      target.adVolume = validated.adVolume;
+    }
+    if (validated.labels !== undefined) {
+      target.labels.push(...validated.labels);
+    }
+    if (validated.targeting !== undefined) {
+      Object.assign(target.keyValues, validated.targeting);
+    }
+    if (validated.audience !== undefined) {
+      target.audience = validated.audience;
+    }
+    if (validated.adUnitPathVariables !== undefined) {
+      target.adUnitPathVariables = validated.adUnitPathVariables;
+    }
+  }
+
   function setConfig(partial: MoliRuntime.MoliRuntimeConfigOverrides): void {
     const validated = validateConfigOverrides(partial);
     switch (state.state) {
       case 'configurable':
       case 'configured': {
-        Object.assign(state.runtimeConfig, validated);
+        applyConfigOverrides(state.runtimeConfig, validated);
         break;
       }
 
       case 'spa-finished':
       case 'spa-requestAds': {
-        Object.assign(state.nextRuntimeConfig, validated);
+        applyConfigOverrides(state.nextRuntimeConfig, validated);
         break;
       }
       default: {
