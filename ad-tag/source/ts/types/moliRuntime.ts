@@ -118,18 +118,21 @@ export namespace MoliRuntime {
      * Set a key value. Can be used in DFP or prebid bids configuration.
      * @param key
      * @param value
+     * @deprecated use `setConfig({ targeting: { [key]: value } })` instead
      */
     setTargeting(key: string, value: string | string[]): void;
 
     /**
      * Adds a label to the static label list.
      * @param label to be added
+     * @deprecated use `setConfig({ labels: [label] })` instead
      */
     addLabel(label: String): void;
 
     /**
      * Sets new ad unit path variables.
      * @param variables
+     * @deprecated use `setConfig({ adUnitPathVariables: variables })` instead
      */
     setAdUnitPathVariables(variables: AdUnitPathVariables): void;
 
@@ -137,6 +140,7 @@ export namespace MoliRuntime {
      * Provide additional information about the user visiting the page.
      *
      * @param audience contains all advertising relevant information about the user
+     * @deprecated use `setConfig({ audience })` instead
      */
     setAudience(audience: AudienceTargeting): void;
 

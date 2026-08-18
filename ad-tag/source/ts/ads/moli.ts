@@ -44,74 +44,25 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     modules: []
   } as MoliRuntime.state.IConfigurable;
 
+  /**
+   * @deprecated use `setConfig({ targeting: { [key]: value } })` instead
+   */
   function setTargeting(key: string, value: string | string[]): void {
-    switch (state.state) {
-      case 'configurable':
-      case 'configured': {
-        state.runtimeConfig.keyValues[key] = value;
-        break;
-      }
-
-      case 'spa-finished':
-      case 'spa-requestAds': {
-        state.nextRuntimeConfig.keyValues[key] = value;
-        break;
-      }
-      default: {
-        getLogger(state.runtimeConfig, window).error(
-          'MoliGlobal',
-          `Setting key-value after configuration: ${key} : ${value}`
-        );
-        break;
-      }
-    }
+    setConfig({ targeting: { [key]: value } });
   }
 
+  /**
+   * @deprecated use `setConfig({ labels: [label] })` instead
+   */
   function addLabel(label: string): void {
-    switch (state.state) {
-      case 'configurable':
-      case 'configured': {
-        state.runtimeConfig.labels.push(label);
-        break;
-      }
-
-      // labels can be pushed in both spa states
-      case 'spa-requestAds':
-      case 'spa-finished': {
-        state.nextRuntimeConfig.labels.push(label);
-        break;
-      }
-      default: {
-        getLogger(state.runtimeConfig, window).error(
-          'MoliGlobal',
-          `Adding label after configure: ${label}`
-        );
-        break;
-      }
-    }
+    setConfig({ labels: [label] });
   }
 
+  /**
+   * @deprecated use `setConfig({ adUnitPathVariables: variables })` instead
+   */
   function setAdUnitPathVariables(variables: AdUnitPathVariables): void {
-    switch (state.state) {
-      case 'configurable':
-      case 'configured': {
-        state.runtimeConfig.adUnitPathVariables = variables;
-        break;
-      }
-      case 'spa-requestAds':
-      case 'spa-finished': {
-        state.nextRuntimeConfig.adUnitPathVariables = variables;
-        break;
-      }
-
-      default: {
-        getLogger(state.runtimeConfig, window).error(
-          'MoliGlobal',
-          `Setting unit path variables after configuration: ${variables}`
-        );
-        break;
-      }
-    }
+    setConfig({ adUnitPathVariables: variables });
   }
 
   function getAdUnitPathVariables(): adUnitPath.AdUnitPathVariables | undefined {
@@ -967,7 +918,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     const abTestValue =
       abTestValues.length > 0 ? Number(abTestValues[0].value) : Math.floor(Math.random() * 100) + 1;
 
-    setTargeting(QueryParameters.abTest, abTestValue.toString());
+    setConfig({ targeting: { [QueryParameters.abTest]: abTestValue.toString() } });
   }
 
   function addDomainLabel(domainFromConfig?: string): void {
@@ -976,46 +927,23 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     const domain =
       domainFromConfig || extractTopPrivateDomainFromHostname(window.location.hostname);
     if (domain) {
-      addLabel(domain);
+      setConfig({ labels: [domain] });
     }
   }
 
   function addGeoLabels(geoFromConfig?: googleAdManager.GeoConfig): void {
     const { country, continent } = geoFromConfig ?? detectGeoFromBrowser();
-    if (country) {
-      addLabel(country);
-    }
-    if (continent) {
-      addLabel(continent);
+    const labels = [country, continent].filter((label): label is string => !!label);
+    if (labels.length > 0) {
+      setConfig({ labels });
     }
   }
 
   /**
-   * Provide additional targeting insights about the user.
-   *
-   * @param audience contains information about the user
+   * @deprecated use `setConfig({ audience })` instead
    */
   function setAudience(audience: MoliRuntime.AudienceTargeting): void {
-    switch (state.state) {
-      case 'configurable':
-      case 'configured': {
-        state.runtimeConfig.audience = audience;
-        break;
-      }
-
-      case 'spa-finished':
-      case 'spa-requestAds': {
-        state.nextRuntimeConfig.audience = audience;
-        break;
-      }
-      default: {
-        getLogger(state.runtimeConfig, window).error(
-          'MoliGlobal',
-          `Setting audience targeting after configuration: ${JSON.stringify(audience)}`
-        );
-        break;
-      }
-    }
+    setConfig({ audience: audience });
   }
 
   /**
