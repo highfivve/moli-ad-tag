@@ -51,6 +51,17 @@ import { BrowserStorageKeys } from '../util/browserStorageKeys';
  * ></script>
  * ```
  *
+ * ## Ad volume
+ *
+ * Add the `data-ad-volume` attribute to override the publisher-level ad density (1-10).
+ * This is equivalent to calling `moli.setConfig({ adVolume })` yourself - no publisher JS required.
+ *
+ * ```html
+ * <script id="moli-ad-tag" src="path/to/your/ad-tag-bundle.js"
+ *        data-ad-volume="4"
+ * ></script>
+ * ```
+ *
  *
  * @module
  */
@@ -92,6 +103,14 @@ if (currentScript) {
     window.moli.que.push(moli => {
       moli.beforeRequestAds(() => labels.forEach(label => moli.addLabel(label)));
     });
+  }
+
+  // publisher provided ad volume in data-ad-volume. Validation (integer, 1-10) and the
+  // fail-open/warn behavior for invalid values live in setConfig() itself - see ADR 0011.
+  const adVolumeAttr = currentScript.getAttribute('data-ad-volume');
+  if (adVolumeAttr !== null) {
+    const adVolume = parseInt(adVolumeAttr, 10);
+    window.moli.que.push(moli => moli.setConfig({ adVolume }));
   }
 
   // make the configLabel available for the ad tag bundle. This info is sent along to prebid server for telemetry.
