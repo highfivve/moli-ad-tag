@@ -225,20 +225,16 @@ describe('renderResult', () => {
     expect(result).to.equal('standard');
   });
 
-  it('should resolve with disallowed if channel is gam, regardless of the render event', async () => {
+  it('should resolve with disallowed if channel is gam without waiting for a render event', async () => {
     const headerSlot = {
       domId: domId
     } as AdSlot;
     const disallowedAdvertiserIds: number[] = [];
     const minVisibleDuration = 0;
 
-    resolveListenerWith({
-      slot: {
-        getSlotElementId: () => domId
-      },
-      advertiserId: 2,
-      isEmpty: false
-    } as any);
+    // on the `gam` channel the slot is defined via `defineOutOfPageSlot`, so GPT never reports
+    // `domId` as the slot element id and no slotRenderEnded event for it ever arrives. The
+    // listener stub therefore never invokes the listener.
 
     const result = await adRenderResult(
       adPipelineContext(),
@@ -249,6 +245,7 @@ describe('renderResult', () => {
     );
 
     expect(result).to.equal('disallowed');
+    expect(eventListenerStub).to.have.not.been.called;
   });
 
   it('should resolve with standard if channel is c and advertiser is not disallowed', async () => {

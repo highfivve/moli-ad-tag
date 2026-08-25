@@ -434,9 +434,12 @@ describe('Sticky-footer-v2 Module', () => {
       expect(adSticky.classList.contains('h5v-footerAd--hidden')).to.be.true;
     });
 
-    it('should hide the stickyAd if channel is gam, even if the advertiser is not disallowed', async function () {
+    it('should hide the stickyAd if channel is gam without waiting for a render event', async function () {
       jsDomWindow.document.body.appendChild(adSticky);
       jsDomWindow.document.body.appendChild(closeButton);
+      // adSticky is shared across tests, so start from a visible container - otherwise a hiding
+      // class left over from a previous test would make this assertion pass trivially
+      adSticky.classList.remove('h5v-footerAd--hidden');
 
       const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
@@ -450,18 +453,14 @@ describe('Sticky-footer-v2 Module', () => {
         'close'
       );
 
-      const slotRenderEndedEvent: googletag.events.ISlotRenderEndedEvent = {
-        slot: { getSlotElementId: () => 'h5v-sticky-ad' } as googletag.IAdSlot,
-        advertiserId: 999,
-        isEmpty: false,
-        campaignId: 42
-      } as googletag.events.ISlotRenderEndedEvent;
-
-      slotRenderedCallback(slotRenderEndedEvent, listenerSpy);
+      // on the `gam` channel the slot is defined via `defineOutOfPageSlot`, so GPT never reports
+      // 'h5v-sticky-ad' as the slot element id and no slotRenderEnded event for it ever arrives.
+      // The container must be hidden regardless, otherwise it stays visible under GAM's anchor.
 
       // Wait for the event loop to finish, so the adSticky can be shown or hidden.
       await new Promise(resolve => setTimeout(resolve, 0));
       expect(adSticky.classList.contains('h5v-footerAd--hidden')).to.be.true;
+      expect(listenerSpy.args.some(args => (args[0] as string) === 'slotRenderEnded')).to.be.false;
     });
 
     it('should not hide the stickyAd if channel is c and the advertiser is not disallowed', async function () {

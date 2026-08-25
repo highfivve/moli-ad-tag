@@ -23,17 +23,24 @@ export const adRenderResult = (
       resolve('standard');
       return;
     }
+    // GAM already serves this position as an out-of-page anchor - hide the custom container.
+    // This must be decided before the listener is registered: on the `gam` channel the slot is
+    // defined via `defineOutOfPageSlot`, which never carries `headerSlot.domId` as its GPT
+    // element id (see ADR 0007), so no slotRenderEnded event for this domId ever arrives and
+    // waiting for one would leave the container visible on top of GAM's anchor.
+    // very similar to the footer sticky ads implementation. Can be merged once GD-8007 is on its way
+    if (channel === 'gam') {
+      resolve('disallowed');
+      return;
+    }
+
     const listener: (event: googletag.events.ISlotRenderEndedEvent) => void = event => {
       // only the header slot is relevant
       if (event.slot.getSlotElementId() !== headerSlot.domId) {
         return;
       }
 
-      if (channel === 'gam') {
-        // GAM already serves this position as an out-of-page anchor - hide the custom container
-        resolve('disallowed');
-        // very similar to the footer sticky ads implementation. Can be merged once GD-8007 is on its way
-      } else if (isAdvertiserIncluded(event, disallowedAdvertiserIds)) {
+      if (isAdvertiserIncluded(event, disallowedAdvertiserIds)) {
         resolve('disallowed');
       } else if (event.isEmpty) {
         resolve('empty');

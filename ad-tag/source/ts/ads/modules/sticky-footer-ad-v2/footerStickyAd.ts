@@ -30,15 +30,22 @@ const stickyRenderedEvent = (
   window: Window & googletag.IGoogleTagWindow
 ): Promise<RenderEventResult> =>
   new Promise(resolve => {
+    // GAM already serves this position as an out-of-page anchor - hide the custom container.
+    // This must be decided before the listener is registered: on the `gam` channel the slot is
+    // defined via `defineOutOfPageSlot`, which never carries `mobileStickyDomId` as its GPT
+    // element id (see ADR 0007), so no slotRenderEnded event for this domId ever arrives and
+    // waiting for one would leave the container visible on top of GAM's anchor.
+    if (channel === 'gam') {
+      resolve('disallowed');
+      return;
+    }
+
     const listener = (event: googletag.events.ISlotRenderEndedEvent): void => {
       if (event.slot.getSlotElementId() !== mobileStickyDomId) {
         return;
       }
 
-      // GAM already serves this position as an out-of-page anchor - hide the custom container
-      if (channel === 'gam') {
-        resolve('disallowed');
-      } else if (event.isEmpty) {
+      if (event.isEmpty) {
         resolve('empty');
       } else if (isAdvertiserIncluded(event, disallowedAdvertiserIds)) {
         resolve('disallowed');
