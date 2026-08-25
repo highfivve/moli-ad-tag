@@ -29,6 +29,10 @@ use(sinonChai);
 const sandbox = Sinon.createSandbox();
 let { jsDomWindow } = createDomAndWindow();
 
+// resolved ad unit path of the sticky footer slot. On the `gam` channel this is the only way to
+// identify the out-of-page anchor slot, which never carries the domId (see ADR 0007).
+const stickyAdUnitPath = '/123/sticky-footer/mobile';
+
 const stickyAdSpy = sandbox.spy(stickyAdModule, 'initAdSticky');
 
 const setupDomAndServices = () => {
@@ -180,6 +184,7 @@ describe('Sticky-footer-v2 Module', () => {
           'production',
           noopLogger,
           'ad-mobile-sticky',
+          'path',
           [111],
           undefined,
           'close'
@@ -191,7 +196,7 @@ describe('Sticky-footer-v2 Module', () => {
       const desktopSlot = createAdSlotConfig('ad-desktop-sticky', 'desktop');
       const desktopGoogleAdSlot = googleAdSlotStub('/1/ad-desktop-sticky', 'ad-desktop-sticky');
       const desktopAdSlotDefinition: MoliRuntime.SlotDefinition<any> = {
-        moliSlot: desktopSlot,
+        moliSlot: desktopSlot.moliSlot,
         adSlot: desktopGoogleAdSlot,
         filterSupportedSizes: {} as any
       };
@@ -213,6 +218,7 @@ describe('Sticky-footer-v2 Module', () => {
           'production',
           noopLogger,
           'ad-desktop-sticky',
+          'path',
           [111],
           undefined,
           'close'
@@ -253,7 +259,7 @@ describe('Sticky-footer-v2 Module', () => {
 
       expect(channelStub).to.have.been.calledOnceWithExactly('ad-mobile-sticky');
       expect(stickyAdSpy).to.have.been.calledOnce;
-      expect(stickyAdSpy.firstCall.args[5]).to.equal('gam');
+      expect(stickyAdSpy.firstCall.args[6]).to.equal('gam');
     });
   });
 
@@ -313,6 +319,7 @@ describe('Sticky-footer-v2 Module', () => {
         'production',
         noopLogger,
         'h5v-sticky-ad',
+        stickyAdUnitPath,
         [111],
         undefined,
         'close'
@@ -330,6 +337,7 @@ describe('Sticky-footer-v2 Module', () => {
         'production',
         noopLogger,
         'h5v-sticky-ad',
+        stickyAdUnitPath,
         [111],
         undefined,
         'close'
@@ -351,6 +359,7 @@ describe('Sticky-footer-v2 Module', () => {
         'production',
         noopLogger,
         'h5v-sticky-ad',
+        stickyAdUnitPath,
         [111],
         undefined,
         'close'
@@ -369,7 +378,15 @@ describe('Sticky-footer-v2 Module', () => {
       jsDomWindow.document.body.appendChild(adSticky);
       jsDomWindow.document.body.appendChild(closeButton);
 
-      initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], undefined);
+      initAdSticky(
+        jsDomWindow,
+        'production',
+        noopLogger,
+        'h5v-sticky-ad',
+        stickyAdUnitPath,
+        [111],
+        undefined
+      );
       expect(closeButton.childNodes.length).to.eq(1);
       expect(closeButton.childNodes[0].nodeName).to.eq('svg');
     });
@@ -385,7 +402,15 @@ describe('Sticky-footer-v2 Module', () => {
       jsDomWindow.document.body.appendChild(adSticky);
       jsDomWindow.document.body.appendChild(closeButton);
 
-      initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], undefined);
+      initAdSticky(
+        jsDomWindow,
+        'production',
+        noopLogger,
+        'h5v-sticky-ad',
+        stickyAdUnitPath,
+        [111],
+        undefined
+      );
       expect(closeButton.childNodes.length).to.eq(1);
     });
 
@@ -400,6 +425,7 @@ describe('Sticky-footer-v2 Module', () => {
         'production',
         noopLogger,
         'h5v-sticky-ad',
+        stickyAdUnitPath,
         [111],
         undefined,
         'close'
@@ -434,7 +460,7 @@ describe('Sticky-footer-v2 Module', () => {
       expect(adSticky.classList.contains('h5v-footerAd--hidden')).to.be.true;
     });
 
-    it('should hide the stickyAd if channel is gam without waiting for a render event', async function () {
+    it('should hide the stickyAd if channel is gam, matching the anchor slot by adUnitPath', async function () {
       jsDomWindow.document.body.appendChild(adSticky);
       jsDomWindow.document.body.appendChild(closeButton);
       // adSticky is shared across tests, so start from a visible container - otherwise a hiding
@@ -448,19 +474,78 @@ describe('Sticky-footer-v2 Module', () => {
         'production',
         noopLogger,
         'h5v-sticky-ad',
+        stickyAdUnitPath,
         [],
         'gam',
         'close'
       );
 
-      // on the `gam` channel the slot is defined via `defineOutOfPageSlot`, so GPT never reports
-      // 'h5v-sticky-ad' as the slot element id and no slotRenderEnded event for it ever arrives.
-      // The container must be hidden regardless, otherwise it stays visible under GAM's anchor.
+      // on the `gam` channel the slot is defined via `defineOutOfPageSlot`, so GPT reports its
+      // own auto-generated element id - never 'h5v-sticky-ad'. Only the adUnitPath plus the
+      // BOTTOM_ANCHOR format targeting identify it.
+      const anchorSlot = googleAdSlotStub(stickyAdUnitPath, 'google_ads_iframe_bottom_anchor_0');
+      anchorSlot.setTargeting(
+        'f',
+        jsDomWindow.googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR.toString()
+      );
+
+      slotRenderedCallback(
+        {
+          slot: anchorSlot,
+          advertiserId: 999,
+          isEmpty: false,
+          campaignId: 42
+        } as googletag.events.ISlotRenderEndedEvent,
+        listenerSpy
+      );
 
       // Wait for the event loop to finish, so the adSticky can be shown or hidden.
       await new Promise(resolve => setTimeout(resolve, 0));
       expect(adSticky.classList.contains('h5v-footerAd--hidden')).to.be.true;
-      expect(listenerSpy.args.some(args => (args[0] as string) === 'slotRenderEnded')).to.be.false;
+    });
+
+    it('should ignore a stale gam anchor slot when the channel is c', async function () {
+      jsDomWindow.document.body.appendChild(adSticky);
+      jsDomWindow.document.body.appendChild(closeButton);
+      adSticky.classList.remove('h5v-footerAd--hidden');
+
+      const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
+
+      await initAdSticky(
+        jsDomWindow,
+        'production',
+        noopLogger,
+        'h5v-sticky-ad',
+        stickyAdUnitPath,
+        [],
+        'c',
+        'close'
+      );
+
+      // a stale anchor slot from a previous cycle shares the adUnitPath and the anchor format
+      // targeting. It must not be mistaken for this cycle's in-page slot, otherwise its empty
+      // render would hide a legitimate prebid sticky.
+      const staleAnchorSlot = googleAdSlotStub(
+        stickyAdUnitPath,
+        'google_ads_iframe_bottom_anchor_0'
+      );
+      staleAnchorSlot.setTargeting(
+        'f',
+        jsDomWindow.googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR.toString()
+      );
+
+      slotRenderedCallback(
+        {
+          slot: staleAnchorSlot,
+          advertiserId: 999,
+          isEmpty: true,
+          campaignId: 42
+        } as googletag.events.ISlotRenderEndedEvent,
+        listenerSpy
+      );
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(adSticky.classList.contains('h5v-footerAd--hidden')).to.be.false;
     });
 
     it('should not hide the stickyAd if channel is c and the advertiser is not disallowed', async function () {
@@ -469,7 +554,16 @@ describe('Sticky-footer-v2 Module', () => {
 
       const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
-      await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [], 'c', 'close');
+      await initAdSticky(
+        jsDomWindow,
+        'production',
+        noopLogger,
+        'h5v-sticky-ad',
+        stickyAdUnitPath,
+        [],
+        'c',
+        'close'
+      );
 
       slotRenderedCallback(slotRenderEndedEvent, listenerSpy);
       slotLoadedCallback(slotLoadedEvent, listenerSpy);
@@ -496,6 +590,7 @@ describe('Sticky-footer-v2 Module', () => {
         'production',
         noopLogger,
         'h5v-sticky-ad',
+        stickyAdUnitPath,
         [123],
         undefined,
         'close'
@@ -536,6 +631,7 @@ describe('Sticky-footer-v2 Module', () => {
         'production',
         noopLogger,
         'h5v-sticky-ad',
+        stickyAdUnitPath,
         [],
         undefined,
         'close'
@@ -568,6 +664,7 @@ describe('Sticky-footer-v2 Module', () => {
         'production',
         noopLogger,
         'h5v-sticky-ad',
+        stickyAdUnitPath,
         [999],
         undefined,
         'close'
@@ -593,6 +690,7 @@ describe('Sticky-footer-v2 Module', () => {
         'production',
         noopLogger,
         'h5v-sticky-ad',
+        stickyAdUnitPath,
         [111],
         undefined,
         'close'
@@ -634,6 +732,7 @@ describe('Sticky-footer-v2 Module', () => {
         'production',
         noopLogger,
         'h5v-sticky-ad',
+        stickyAdUnitPath,
         [],
         undefined,
         'close'

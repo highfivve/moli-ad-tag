@@ -30,6 +30,7 @@ import {
   PrepareRequestAdsStep
 } from 'ad-tag/ads/adPipeline';
 import { modules } from 'ad-tag/types/moliConfig';
+import { resolveAdUnitPath } from 'ad-tag/ads/adUnitPath';
 
 import { initAdSticky } from './footerStickyAd';
 
@@ -83,6 +84,7 @@ export const createStickyFooterAdsV2 = (): IModule => {
                 ctx.env__,
                 ctx.logger__,
                 footerAdSlot.moliSlot.domId,
+                resolveAdUnitPath(footerAdSlot.moliSlot.adUnitPath, ctx.adUnitPathVariables__),
                 config.disallowedAdvertiserIds,
                 channel,
                 config.closingButtonText
