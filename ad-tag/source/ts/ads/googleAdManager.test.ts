@@ -254,6 +254,27 @@ describe('google ad manager', () => {
         await step(adPipelineContext('production', config, 2), [createdAdSlot(domId1)]);
         expect(destroySlotsSpy).callCount(4);
       });
+
+      it('should match a stale out-of-page slot (e.g. GAM anchor) by adUnitPath if the element id does not match the domId', async () => {
+        // out-of-page slots (anchor/interstitial) never get the moli domId as their GPT element id
+        const staleOutOfPageSlot = googleAdSlotStub(
+          `/123/${domId1}/mobile`,
+          'google_ads_iframe_out_of_page'
+        );
+        sandbox.stub(dom.window.googletag.pubads(), 'getSlots').returns([staleOutOfPageSlot]);
+        const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
+        const step = gptDestroyAdSlots();
+
+        await step(
+          adPipelineContext('production', {
+            ...emptyConfig,
+            spa: { enabled: true, cleanup: { slots: 'requested' }, validateLocation: 'href' }
+          }),
+          [createdAdSlot(domId1)]
+        );
+        expect(destroySlotsSpy).to.have.been.calledOnce;
+        expect(destroySlotsSpy).to.have.been.calledWith([staleOutOfPageSlot]);
+      });
     });
 
     describe('cleanup excluded', () => {
@@ -316,6 +337,38 @@ describe('google ad manager', () => {
         await step(adPipelineContext('production', config, 2), [createdAdSlot(domId1)]);
         await step(adPipelineContext('production', config, 2), [createdAdSlot(domId1)]);
         expect(destroySlotsSpy).callCount(2);
+      });
+
+      it('should keep a stale excluded out-of-page slot (e.g. GAM anchor) alive when matched by adUnitPath', async () => {
+        // the excluded slot is currently served out-of-page, so its element id does not match
+        // domId1 - only its adUnitPath (resolved from the moli slot config) identifies it
+        const domId2 = 'slot-2';
+        const staleExcludedOutOfPageSlot = googleAdSlotStub(
+          `/123/${domId1}/mobile`,
+          'google_ads_iframe_out_of_page'
+        );
+        const googleSlot2 = googleAdSlotStub('', domId2);
+        sandbox
+          .stub(dom.window.googletag.pubads(), 'getSlots')
+          .returns([staleExcludedOutOfPageSlot, googleSlot2]);
+        const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
+        const step = gptDestroyAdSlots();
+
+        const config: MoliConfig = {
+          ...emptyConfig,
+          slots: [createdAdSlot(domId1), createdAdSlot(domId2)],
+          spa: {
+            enabled: true,
+            cleanup: { slots: 'excluded', slotIds: [domId1] },
+            validateLocation: 'href'
+          }
+        };
+        await step(adPipelineContext('production', config), [
+          createdAdSlot(domId1),
+          createdAdSlot(domId2)
+        ]);
+        expect(destroySlotsSpy).to.have.been.calledOnce;
+        expect(destroySlotsSpy).to.have.been.calledWith([googleSlot2]);
       });
     });
   });
