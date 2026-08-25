@@ -19,6 +19,7 @@ import { AssetLoadMethod } from '../util/assetLoaderService';
 import { tcfapi } from '../types/tcfapi';
 import { createTestSlots } from '../util/test-slots';
 import { resolveAdUnitPath } from './adUnitPath';
+import { findGoogletagSlot } from './findGoogletagSlot';
 import { AdSlot, auction, consent, googleAdManager } from '../types/moliConfig';
 import {
   formatKey,
@@ -201,19 +202,39 @@ export const gptDestroyAdSlots = (): ConfigureStep => {
         }
         return Promise.resolve();
       case 'requested':
-        const allGptSlots = context.window__.googletag.pubads().getSlots();
+        // destroy all slots that are in the provided slot array. Match by domId or, as a
+        // fallback, by adUnitPath - out-of-page slots (e.g. GAM-served anchor/interstitial
+        // slots) never get their GPT element id set to the moli domId, so a domId-only match
+        // would leave a stale out-of-page slot from a previous SPA cycle undestroyed.
         const gptSlots = slots
-          .map(slot => allGptSlots.find(s => s.getSlotElementId() === slot.domId))
+          .map(slot =>
+            findGoogletagSlot(
+              {
+                domId: slot.domId,
+                adUnitPath: resolveAdUnitPath(slot.adUnitPath, context.adUnitPathVariables__)
+              },
+              context.window__.googletag
+            )
+          )
           .filter(isNotNull);
-        // destroy all slots that are in the provided slot array
         return destroySelectedSlots(gptSlots);
       case 'excluded':
         if (isNextRequestAdsCall) {
-          // destroy all slots that are not in the provided slot array
+          // destroy all slots that are not in the provided slot array. As above, out-of-page
+          // slots never carry the moli domId as their GPT element id, so an excluded slot that
+          // is currently served out-of-page (e.g. a GAM anchor) is kept alive by also matching
+          // its resolved adUnitPath.
+          const excludedAdUnitPaths = context.config__.slots
+            .filter(moliSlot => cleanup.slotIds.includes(moliSlot.domId))
+            .map(moliSlot => resolveAdUnitPath(moliSlot.adUnitPath, context.adUnitPathVariables__));
           const destroyableSlots = context.window__.googletag
             .pubads()
             .getSlots()
-            .filter(slot => !cleanup.slotIds.includes(slot.getSlotElementId()));
+            .filter(
+              slot =>
+                !cleanup.slotIds.includes(slot.getSlotElementId()) &&
+                !excludedAdUnitPaths.includes(slot.getAdUnitPath())
+            );
           return destroySelectedSlots(destroyableSlots);
         }
         return Promise.resolve();
