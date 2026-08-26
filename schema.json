@@ -7287,7 +7287,8 @@
     "modules.inlineAi.InlineAiInjectionStrategy": {
       "enum": [
         "default",
-        "distribute-evenly"
+        "distribute-evenly",
+        "manual"
       ],
       "type": "string"
     },
@@ -7734,6 +7735,10 @@
         {
           "additionalProperties": false,
           "properties": {
+            "anchorInjection": {
+              "$ref": "#/definitions/modules.inlineAi.InlineAiDynamicTarget",
+              "description": "Manual pin point for a single question pill, distinct from `dynamic`: `selector` (or `containerId`) picks the scan root to distribute pills across, `anchorInjection` pins one pill to a specific element found within that root. Only meaningful together with `injectionStrategy: 'manual'` - undocumented in InlineAI's public docs but vendor-confirmed for this use case."
+            },
             "breakpoints": {
               "description": "The placement only renders when at least one entry matches the current viewport.",
               "items": {

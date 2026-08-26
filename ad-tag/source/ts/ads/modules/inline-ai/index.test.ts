@@ -338,6 +338,43 @@ describe('inline-ai module', () => {
       ]);
     });
 
+    it('single-question: selector + anchorInjection manual pin', async () => {
+      const cmds = await mountedCommands([
+        {
+          name: 'sq',
+          type: 'single-question',
+          target: {
+            selector: 'body',
+            anchorInjection: {
+              tagName: 'div',
+              attributeName: 'id',
+              attributeValue: 'discussion-single-question'
+            },
+            injectionStrategy: 'manual',
+            injectionLimit: 1,
+            location: 'append'
+          }
+        }
+      ]);
+      expect(cmds).to.deep.equal([
+        [
+          'mount',
+          'single-question',
+          {
+            selector: 'body',
+            anchorInjection: {
+              tagName: 'div',
+              attributeName: 'id',
+              attributeValue: 'discussion-single-question'
+            },
+            injectionStrategy: 'manual',
+            injectionLimit: 1,
+            location: 'append'
+          }
+        ]
+      ]);
+    });
+
     it('basic-embed: string target shorthand', async () => {
       const cmds = await mountedCommands([
         { name: 'be', type: 'basic-embed', target: 'content-sidebar' }
