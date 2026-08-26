@@ -2,6 +2,7 @@ import { googletag } from 'ad-tag/types/googletag';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { auction, Environment } from 'ad-tag/types/moliConfig';
 import { isAdvertiserIncluded } from 'ad-tag/ads/isAdvertiserIncluded';
+import { isGamAnchor } from 'ad-tag/ads/auctions/anchorContext';
 
 const adStickyContainerDataRef = '[data-ref=h5v-sticky-ad]';
 const adStickyCloseButtonDataRef = '[data-ref=h5v-sticky-ad-close]';
@@ -21,17 +22,41 @@ const mobileInitialHidingClass = 'h5v-footerAd--hidden-m';
 type RenderEventResult = 'empty' | 'disallowed' | 'standard';
 
 /**
+ * Identifies the event's slot as the one backing the sticky footer position.
+ *
+ * On the `c` channel that is an in-page slot carrying `mobileStickyDomId` as its GPT element id.
+ * On the `gam` channel it is an out-of-page anchor defined via `defineOutOfPageSlot`, which never
+ * carries the domId at all (see ADR 0007) and can only be identified by its resolved ad unit path
+ * plus its anchor format targeting.
+ *
+ * The ad unit path arm is deliberately limited to the `gam` channel: a stale anchor slot from a
+ * previous cycle carries the same ad unit path *and* the same anchor format targeting, so on the
+ * `c` channel it would otherwise hijack the in-page slot's render result and hide a legitimate
+ * prebid sticky.
+ */
+const isStickySlotEvent = (
+  slot: googletag.IAdSlot,
+  mobileStickyDomId: string,
+  resolvedAdUnitPath: string,
+  channel: auction.AnchorChannel | undefined | null,
+  window: Window & googletag.IGoogleTagWindow
+): boolean =>
+  slot.getSlotElementId() === mobileStickyDomId ||
+  (channel === 'gam' && isGamAnchor(slot, window) && slot.getAdUnitPath() === resolvedAdUnitPath);
+
+/**
  * Called when the iframe gets rendered and where our logic for disallowed advertisers with special formats is.
  */
 const stickyRenderedEvent = (
   mobileStickyDomId: string,
+  resolvedAdUnitPath: string,
   disallowedAdvertiserIds: number[],
   channel: auction.AnchorChannel | undefined | null,
   window: Window & googletag.IGoogleTagWindow
 ): Promise<RenderEventResult> =>
   new Promise(resolve => {
     const listener = (event: googletag.events.ISlotRenderEndedEvent): void => {
-      if (event.slot.getSlotElementId() !== mobileStickyDomId) {
+      if (!isStickySlotEvent(event.slot, mobileStickyDomId, resolvedAdUnitPath, channel, window)) {
         return;
       }
 
@@ -93,6 +118,7 @@ export const initAdSticky = (
   env: Environment,
   log: MoliRuntime.MoliLogger,
   footerStickyDomId: string,
+  resolvedAdUnitPath: string,
   disallowedAdvertiserIds: number[],
   channel: auction.AnchorChannel | undefined | null,
   closingButtonText?: string
@@ -174,7 +200,13 @@ export const initAdSticky = (
         // wait for the results
 
         const stickyOnLoadEventPromise = stickyOnLoadEvent(footerStickyDomId, window);
-        return stickyRenderedEvent(footerStickyDomId, disallowedAdvertiserIds, channel, window)
+        return stickyRenderedEvent(
+          footerStickyDomId,
+          resolvedAdUnitPath,
+          disallowedAdvertiserIds,
+          channel,
+          window
+        )
           .then(result =>
             result === 'empty' || result === 'disallowed'
               ? Promise.resolve(result)
@@ -190,7 +222,13 @@ export const initAdSticky = (
       if (footerStickyDomId) {
         const stickyOnLoadEventPromise = stickyOnLoadEvent(footerStickyDomId, window);
 
-        stickyRenderedEvent(footerStickyDomId, disallowedAdvertiserIds, channel, window)
+        stickyRenderedEvent(
+          footerStickyDomId,
+          resolvedAdUnitPath,
+          disallowedAdvertiserIds,
+          channel,
+          window
+        )
           .then(result =>
             result === 'empty' || result === 'disallowed'
               ? Promise.resolve(result)

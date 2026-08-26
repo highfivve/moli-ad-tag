@@ -6,7 +6,7 @@ import { adRenderResult } from './renderResult';
 import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 import { googletag } from 'ad-tag/types/googletag';
 import { prebidjs } from 'ad-tag/types/prebidjs';
-import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
+import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 import { AdSlot } from 'ad-tag/types/moliConfig';
 
@@ -30,6 +30,10 @@ describe('renderResult', () => {
   };
 
   const domId = 'header';
+
+  // resolved ad unit path of the header slot. On the `gam` channel this is the only way to
+  // identify the out-of-page anchor slot, which never carries the domId (see ADR 0007).
+  const headerAdUnitPath = '/123/sticky-header/mobile';
 
   const adPipelineContext = (): AdPipelineContext =>
     ({
@@ -225,17 +229,22 @@ describe('renderResult', () => {
     expect(result).to.equal('standard');
   });
 
-  it('should resolve with disallowed if channel is gam, regardless of the render event', async () => {
+  it('should resolve with disallowed if channel is gam, matching the anchor slot by adUnitPath', async () => {
     const headerSlot = {
-      domId: domId
+      domId: domId,
+      adUnitPath: headerAdUnitPath
     } as AdSlot;
     const disallowedAdvertiserIds: number[] = [];
     const minVisibleDuration = 0;
 
+    // on the `gam` channel the slot is defined via `defineOutOfPageSlot`, so GPT reports its own
+    // auto-generated element id - never `domId`. Only the adUnitPath plus the TOP_ANCHOR format
+    // targeting identify it.
+    const anchorSlot = googleAdSlotStub(headerAdUnitPath, 'google_ads_iframe_top_anchor_0');
+    anchorSlot.setTargeting('f', jsDomWindow.googletag.enums.OutOfPageFormat.TOP_ANCHOR.toString());
+
     resolveListenerWith({
-      slot: {
-        getSlotElementId: () => domId
-      },
+      slot: anchorSlot,
       advertiserId: 2,
       isEmpty: false
     } as any);
@@ -249,6 +258,43 @@ describe('renderResult', () => {
     );
 
     expect(result).to.equal('disallowed');
+  });
+
+  it('should ignore a stale gam anchor slot when the channel is c', async () => {
+    const headerSlot = {
+      domId: domId,
+      adUnitPath: headerAdUnitPath
+    } as AdSlot;
+    const disallowedAdvertiserIds: number[] = [];
+    const minVisibleDuration = 0;
+
+    // a stale anchor slot from a previous cycle shares the adUnitPath and the anchor format
+    // targeting. It must not be mistaken for this cycle's in-page slot.
+    const staleAnchorSlot = googleAdSlotStub(headerAdUnitPath, 'google_ads_iframe_top_anchor_0');
+    staleAnchorSlot.setTargeting(
+      'f',
+      jsDomWindow.googletag.enums.OutOfPageFormat.TOP_ANCHOR.toString()
+    );
+
+    resolveListenerWith({
+      slot: staleAnchorSlot,
+      isEmpty: true
+    } as any);
+
+    // wait a little bit to show that the promise will never be resolved by the stale slot
+    const sleep = new Promise<'unresolved'>(resolve =>
+      setTimeout(() => resolve('unresolved'), 250)
+    );
+
+    const result = adRenderResult(
+      adPipelineContext(),
+      headerSlot,
+      disallowedAdvertiserIds,
+      'c',
+      minVisibleDuration
+    );
+
+    expect(await Promise.race([result, sleep])).to.equal('unresolved');
   });
 
   it('should resolve with standard if channel is c and advertiser is not disallowed', async () => {
