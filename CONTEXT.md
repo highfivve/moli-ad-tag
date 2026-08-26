@@ -190,17 +190,6 @@ logging/debugging — distinct from moli's `domId`, since a placement's DOM targ
 Condition]. Only consulted in `programmatic` and `hybrid` [Inline AI Integration Mode] — never
 in `auto`.
 
-### Inline AI Anchor Injection
-A `single-question`-only target field (`anchorInjection`, undocumented in InlineAI's public
-docs but vendor-confirmed) that pins one question pill to a specific element, as opposed to
-distributing pills across a scanned root. `selector` (or `containerId`) on the same target picks
-the scan root; `anchorInjection` (a tag-name-plus-attribute matcher, same shape as `dynamic`)
-picks one element within that root to pin a pill to. Only meaningful together with
-`injectionStrategy: 'manual'` — the other two [Inline AI Placement] target strategies
-(`default`, `distribute-evenly`) never read it. Distinct from `dynamic`, which *replaces*
-`selector`/`containerId` as the whole target for other placement types rather than layering on
-top of one.
-
 ### Placement Label Condition
 A [Label Condition] on an [Inline AI Placement], evaluated against the ad pipeline's active
 Labels. The module itself does **not** inject a mode label — if a publisher wants to scope a
