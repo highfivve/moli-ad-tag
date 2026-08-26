@@ -37,6 +37,42 @@ not inject a mode label itself.
 or an object with injection/breakpoint options). See the
 [placement showcase](https://www.getinline.io/platform/placements) for what each type renders.
 
+### Single question with a manual anchor
+
+`single-question`'s `target` accepts two extra fields beyond the shared `selector`/`dynamic`/
+`containerId`/`location`: `injectionStrategy` picks how pills are distributed (`default`,
+`distribute-evenly`, or `manual`), and `anchorInjection` (only meaningful with
+`injectionStrategy: 'manual'`) pins one pill to a specific element found within the `selector`
+scan root, instead of spreading pills across it:
+
+```ts
+modules: {
+  inlineAi: {
+    enabled: true,
+    publisherId: 'YOUR_PUBLISHER_ID',
+    scriptUrl: 'https://getinline.tech/default/assets/index.js',
+    mode: 'programmatic',
+    placements: [
+      {
+        name: 'discussion-follow-up',
+        type: 'single-question',
+        target: {
+          selector: 'body',
+          anchorInjection: {
+            tagName: 'div',
+            attributeName: 'id',
+            attributeValue: 'discussion-single-question'
+          },
+          injectionStrategy: 'manual',
+          injectionLimit: 1,
+          location: 'append'
+        }
+      }
+    ]
+  }
+}
+```
+
 ## Single page applications
 
 On a regular page the module runs once, on ad pipeline init. On a [single page app](./single-page-app.md)

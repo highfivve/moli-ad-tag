@@ -3391,7 +3391,7 @@ export namespace modules {
     export type InlineAiInputShape = 'pill' | 'rounded-rectangle';
     export type InlineAiSuggestedQuestionsMode = 'animated' | 'static';
     export type InlineAiTypographySource = 'inherit-from-website' | 'inherit-from-theme';
-    export type InlineAiInjectionStrategy = 'default' | 'distribute-evenly';
+    export type InlineAiInjectionStrategy = 'default' | 'distribute-evenly' | 'manual';
     export type InlineAiFabHorizontalPosition = 'left' | 'right' | 'center';
 
     /**
@@ -3439,6 +3439,14 @@ export namespace modules {
           /** `1` skips the first paragraph and starts injecting from the second. */
           readonly injectionSelectorOffset?: number;
           readonly typographySource?: InlineAiTypographySource;
+          /**
+           * Manual pin point for a single question pill, distinct from `dynamic`: `selector`
+           * (or `containerId`) picks the scan root to distribute pills across, `anchorInjection`
+           * pins one pill to a specific element found within that root. Only meaningful together
+           * with `injectionStrategy: 'manual'` - undocumented in InlineAI's public docs but
+           * vendor-confirmed for this use case.
+           */
+          readonly anchorInjection?: InlineAiDynamicTarget;
         });
 
     export type InlineAiFabPosition = {
