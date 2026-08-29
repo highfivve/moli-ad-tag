@@ -74,7 +74,7 @@ export const resolveAdUnitPath = (
       'g'
     ),
     // For each key found, replace with the appropriate value
-    match => adUnitPathVariables[match.substr(1, match.length - 2)]
+    match => adUnitPathVariables[match.substring(1, match.length - 2)]
   );
 };
 
