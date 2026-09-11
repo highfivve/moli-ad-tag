@@ -1021,7 +1021,8 @@ export namespace prebidjs {
       | IUtiqIdProvider
       | IUtiqMtpIdProvider
       | ISharedIdProvider
-      | IPairIdProvider;
+      | IPairIdProvider
+      | IIntentIqIdProvider;
 
     /**
      * @see https://docs.prebid.org/dev-docs/modules/userId.html#basic-configuration
@@ -1329,6 +1330,201 @@ export namespace prebidjs {
      * @see https://docs.prebid.org/dev-docs/modules/userId.html#id
      */
     export interface IZeotapIdPlusIdProvider extends IUserIdProvider<'zeotapIdPlus'> {}
+
+    /**
+     * Controls how the IntentIQ A/B test group is assigned.
+     *
+     * - `'percentage'`  — random assignment based on `abPercentage`
+     * - `'group'`       — fixed group supplied via the `group` param
+     * - `'IIQServer'`   — server-driven assignment (default)
+     * - `'disabled'`    — A/B testing disabled; always use IIQ
+     *
+     * @see https://github.com/prebid/Prebid.js/blob/master/libraries/intentIqUtils/defineABTestingGroupUtils.ts
+     */
+    export type IntentIqABConfigSource = 'percentage' | 'group' | 'IIQServer' | 'disabled';
+
+    /**
+     * @see https://github.com/prebid/Prebid.js/blob/master/modules/intentIqIdSystem.ts
+     * @see https://docs.prebid.org/dev-docs/modules/userid-submodules/intentiq.html
+     */
+    export interface IIntentIqIdProviderParams {
+      /**
+       * Partner ID assigned by IntentIQ. Required.
+       */
+      readonly partner: number;
+
+      /**
+       * Invoked when the identity lookup completes or times out. Receives the resolved EID payload
+       * or an empty string when the browser is blacklisted or the user is opted out.
+       *
+       * Not used by moli in v1 - always left unset.
+       */
+      readonly callback?: (data: { eids: unknown[] } | string) => void;
+
+      /**
+       * Milliseconds to wait for the server response before firing `callback` with whatever data is
+       * currently available. Defaults to 500 ms.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly timeoutInMillis?: number;
+
+      /**
+       * Comma-separated list of browser names (lowercase) that should be excluded from identity
+       * resolution, e.g. `'chrome,safari'`.
+       */
+      readonly browserBlackList?: string;
+
+      /**
+       * Publisher domain name, used to build the referrer URL parameter.
+       *
+       * Filled in automatically by moli from `adUnitPathVariables.domain` at runtime - do not set
+       * this in a hand-written module config.
+       */
+      readonly domainName?: string;
+
+      /**
+       * When `true`, first-party data is stored under a partner-specific key so multiple IntentIQ
+       * configurations on the same page do not collide.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly siloEnabled?: boolean;
+
+      /**
+       * Called whenever the resolved A/B group changes. Receives the new group (`'A'` | `'B'`) and
+       * the server termination-cause code when available.
+       *
+       * Not used by moli in v1 - always left unset.
+       */
+      readonly groupChanged?: (group: 'A' | 'B', terminationCause?: number) => void;
+
+      /**
+       * Reference to the GAM `googletag.pubads()` object for automatic targeting key injection.
+       *
+       * Filled in automatically by moli with `window.googletag` whenever `gamParameterName` is set -
+       * do not set this in a hand-written module config.
+       */
+      readonly gamObjectReference?: Record<string, unknown>;
+
+      /**
+       * GAM targeting key used to pass the A/B group. Defaults to `'intent_iq_group'`.
+       */
+      readonly gamParameterName?: string;
+
+      /**
+       * Percentage of users placed in the WITH_IIQ (group A) cohort. Accepts 0-100; values outside
+       * that range are clamped. Defaults to 95. Only used when `ABTestingConfigurationSource` is
+       * `'percentage'` or `'IIQServer'` (no prior server termination cause).
+       */
+      readonly abPercentage?: number;
+
+      /**
+       * Determines how the A/B test group is assigned. Defaults to `'IIQServer'`.
+       */
+      readonly ABTestingConfigurationSource?: IntentIqABConfigSource;
+
+      /**
+       * Explicit A/B group override. Only used when `ABTestingConfigurationSource` is `'group'`.
+       */
+      readonly group?: 'A' | 'B';
+
+      /**
+       * Human-readable metadata tag describing the integration source (e.g. `'prebid'`, `'amp'`).
+       * Translated to a numeric code internally.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly sourceMetaData?: string;
+
+      /**
+       * Numeric metadata code for the integration source when a specific override is required.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly sourceMetaDataExternal?: number;
+
+      /**
+       * Freeform key-value pairs appended to every pixel request.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly additionalParams?: { [key: string]: string | number | boolean };
+
+      /**
+       * Timeout in milliseconds for fetching Client Hints before falling back to an empty string.
+       * Defaults to 10 ms.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly chTimeout?: number;
+
+      /**
+       * Partner-supplied first-party client identifier.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly partnerClientId?: string;
+
+      /**
+       * Type code for `partnerClientId`. Must be a positive integer recognised by the IntentIQ
+       * server.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly partnerClientIdType?: number;
+
+      /**
+       * Partner-supplied Advertiser ID.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly pai?: string;
+
+      /**
+       * Partner-supplied client identifier used internally by IntentIQ (first-party cookie id).
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly pcid?: string;
+
+      /**
+       * Geo-region routing hint for the IntentIQ API/sync servers.
+       *
+       * Always hardcoded to `'gdpr'` by moli - do not set this in a hand-written module config.
+       */
+      readonly region?: string;
+
+      /**
+       * Override for the IntentIQ API server base URL. Derived from `region` if unset.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly iiqServerAddress?: string;
+
+      /**
+       * Override for the IntentIQ pixel/sync server base URL. Derived from `region` if unset.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly iiqPixelServerAddress?: string;
+
+      /**
+       * Moli-specific extension (not a prebid IntentIQ config field): an optional URL to IntentIQ's
+       * alternative raw CDN tag script. If set, moli loads this script via the asset loader service.
+       * No portal field drives this yet - always `undefined` in portal-generated configs.
+       */
+      readonly scriptUrl?: string;
+    }
+
+    /**
+     * @see https://github.com/prebid/Prebid.js/blob/master/modules/intentIqIdSystem.ts
+     * @see https://docs.prebid.org/dev-docs/modules/userid-submodules/intentiq.html
+     */
+    export interface IIntentIqIdProvider extends IParameterizedUserIdProvider<
+      IIntentIqIdProviderParams,
+      'intentIqId'
+    > {}
 
     export interface IFilterSettingsConfig {
       /**
@@ -2092,7 +2288,8 @@ export namespace prebidjs {
       | IAdagioAnalyticsAdapter
       | IAgmaAnalyticsAdapter
       | IGoogleAnalyticsAdapter
-      | IGenericAnalyticsAdapter;
+      | IGenericAnalyticsAdapter
+      | IIntentIqAnalyticsAdapter;
     export type AnalyticsProviders = AnalyticsAdapter['provider'];
 
     /**
@@ -2246,6 +2443,136 @@ export namespace prebidjs {
 
     export interface IGoogleAnalyticsAdapter extends IAnalyticsAdapter<IGoogleAnalyticsAdapterOptions> {
       readonly provider: 'ga';
+    }
+
+    /**
+     * A single custom parameter appended to IntentIQ report URLs.
+     */
+    export interface IIntentIqAnalyticsAdapterAdditionalParam {
+      /**
+       * Name of the parameter, sent prefixed with `agp_`.
+       */
+      readonly parameterName: string;
+
+      /**
+       * Value to assign to the parameter.
+       */
+      readonly parameterValue: string | number;
+
+      /**
+       * Whether to send the parameter with, in order, the sync request, the VR request and the win
+       * report. Each entry is 1 to send and 0 to omit.
+       */
+      readonly destination: (0 | 1)[];
+    }
+
+    /**
+     * Options passed to `pbjs.enableAnalytics({ provider: 'iiqAnalytics', options: { ... } })`.
+     *
+     * @see https://github.com/prebid/Prebid.js/blob/master/modules/intentIqAnalyticsAdapter.ts
+     */
+    export interface IIntentIqAnalyticsAdapterOptions {
+      /**
+       * Partner ID assigned by IntentIQ. Required.
+       */
+      readonly partner: number;
+
+      /**
+       * Set to `true` to allow manual win reporting via
+       * `window.intentIqAnalyticsAdapter_<partnerId>.reportExternalWin()`. Defaults to `false`.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly manualWinReportEnabled?: boolean;
+
+      /**
+       * Enable GAM predict-score reporting. Defaults to `false`.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly gamPredictReporting?: boolean;
+
+      /**
+       * HTTP method used to send reports. Defaults to `'GET'`.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly reportMethod?: 'GET' | 'POST';
+
+      /**
+       * Override for the IntentIQ reporting server base URL. Derived from `region` if unset.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly reportingServerAddress?: string;
+
+      /**
+       * Geo-region routing hint for the reporting server.
+       *
+       * Always hardcoded to `'gdpr'` by moli, shared with the `intentIqId` userId provider.
+       */
+      readonly region?: string;
+
+      /**
+       * Controls how the `placementId` field in reports is populated:
+       * 1 = adUnitCode then placementId (default), 2 = placementId then adUnitCode,
+       * 3 = adUnitCode only, 4 = placementId only.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly adUnitConfig?: 1 | 2 | 3 | 4;
+
+      /**
+       * Determines how the A/B test group is assigned. Defaults to `'IIQServer'`. Shared with the
+       * `intentIqId` userId provider.
+       */
+      readonly ABTestingConfigurationSource?: userSync.IntentIqABConfigSource;
+
+      /**
+       * Explicit A/B group override. Only used when `ABTestingConfigurationSource` is `'group'`.
+       */
+      readonly group?: 'A' | 'B';
+
+      /**
+       * Percentage of users placed in the WITH_IIQ cohort (0-100). Defaults to 95.
+       */
+      readonly abPercentage?: number;
+
+      /**
+       * Comma-separated list of browser names (lowercase) excluded from reporting, e.g.
+       * `'chrome,safari'`. Shared with the `intentIqId` userId provider.
+       */
+      readonly browserBlackList?: string;
+
+      /**
+       * Publisher domain name appended to report URLs. Shared with the `intentIqId` userId
+       * provider, derived from `adUnitPathVariables.domain` at runtime.
+       */
+      readonly domainName?: string;
+
+      /**
+       * Custom parameters appended to report URLs.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly additionalParams?: IIntentIqAnalyticsAdapterAdditionalParam[];
+
+      /**
+       * When `true`, first-party data is stored under a partner-specific key.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly siloEnabled?: boolean;
+
+      /**
+       * Reference to the GAM `googletag.pubads()` object for predict-score reporting. Shared with
+       * the `intentIqId` userId provider.
+       */
+      readonly gamObjectReference?: Record<string, unknown>;
+    }
+
+    export interface IIntentIqAnalyticsAdapter extends IAnalyticsAdapter<IIntentIqAnalyticsAdapterOptions> {
+      readonly provider: 'iiqAnalytics';
     }
   }
 
