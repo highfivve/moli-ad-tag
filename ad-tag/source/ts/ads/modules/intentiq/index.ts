@@ -112,8 +112,11 @@ export const createIntentIq = (): IModule => {
     },
     params: {
       partner: config.partner,
-      domainName: context.adUnitPathVariables__.domain,
       region: 'gdpr',
+      // the domain ad unit path variable is optional, so there may be no domain to send
+      ...(context.adUnitPathVariables__.domain
+        ? { domainName: context.adUnitPathVariables__.domain }
+        : {}),
       ...(config.browserBlackList ? { browserBlackList: config.browserBlackList } : {}),
       ...(config.abPercentage === undefined ? {} : { abPercentage: config.abPercentage }),
       ...(config.ABTestingConfigurationSource
@@ -137,6 +140,13 @@ export const createIntentIq = (): IModule => {
     // without a prebid configuration there's no pbjs instance to configure
     if (context.env__ === 'test' || !context.config__.prebid) {
       return Promise.resolve();
+    }
+
+    if (!context.adUnitPathVariables__.domain) {
+      context.logger__.warn(
+        'IntentIQ',
+        'no domain ad unit path variable set. The intentIqId provider will be configured without a domainName'
+      );
     }
 
     context.window__.pbjs.que.push(() => {
@@ -174,7 +184,16 @@ export const createIntentIq = (): IModule => {
 
     initSteps__(): InitStep[] {
       const config = intentIqConfig;
-      return config ? [mkInitStep(name, ctx => loadIntentIqScript(config, ctx))] : [];
+      return config
+        ? [
+            mkInitStep(name, ctx => {
+              // async loading - the userId submodule doesn't depend on this script and prebid
+              // takes care of the auction delay
+              loadIntentIqScript(config, ctx);
+              return Promise.resolve();
+            })
+          ]
+        : [];
     },
 
     configureSteps__(): ConfigureStep[] {

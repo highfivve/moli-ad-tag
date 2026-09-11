@@ -363,11 +363,15 @@ const IntentIqModule: React.FC<{ config: modules.intentiq.IntentIqModuleConfig }
         <Tag>{config.gamParameterName}</Tag>
       </Row>
     )}
-    <Row label="A/B testing">
-      <Tag variant="blue">{config.ABTestingConfigurationSource ?? 'IIQServer'}</Tag>
-      {config.group && <Tag variant="grey">group {config.group}</Tag>}
-      {config.abPercentage !== undefined && <Tag variant="grey">{config.abPercentage}%</Tag>}
-    </Row>
+    {(config.ABTestingConfigurationSource || config.group || config.abPercentage !== undefined) && (
+      <Row label="A/B testing">
+        {config.ABTestingConfigurationSource && (
+          <Tag variant="blue">{config.ABTestingConfigurationSource}</Tag>
+        )}
+        {config.group && <Tag variant="grey">group {config.group}</Tag>}
+        {config.abPercentage !== undefined && <Tag variant="grey">{config.abPercentage}%</Tag>}
+      </Row>
+    )}
     {config.browserBlackList && (
       <Row label="Browser blacklist">
         <ListTags values={config.browserBlackList.split(',')} variant="grey" />

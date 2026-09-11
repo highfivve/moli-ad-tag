@@ -215,6 +215,18 @@ describe('IntentIQ Module', () => {
       });
     });
 
+    it('should not set a domainName if no domain ad unit path variable is configured', async () => {
+      const mergeConfigSpy = sandbox.spy(jsDomWindow.pbjs, 'mergeConfig');
+      const module = createModule();
+      await module.configureSteps__()[0]({ ...adPipelineContext(), adUnitPathVariables__: {} }, []);
+
+      expect(mergeConfigSpy).to.have.been.calledOnce;
+      expect(mergedProvider(mergeConfigSpy).params).to.deep.equal({
+        partner: 12345,
+        region: 'gdpr'
+      });
+    });
+
     it('should not set a gamObjectReference if gamParameterName is not configured', async () => {
       jsDomWindow.googletag = createGoogletagStub();
       const mergeConfigSpy = sandbox.spy(jsDomWindow.pbjs, 'mergeConfig');

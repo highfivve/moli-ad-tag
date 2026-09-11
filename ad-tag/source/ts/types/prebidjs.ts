@@ -1406,7 +1406,7 @@ export namespace prebidjs {
       readonly groupChanged?: (group: 'A' | 'B', terminationCause?: number) => void;
 
       /**
-       * Reference to the GAM `googletag.pubads()` object for automatic targeting key injection.
+       * Reference to the `googletag` object, used for automatic targeting key injection.
        *
        * Computed at runtime by the `intentiq` module from `window.googletag` whenever
        * `gamParameterName` is set - never configurable.
@@ -2568,8 +2568,8 @@ export namespace prebidjs {
       readonly siloEnabled?: boolean;
 
       /**
-       * Reference to the GAM `googletag.pubads()` object for predict-score reporting. Should match the reference the
-       * `intentiq` module passes to the userId provider.
+       * Reference to the `googletag` object, used for predict-score reporting. Should match the
+       * reference the `intentiq` module passes to the userId provider.
        */
       readonly gamObjectReference?: Record<string, unknown>;
     }
