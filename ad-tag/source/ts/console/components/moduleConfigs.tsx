@@ -351,6 +351,36 @@ const IdentityLinkModule: React.FC<{ config: modules.identitylink.IdentityLinkMo
   </>
 );
 
+const IntentIqModule: React.FC<{ config: modules.intentiq.IntentIqModuleConfig }> = ({
+  config
+}) => (
+  <>
+    <Row label="Partner">
+      <Tag>{config.partner}</Tag>
+    </Row>
+    {config.gamParameterName && (
+      <Row label="GAM parameter">
+        <Tag>{config.gamParameterName}</Tag>
+      </Row>
+    )}
+    <Row label="A/B testing">
+      <Tag variant="blue">{config.ABTestingConfigurationSource ?? 'IIQServer'}</Tag>
+      {config.group && <Tag variant="grey">group {config.group}</Tag>}
+      {config.abPercentage !== undefined && <Tag variant="grey">{config.abPercentage}%</Tag>}
+    </Row>
+    {config.browserBlackList && (
+      <Row label="Browser blacklist">
+        <ListTags values={config.browserBlackList.split(',')} variant="grey" />
+      </Row>
+    )}
+    {config.scriptUrl && (
+      <Row label="Script URL">
+        <Tag>{config.scriptUrl}</Tag>
+      </Row>
+    )}
+  </>
+);
+
 const PubstackModule: React.FC<{ config: modules.pubstack.PubstackConfig }> = ({ config }) => (
   <Row label="Tag ID">
     <Tag>{config.tagId}</Tag>
@@ -729,6 +759,7 @@ const moduleComponents: {
   geoedge: GeoEdgeModule,
   identitylink: IdentityLinkModule,
   inlineAi: InlineAiModule,
+  intentiq: IntentIqModule,
   pubstack: PubstackModule,
   skin: SkinModule,
   styles: StylesModule,

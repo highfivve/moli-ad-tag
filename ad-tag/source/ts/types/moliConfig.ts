@@ -2994,6 +2994,90 @@ export namespace modules {
     }
   }
 
+  export namespace intentiq {
+    /**
+     * ## IntentIQ module configuration
+     *
+     * Configures the `intentIqId` prebid userId provider. The module is the only writer of that
+     * userSync entry - it is never authored in `MoliConfig.prebid.config.userSync`.
+     *
+     * Note that the `iiqAnalytics` analytics adapter is **not** part of this configuration. It is
+     * configured directly in `MoliConfig.prebid.analyticAdapters` and enabled by the generic
+     * `pbjs.enableAnalytics` call in the prebid init step.
+     *
+     * @example
+     * ```json
+     * {
+     *   "intentiq": {
+     *     "enabled": true,
+     *     "partner": 123456,
+     *     "gamParameterName": "intent_iq_group"
+     *   }
+     * }
+     * ```
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/userid-submodules/intentiq.html
+     */
+    export interface IntentIqModuleConfig extends IModuleConfig {
+      /**
+       * Partner ID assigned by IntentIQ.
+       */
+      readonly partner: number;
+
+      /**
+       * Comma-separated list of browser names (lowercase) that should be excluded from identity
+       * resolution, e.g. `'chrome,safari'`.
+       */
+      readonly browserBlackList?: string;
+
+      /**
+       * GAM targeting key used to pass the A/B group. Defaults to `'intent_iq_group'` in prebid.
+       *
+       * If set, the module passes `window.googletag` as the `gamObjectReference` so the IntentIQ
+       * userId submodule can set the targeting key itself.
+       */
+      readonly gamParameterName?: string;
+
+      /**
+       * Percentage of users placed in the WITH_IIQ (group A) cohort. Accepts 0-100. Defaults to 95
+       * in prebid. Only used when `ABTestingConfigurationSource` is `'percentage'` or `'IIQServer'`.
+       */
+      readonly abPercentage?: number;
+
+      /**
+       * Determines how the A/B test group is assigned. Defaults to `'IIQServer'` in prebid.
+       */
+      readonly ABTestingConfigurationSource?: prebidjs.userSync.IntentIqABConfigSource;
+
+      /**
+       * Explicit A/B group override. Only used when `ABTestingConfigurationSource` is `'group'`.
+       */
+      readonly group?: 'A' | 'B';
+
+      /**
+       * Optional URL of IntentIQ's alternative raw CDN tag script. If set, the module loads this
+       * script in an init step. This is not a prebid configuration field.
+       */
+      readonly scriptUrl?: string;
+
+      /**
+       * Storage settings for the userId provider. `type` and `name` are always `html5` /
+       * `intentIqId` and cannot be configured.
+       */
+      readonly storage?: {
+        /**
+         * How long (in days) the id is stored. Defaults to `0`.
+         */
+        readonly expires?: number;
+
+        /**
+         * How long (in seconds) before the id is refreshed. Defaults to `0`.
+         */
+        readonly refreshInSeconds?: number;
+      };
+    }
+  }
+
   export namespace yield_optimization {
     export type YieldOptimizationConfigProvider = 'none' | 'static' | 'dynamic';
 
@@ -3597,6 +3681,7 @@ export namespace modules {
     readonly geoedge?: Overridable<geoedge.GeoEdgeModuleConfig>;
     readonly identitylink?: Overridable<identitylink.IdentityLinkModuleConfig>;
     readonly inlineAi?: Overridable<inlineAi.InlineAiModuleConfig>;
+    readonly intentiq?: Overridable<intentiq.IntentIqModuleConfig>;
     readonly pubstack?: Overridable<pubstack.PubstackConfig>;
     readonly skin?: Overridable<skin.SkinModuleConfig>;
     readonly stickyHeaderAd?: Overridable<stickyHeaderAd.StickyHeaderAdConfig>;

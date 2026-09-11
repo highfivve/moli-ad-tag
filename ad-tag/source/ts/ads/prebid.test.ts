@@ -39,7 +39,6 @@ describe('prebid', () => {
   const { dom, jsDomWindow } = createDomAndWindow();
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
-  const loadScriptSpy = sandbox.spy(assetLoaderService, 'loadScript');
 
   const adPipelineContext = (
     env: Environment = 'production',
@@ -219,7 +218,7 @@ describe('prebid', () => {
   });
 
   describe('prebid init step', () => {
-    const loadSpy = loadScriptSpy;
+    const loadSpy = sandbox.spy(assetLoaderService, 'loadScript');
 
     it('should not load prebid externally if prebid was already loaded', async () => {
       dom.window.pbjs = { que: [], libLoaded: true };
@@ -411,148 +410,6 @@ describe('prebid', () => {
         expect(setBidderConfigSpy).to.have.been.calledTwice;
         expect(setBidderConfigSpy.firstCall).to.have.been.calledWithExactly(bidderConfigA, true);
         expect(setBidderConfigSpy.secondCall).to.have.been.calledWithExactly(bidderConfigB, false);
-      });
-    });
-
-    describe('intentIq', () => {
-      afterEach(() => {
-        delete (jsDomWindow as any).googletag;
-      });
-
-      const intentIqUserSync = (
-        params?: Partial<prebidjs.userSync.IIntentIqIdProviderParams>
-      ): prebidjs.userSync.IUserSyncConfig => ({
-        userIds: [
-          {
-            name: 'intentIqId',
-            params: { partner: 12345, ...params }
-          }
-        ]
-      });
-
-      it('should enrich the intentIqId userId provider before calling pbjs.setConfig', () => {
-        const step = prebidConfigure(
-          {
-            ...moliPrebidTestConfig,
-            config: { userSync: intentIqUserSync() }
-          },
-          dummySchainConfig
-        );
-        const setConfigSpy = sandbox.spy(dom.window.pbjs, 'setConfig');
-
-        step(adPipelineContext(), []);
-
-        expect(setConfigSpy).to.have.been.calledOnce;
-        const config = setConfigSpy.firstCall.args[0];
-        const provider = config.userSync?.userIds?.find(
-          (p: prebidjs.userSync.UserIdProvider) => p.name === 'intentIqId'
-        ) as prebidjs.userSync.IIntentIqIdProvider;
-
-        expect(provider.params.domainName).to.equal('example.com');
-        expect(provider.params.region).to.equal('gdpr');
-        expect(provider.storage).to.deep.equal({
-          type: 'html5',
-          name: 'intentIqId',
-          expires: 0,
-          refreshInSeconds: 0
-        });
-      });
-
-      it('should not call pbjs.enableAnalytics with iiqAnalytics if intentIqId is not configured', () => {
-        const step = prebidConfigure(moliPrebidTestConfig, dummySchainConfig);
-        const enableAnalyticsSpy = sandbox.spy(dom.window.pbjs, 'enableAnalytics');
-
-        step(adPipelineContext(), []);
-        expect(enableAnalyticsSpy).to.have.not.been.called;
-      });
-
-      it('should call pbjs.enableAnalytics with the iiqAnalytics adapter sharing the userId provider config', () => {
-        const step = prebidConfigure(
-          {
-            ...moliPrebidTestConfig,
-            config: {
-              userSync: intentIqUserSync({
-                ABTestingConfigurationSource: 'percentage',
-                browserBlackList: 'chrome',
-                abPercentage: 50
-              })
-            }
-          },
-          dummySchainConfig
-        );
-        const enableAnalyticsSpy = sandbox.spy(dom.window.pbjs, 'enableAnalytics');
-
-        step(adPipelineContext(), []);
-
-        expect(enableAnalyticsSpy).to.have.been.calledOnceWithExactly([
-          {
-            provider: 'iiqAnalytics',
-            options: {
-              partner: 12345,
-              region: 'gdpr',
-              ABTestingConfigurationSource: 'percentage',
-              browserBlackList: 'chrome',
-              domainName: 'example.com',
-              group: undefined,
-              abPercentage: 50,
-              gamObjectReference: undefined
-            }
-          }
-        ]);
-      });
-
-      it('should not load a script if scriptUrl is not configured', () => {
-        const step = prebidConfigure(
-          {
-            ...moliPrebidTestConfig,
-            config: { userSync: intentIqUserSync() }
-          },
-          dummySchainConfig
-        );
-
-        step(adPipelineContext(), []);
-        expect(loadScriptSpy).to.have.not.been.called;
-      });
-
-      it('should load the intentIq script via the asset loader service if scriptUrl is configured', () => {
-        const scriptUrl = 'https://cdn.intentiq.com/script.js';
-        const step = prebidConfigure(
-          {
-            ...moliPrebidTestConfig,
-            config: { userSync: intentIqUserSync({ scriptUrl }) }
-          },
-          dummySchainConfig
-        );
-
-        step(adPipelineContext(), []);
-
-        expect(loadScriptSpy).to.have.been.calledOnce;
-        expect(loadScriptSpy.firstCall.args[0]).to.include({
-          name: 'intentIq',
-          assetUrl: scriptUrl
-        });
-      });
-
-      it('should inject window.googletag as gamObjectReference when gamParameterName is configured', () => {
-        const googletagStub = createGoogletagStub();
-        (jsDomWindow as any).googletag = googletagStub;
-
-        const step = prebidConfigure(
-          {
-            ...moliPrebidTestConfig,
-            config: { userSync: intentIqUserSync({ gamParameterName: 'intent_iq_group' }) }
-          },
-          dummySchainConfig
-        );
-        const setConfigSpy = sandbox.spy(dom.window.pbjs, 'setConfig');
-
-        step(adPipelineContext(), []);
-
-        const config = setConfigSpy.firstCall.args[0];
-        const provider = config.userSync?.userIds?.find(
-          (p: prebidjs.userSync.UserIdProvider) => p.name === 'intentIqId'
-        ) as prebidjs.userSync.IIntentIqIdProvider;
-        expect(provider.params.gamObjectReference).to.equal(googletagStub);
       });
     });
 

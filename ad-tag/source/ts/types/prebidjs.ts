@@ -1344,6 +1344,12 @@ export namespace prebidjs {
     export type IntentIqABConfigSource = 'percentage' | 'group' | 'IIQServer' | 'disabled';
 
     /**
+     * Parameters of the `intentIqId` userId provider.
+     *
+     * This entry is never authored in `MoliConfig`. It is assembled by the `intentiq` module from
+     * `modules.intentiq.IntentIqModuleConfig` plus runtime-derived values and merged into the
+     * prebid `userSync` config - see `ads/modules/intentiq`.
+     *
      * @see https://github.com/prebid/Prebid.js/blob/master/modules/intentIqIdSystem.ts
      * @see https://docs.prebid.org/dev-docs/modules/userid-submodules/intentiq.html
      */
@@ -1378,8 +1384,8 @@ export namespace prebidjs {
       /**
        * Publisher domain name, used to build the referrer URL parameter.
        *
-       * Filled in automatically by moli from `adUnitPathVariables.domain` at runtime - do not set
-       * this in a hand-written module config.
+       * Computed at runtime by the `intentiq` module from `adUnitPathVariables.domain` - never
+       * configurable.
        */
       readonly domainName?: string;
 
@@ -1402,8 +1408,8 @@ export namespace prebidjs {
       /**
        * Reference to the GAM `googletag.pubads()` object for automatic targeting key injection.
        *
-       * Filled in automatically by moli with `window.googletag` whenever `gamParameterName` is set -
-       * do not set this in a hand-written module config.
+       * Computed at runtime by the `intentiq` module from `window.googletag` whenever
+       * `gamParameterName` is set - never configurable.
        */
       readonly gamObjectReference?: Record<string, unknown>;
 
@@ -1491,7 +1497,7 @@ export namespace prebidjs {
       /**
        * Geo-region routing hint for the IntentIQ API/sync servers.
        *
-       * Always hardcoded to `'gdpr'` by moli - do not set this in a hand-written module config.
+       * Always hardcoded to `'gdpr'` by the `intentiq` module - never configurable.
        */
       readonly region?: string;
 
@@ -1508,13 +1514,6 @@ export namespace prebidjs {
        * Out of scope for v1 - never populated by moli.
        */
       readonly iiqPixelServerAddress?: string;
-
-      /**
-       * Moli-specific extension (not a prebid IntentIQ config field): an optional URL to IntentIQ's
-       * alternative raw CDN tag script. If set, moli loads this script via the asset loader service.
-       * No portal field drives this yet - always `undefined` in portal-generated configs.
-       */
-      readonly scriptUrl?: string;
     }
 
     /**
@@ -2469,6 +2468,11 @@ export namespace prebidjs {
     /**
      * Options passed to `pbjs.enableAnalytics({ provider: 'iiqAnalytics', options: { ... } })`.
      *
+     * The whole adapter entry is authored in `MoliConfig.prebid.analyticAdapters` and enabled by
+     * the generic `pbjs.enableAnalytics(analyticAdapters)` call in `prebidInit`. The ad-tag never
+     * derives or populates any of these options itself - the `intentiq` module only owns the
+     * `intentIqId` userId provider.
+     *
      * @see https://github.com/prebid/Prebid.js/blob/master/modules/intentIqAnalyticsAdapter.ts
      */
     export interface IIntentIqAnalyticsAdapterOptions {
@@ -2481,35 +2485,34 @@ export namespace prebidjs {
        * Set to `true` to allow manual win reporting via
        * `window.intentIqAnalyticsAdapter_<partnerId>.reportExternalWin()`. Defaults to `false`.
        *
-       * Out of scope for v1 - never populated by moli.
+       * Never populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.
        */
       readonly manualWinReportEnabled?: boolean;
 
       /**
        * Enable GAM predict-score reporting. Defaults to `false`.
        *
-       * Out of scope for v1 - never populated by moli.
+       * Never populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.
        */
       readonly gamPredictReporting?: boolean;
 
       /**
        * HTTP method used to send reports. Defaults to `'GET'`.
        *
-       * Out of scope for v1 - never populated by moli.
+       * Never populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.
        */
       readonly reportMethod?: 'GET' | 'POST';
 
       /**
        * Override for the IntentIQ reporting server base URL. Derived from `region` if unset.
        *
-       * Out of scope for v1 - never populated by moli.
+       * Never populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.
        */
       readonly reportingServerAddress?: string;
 
       /**
-       * Geo-region routing hint for the reporting server.
-       *
-       * Always hardcoded to `'gdpr'` by moli, shared with the `intentIqId` userId provider.
+       * Geo-region routing hint for the reporting server. Should be set to `'gdpr'`, matching the
+       * region the `intentiq` module hardcodes for the userId provider.
        */
       readonly region?: string;
 
@@ -2518,13 +2521,13 @@ export namespace prebidjs {
        * 1 = adUnitCode then placementId (default), 2 = placementId then adUnitCode,
        * 3 = adUnitCode only, 4 = placementId only.
        *
-       * Out of scope for v1 - never populated by moli.
+       * Never populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.
        */
       readonly adUnitConfig?: 1 | 2 | 3 | 4;
 
       /**
-       * Determines how the A/B test group is assigned. Defaults to `'IIQServer'`. Shared with the
-       * `intentIqId` userId provider.
+       * Determines how the A/B test group is assigned. Defaults to `'IIQServer'`. Should match the
+       * `intentiq` module config, which drives the userId provider.
        */
       readonly ABTestingConfigurationSource?: userSync.IntentIqABConfigSource;
 
@@ -2540,33 +2543,33 @@ export namespace prebidjs {
 
       /**
        * Comma-separated list of browser names (lowercase) excluded from reporting, e.g.
-       * `'chrome,safari'`. Shared with the `intentIqId` userId provider.
+       * `'chrome,safari'`. Should match the `intentiq` module config.
        */
       readonly browserBlackList?: string;
 
       /**
-       * Publisher domain name appended to report URLs. Shared with the `intentIqId` userId
-       * provider, derived from `adUnitPathVariables.domain` at runtime.
+       * Publisher domain name appended to report URLs. Should match the domain the
+       * `intentiq` module derives for the userId provider.
        */
       readonly domainName?: string;
 
       /**
        * Custom parameters appended to report URLs.
        *
-       * Out of scope for v1 - never populated by moli.
+       * Never populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.
        */
       readonly additionalParams?: IIntentIqAnalyticsAdapterAdditionalParam[];
 
       /**
        * When `true`, first-party data is stored under a partner-specific key.
        *
-       * Out of scope for v1 - never populated by moli.
+       * Never populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.
        */
       readonly siloEnabled?: boolean;
 
       /**
-       * Reference to the GAM `googletag.pubads()` object for predict-score reporting. Shared with
-       * the `intentIqId` userId provider.
+       * Reference to the GAM `googletag.pubads()` object for predict-score reporting. Should match the reference the
+       * `intentiq` module passes to the userId provider.
        */
       readonly gamObjectReference?: Record<string, unknown>;
     }

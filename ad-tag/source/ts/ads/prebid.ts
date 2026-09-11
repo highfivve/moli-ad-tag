@@ -30,11 +30,6 @@ import { isGamInterstitial } from 'ad-tag/ads/auctions/interstitialContext';
 import { isGamAnchor } from 'ad-tag/ads/auctions/anchorContext';
 import { criteoEnrichWithFpd } from 'ad-tag/ads/criteo';
 import { enrichId5WithFpd } from 'ad-tag/ads/id5';
-import {
-  createIntentIqAnalyticsAdapter,
-  enrichIntentIqId,
-  loadIntentIqScript
-} from 'ad-tag/ads/intentIq';
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
@@ -365,10 +360,9 @@ export const prebidConfigure = (
             });
           }
 
-          const enrichedUserIds = enrichIntentIqId(
-            context.window__,
-            context.adUnitPathVariables__,
-            enrichId5WithFpd(context.runtimeConfig__, prebidConfig.config.userSync?.userIds)
+          const enrichedUserIds = enrichId5WithFpd(
+            context.runtimeConfig__,
+            prebidConfig.config.userSync?.userIds
           );
           context.window__.pbjs.setConfig({
             ...prebidConfig.config,
@@ -383,17 +377,6 @@ export const prebidConfigure = (
                 : prebidConfig.config.userSync
             }
           });
-
-          // IntentIQ analytics adapter shares partner/ABConfigSource/browserBlackList/domainName
-          // with the (enriched) userId provider config, so it's derived from it here instead of
-          // requiring a separate, potentially inconsistent, `analyticAdapters` entry.
-          const intentIqAnalyticsAdapter = createIntentIqAnalyticsAdapter(enrichedUserIds);
-          if (intentIqAnalyticsAdapter) {
-            context.window__.pbjs.enableAnalytics([intentIqAnalyticsAdapter]);
-          }
-
-          // load IntentIQ's optional alternative raw-CDN-tag script, if configured.
-          loadIntentIqScript(context.assetLoaderService__, enrichedUserIds);
 
           const bidderConfigs = criteoEnrichWithFpd(
             context.runtimeConfig__,

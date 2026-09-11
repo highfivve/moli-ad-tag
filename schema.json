@@ -2637,6 +2637,137 @@
       ],
       "type": "object"
     },
+    "Overridable<modules.intentiq.IntentIqModuleConfig>": {
+      "additionalProperties": false,
+      "description": "## Label-conditioned config overrides\n\nWraps a configuration `C` so a publisher can provide a default configuration plus an ordered list of label-conditioned `overrides`. At the first ad request the active labels select the **first matching** override, whose `config` **fully replaces** the default (no field-by-field merge). If no override matches, the default is used.\n\nThis wrapper is shared by two concepts: module configs (`modules.ModulesConfig`) and the first-level features of the Global Auction Context (`auction.GlobalAuctionContextConfig`).\n\nThe override selector (`labelAll` / `labelAny` / `labelNone`) picks *which* config. For modules it is orthogonal to the module activation gate (`labelCondition`); auction features have no separate activation gate, so an override `config` with `enabled: false` is the only way to disable a feature for its labels.\n\nOverride selection runs once, at configure / initialize time. SPA navigations do not re-resolve it; the configuration is fixed for the page lifetime. Implementations never see `overrides` — they receive an already-resolved configuration.\n\nThe override `config` is the bare config `C`, which has no `overrides` field, so nesting overrides is structurally impossible.",
+      "properties": {
+        "ABTestingConfigurationSource": {
+          "$ref": "#/definitions/prebidjs.userSync.IntentIqABConfigSource",
+          "description": "Determines how the A/B test group is assigned. Defaults to `'IIQServer'` in prebid."
+        },
+        "abPercentage": {
+          "description": "Percentage of users placed in the WITH_IIQ (group A) cohort. Accepts 0-100. Defaults to 95 in prebid. Only used when `ABTestingConfigurationSource` is `'percentage'` or `'IIQServer'`.",
+          "type": "number"
+        },
+        "browserBlackList": {
+          "description": "Comma-separated list of browser names (lowercase) that should be excluded from identity resolution, e.g. `'chrome,safari'`.",
+          "type": "string"
+        },
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "gamParameterName": {
+          "description": "GAM targeting key used to pass the A/B group. Defaults to `'intent_iq_group'` in prebid.\n\nIf set, the module passes `window.googletag` as the `gamObjectReference` so the IntentIQ userId submodule can set the targeting key itself.",
+          "type": "string"
+        },
+        "group": {
+          "description": "Explicit A/B group override. Only used when `ABTestingConfigurationSource` is `'group'`.",
+          "enum": [
+            "A",
+            "B"
+          ],
+          "type": "string"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
+        "overrides": {
+          "description": "Ordered list of label-conditioned configuration overrides. The first entry whose label condition matches the active labels fully replaces the default configuration. If none match, the default configuration is used.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "config": {
+                    "$ref": "#/definitions/modules.intentiq.IntentIqModuleConfig"
+                  },
+                  "labelAll": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "config",
+                  "labelAll"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "config": {
+                    "$ref": "#/definitions/modules.intentiq.IntentIqModuleConfig"
+                  },
+                  "labelAny": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "config",
+                  "labelAny"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "config": {
+                    "$ref": "#/definitions/modules.intentiq.IntentIqModuleConfig"
+                  },
+                  "labelNone": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "config",
+                  "labelNone"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        "partner": {
+          "description": "Partner ID assigned by IntentIQ.",
+          "type": "number"
+        },
+        "scriptUrl": {
+          "description": "Optional URL of IntentIQ's alternative raw CDN tag script. If set, the module loads this script in an init step. This is not a prebid configuration field.",
+          "type": "string"
+        },
+        "storage": {
+          "additionalProperties": false,
+          "description": "Storage settings for the userId provider. `type` and `name` are always `html5` / `intentIqId` and cannot be configured.",
+          "properties": {
+            "expires": {
+              "description": "How long (in days) the id is stored. Defaults to `0`.",
+              "type": "number"
+            },
+            "refreshInSeconds": {
+              "description": "How long (in seconds) before the id is refreshed. Defaults to `0`.",
+              "type": "number"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "enabled",
+        "partner"
+      ],
+      "type": "object"
+    },
     "Overridable<modules.interstitial.InterstitialModuleConfig>": {
       "additionalProperties": false,
       "description": "## Label-conditioned config overrides\n\nWraps a configuration `C` so a publisher can provide a default configuration plus an ordered list of label-conditioned `overrides`. At the first ad request the active labels select the **first matching** override, whose `config` **fully replaces** the default (no field-by-field merge). If no override matches, the default is used.\n\nThis wrapper is shared by two concepts: module configs (`modules.ModulesConfig`) and the first-level features of the Global Auction Context (`auction.GlobalAuctionContextConfig`).\n\nThe override selector (`labelAll` / `labelAny` / `labelNone`) picks *which* config. For modules it is orthogonal to the module activation gate (`labelCondition`); auction features have no separate activation gate, so an override `config` with `enabled: false` is the only way to disable a feature for its labels.\n\nOverride selection runs once, at configure / initialize time. SPA navigations do not re-resolve it; the configuration is fixed for the page lifetime. Implementations never see `overrides` — they receive an already-resolved configuration.\n\nThe override `config` is the bare config `C`, which has no `overrides` field, so nesting overrides is structurally impossible.",
@@ -5763,6 +5894,9 @@
         "inlineAi": {
           "$ref": "#/definitions/Overridable%3Cmodules.inlineAi.InlineAiModuleConfig%3E"
         },
+        "intentiq": {
+          "$ref": "#/definitions/Overridable%3Cmodules.intentiq.IntentIqModuleConfig%3E"
+        },
         "interstitial": {
           "$ref": "#/definitions/Overridable%3Cmodules.interstitial.InterstitialModuleConfig%3E"
         },
@@ -7824,6 +7958,72 @@
       "required": [
         "name",
         "type"
+      ],
+      "type": "object"
+    },
+    "modules.intentiq.IntentIqModuleConfig": {
+      "additionalProperties": false,
+      "description": "## IntentIQ module configuration\n\nConfigures the `intentIqId` prebid userId provider. The module is the only writer of that userSync entry - it is never authored in `MoliConfig.prebid.config.userSync`.\n\nNote that the `iiqAnalytics` analytics adapter is **not** part of this configuration. It is configured directly in `MoliConfig.prebid.analyticAdapters` and enabled by the generic `pbjs.enableAnalytics` call in the prebid init step.",
+      "properties": {
+        "ABTestingConfigurationSource": {
+          "$ref": "#/definitions/prebidjs.userSync.IntentIqABConfigSource",
+          "description": "Determines how the A/B test group is assigned. Defaults to `'IIQServer'` in prebid."
+        },
+        "abPercentage": {
+          "description": "Percentage of users placed in the WITH_IIQ (group A) cohort. Accepts 0-100. Defaults to 95 in prebid. Only used when `ABTestingConfigurationSource` is `'percentage'` or `'IIQServer'`.",
+          "type": "number"
+        },
+        "browserBlackList": {
+          "description": "Comma-separated list of browser names (lowercase) that should be excluded from identity resolution, e.g. `'chrome,safari'`.",
+          "type": "string"
+        },
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "gamParameterName": {
+          "description": "GAM targeting key used to pass the A/B group. Defaults to `'intent_iq_group'` in prebid.\n\nIf set, the module passes `window.googletag` as the `gamObjectReference` so the IntentIQ userId submodule can set the targeting key itself.",
+          "type": "string"
+        },
+        "group": {
+          "description": "Explicit A/B group override. Only used when `ABTestingConfigurationSource` is `'group'`.",
+          "enum": [
+            "A",
+            "B"
+          ],
+          "type": "string"
+        },
+        "labelCondition": {
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
+        },
+        "partner": {
+          "description": "Partner ID assigned by IntentIQ.",
+          "type": "number"
+        },
+        "scriptUrl": {
+          "description": "Optional URL of IntentIQ's alternative raw CDN tag script. If set, the module loads this script in an init step. This is not a prebid configuration field.",
+          "type": "string"
+        },
+        "storage": {
+          "additionalProperties": false,
+          "description": "Storage settings for the userId provider. `type` and `name` are always `html5` / `intentIqId` and cannot be configured.",
+          "properties": {
+            "expires": {
+              "description": "How long (in days) the id is stored. Defaults to `0`.",
+              "type": "number"
+            },
+            "refreshInSeconds": {
+              "description": "How long (in seconds) before the id is refreshed. Defaults to `0`.",
+              "type": "number"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "enabled",
+        "partner"
       ],
       "type": "object"
     },
@@ -15798,7 +15998,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-211063-211066-248365657-211056-211066-248365657-211024-211852-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-222884-222887-248365657-222877-222887-248365657-222845-223673-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-235921%3E"
           },
           "type": "array"
         }
@@ -15808,7 +16008,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<(alias-248365657-209967-210137-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-2241001149092559&alias-248365657-210137-210270-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-2241001210238678)>": {
+    "prebidjs.activitycontrols.IActivity<(alias-248365657-221788-221958-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-2359211149092559&alias-248365657-221958-222091-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-2359211210238678)>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -15818,7 +16018,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-209967-210137-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-2241001149092559%26alias-248365657-210137-210270-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-2241001210238678)%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-221788-221958-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-2359211149092559%26alias-248365657-221958-222091-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-2359211210238678)%3E"
           },
           "type": "array"
         }
@@ -15828,7 +16028,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-209512-209726-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-22410098888365>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-221333-221547-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-23592198888365>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -15838,7 +16038,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-209512-209726-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-22410098888365%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-221333-221547-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-23592198888365%3E"
           },
           "type": "array"
         }
@@ -15848,7 +16048,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-209726-209967-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100187177090>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-221547-221788-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-235921187177090>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -15858,7 +16058,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-209726-209967-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100187177090%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-221547-221788-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-235921187177090%3E"
           },
           "type": "array"
         }
@@ -15868,7 +16068,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-209967-210137-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-2241001149092559&alias-248365657-210137-210270-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-2241001210238678)>": {
+    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-221788-221958-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-2359211149092559&alias-248365657-221958-222091-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-2359211210238678)>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -15931,7 +16131,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-209512-209726-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-22410098888365>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-221333-221547-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-23592198888365>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -15991,7 +16191,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-209726-209967-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100187177090>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-221547-221788-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-235921187177090>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -16046,7 +16246,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<structure-248365657-211063-211066-248365657-211056-211066-248365657-211024-211852-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100>": {
+    "prebidjs.activitycontrols.IActivityRule<structure-248365657-222884-222887-248365657-222877-222887-248365657-222845-223673-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-235921>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -16102,7 +16302,7 @@
       "description": "Starting with version 7.52, Prebid.js introduced a centralized control mechanism for privacy-sensitive activities\n- such as accessing device storage or sharing data with partners.  These controls are intended to serve as building blocks for privacy protection mechanisms, allowing module developers or publishers to directly specify what should be permitted or avoided in any given regulatory environment.",
       "properties": {
         "accessDevice": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209512-209726-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-22410098888365%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-221333-221547-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-23592198888365%3E",
           "description": "A component wants to use device storage.\n\nEffect when denied: Storage is disabled"
         },
         "enrichEids": {
@@ -16114,7 +16314,7 @@
           "description": "A Real-Time Data (RTD) submodule wants to add user first-party data to outgoing requests (`user.data` in ORTB)\n\nEffect when denied: User FPD is discarded"
         },
         "fetchBids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209726-209967-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-221547-221788-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-235921187177090%3E",
           "description": "A bid adapter wants to participate in an auction\n\nEffect when denied: Bidder is removed from the auction"
         },
         "reportAnalytics": {
@@ -16122,23 +16322,23 @@
           "description": "An analytics adapter is being enabled through `pbjs.enableAnalytics`\n\nEffect when denied: Adapter remains disabled"
         },
         "syncUser": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-209967-210137-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-2241001149092559%26alias-248365657-210137-210270-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-2241001210238678)%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-221788-221958-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-2359211149092559%26alias-248365657-221958-222091-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-2359211210238678)%3E",
           "description": "A bid adapter wants to fetch a [user sync](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-Configure-User-Syncing)\n\nEffect when denied: User sync is skipped"
         },
         "transmitEids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209726-209967-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-221547-221788-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-235921187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user IDs to their endpoint.\n\nEffect when denied: User IDs are hidden from the component"
         },
         "transmitPreciseGeo": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209726-209967-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-221547-221788-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-235921187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit precise geolocation data to their endpoint.\n\nEffect when denied: Component is allowed only 2-digit precision for latitude and longitude"
         },
         "transmitTid": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209726-209967-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-221547-221788-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-235921187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit globally unique transaction IDs to their endpoint.\n\nEffect when denied: Transaction IDs are hidden from the component"
         },
         "transmitUfpd": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-209726-209967-248365657-208931-215034-248365657-208816-215034-248365657-195-224099-248365657-168-224099-248365657-0-224100187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-221547-221788-248365657-220752-226855-248365657-220637-226855-248365657-195-235920-248365657-168-235920-248365657-0-235921187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user FPD to their endpoint.\n\nEffect when denied: User FPD is hidden from the component"
         }
       },
@@ -16157,6 +16357,9 @@
         },
         {
           "$ref": "#/definitions/prebidjs.analytics.IGenericAnalyticsAdapter"
+        },
+        {
+          "$ref": "#/definitions/prebidjs.analytics.IIntentIqAnalyticsAdapter"
         }
       ]
     },
@@ -16751,6 +16954,161 @@
           "type": "string"
         }
       },
+      "type": "object"
+    },
+    "prebidjs.analytics.IIntentIqAnalyticsAdapter": {
+      "additionalProperties": false,
+      "properties": {
+        "excludeEvents": {
+          "description": "Event blocklist; if provided, these events will not be forwarded to the adapter",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "includeEvents": {
+          "description": "Event include list; if provided, only these events will be forwarded to the adapter",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "options": {
+          "$ref": "#/definitions/prebidjs.analytics.IIntentIqAnalyticsAdapterOptions",
+          "description": "Adapter specific options"
+        },
+        "provider": {
+          "const": "iiqAnalytics",
+          "description": "Analytics adapter code",
+          "type": "string"
+        }
+      },
+      "required": [
+        "options",
+        "provider"
+      ],
+      "type": "object"
+    },
+    "prebidjs.analytics.IIntentIqAnalyticsAdapterAdditionalParam": {
+      "additionalProperties": false,
+      "description": "A single custom parameter appended to IntentIQ report URLs.",
+      "properties": {
+        "destination": {
+          "description": "Whether to send the parameter with, in order, the sync request, the VR request and the win report. Each entry is 1 to send and 0 to omit.",
+          "items": {
+            "enum": [
+              0,
+              1
+            ],
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "parameterName": {
+          "description": "Name of the parameter, sent prefixed with `agp_`.",
+          "type": "string"
+        },
+        "parameterValue": {
+          "description": "Value to assign to the parameter.",
+          "type": [
+            "string",
+            "number"
+          ]
+        }
+      },
+      "required": [
+        "parameterName",
+        "parameterValue",
+        "destination"
+      ],
+      "type": "object"
+    },
+    "prebidjs.analytics.IIntentIqAnalyticsAdapterOptions": {
+      "additionalProperties": false,
+      "description": "Options passed to `pbjs.enableAnalytics({ provider: 'iiqAnalytics', options: { ... } })`.\n\nThe whole adapter entry is authored in `MoliConfig.prebid.analyticAdapters` and enabled by the generic `pbjs.enableAnalytics(analyticAdapters)` call in `prebidInit`. The ad-tag never derives or populates any of these options itself - the `intentiq` module only owns the `intentIqId` userId provider.",
+      "properties": {
+        "ABTestingConfigurationSource": {
+          "$ref": "#/definitions/prebidjs.userSync.IntentIqABConfigSource",
+          "description": "Determines how the A/B test group is assigned. Defaults to `'IIQServer'`. Should match the `intentiq` module config, which drives the userId provider."
+        },
+        "abPercentage": {
+          "description": "Percentage of users placed in the WITH_IIQ cohort (0-100). Defaults to 95.",
+          "type": "number"
+        },
+        "adUnitConfig": {
+          "description": "Controls how the `placementId` field in reports is populated: 1 = adUnitCode then placementId (default), 2 = placementId then adUnitCode, 3 = adUnitCode only, 4 = placementId only.\n\nNever populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.",
+          "enum": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "type": "number"
+        },
+        "additionalParams": {
+          "description": "Custom parameters appended to report URLs.\n\nNever populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.",
+          "items": {
+            "$ref": "#/definitions/prebidjs.analytics.IIntentIqAnalyticsAdapterAdditionalParam"
+          },
+          "type": "array"
+        },
+        "browserBlackList": {
+          "description": "Comma-separated list of browser names (lowercase) excluded from reporting, e.g. `'chrome,safari'`. Should match the `intentiq` module config.",
+          "type": "string"
+        },
+        "domainName": {
+          "description": "Publisher domain name appended to report URLs. Should match the domain the `intentiq` module derives for the userId provider.",
+          "type": "string"
+        },
+        "gamObjectReference": {
+          "additionalProperties": {},
+          "description": "Reference to the GAM `googletag.pubads()` object for predict-score reporting. Should match the reference the `intentiq` module passes to the userId provider.",
+          "type": "object"
+        },
+        "gamPredictReporting": {
+          "description": "Enable GAM predict-score reporting. Defaults to `false`.\n\nNever populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.",
+          "type": "boolean"
+        },
+        "group": {
+          "description": "Explicit A/B group override. Only used when `ABTestingConfigurationSource` is `'group'`.",
+          "enum": [
+            "A",
+            "B"
+          ],
+          "type": "string"
+        },
+        "manualWinReportEnabled": {
+          "description": "Set to `true` to allow manual win reporting via `window.intentIqAnalyticsAdapter_<partnerId>.reportExternalWin()`. Defaults to `false`.\n\nNever populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.",
+          "type": "boolean"
+        },
+        "partner": {
+          "description": "Partner ID assigned by IntentIQ. Required.",
+          "type": "number"
+        },
+        "region": {
+          "description": "Geo-region routing hint for the reporting server. Should be set to `'gdpr'`, matching the region the `intentiq` module hardcodes for the userId provider.",
+          "type": "string"
+        },
+        "reportMethod": {
+          "description": "HTTP method used to send reports. Defaults to `'GET'`.\n\nNever populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.",
+          "enum": [
+            "GET",
+            "POST"
+          ],
+          "type": "string"
+        },
+        "reportingServerAddress": {
+          "description": "Override for the IntentIQ reporting server base URL. Derived from `region` if unset.\n\nNever populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.",
+          "type": "string"
+        },
+        "siloEnabled": {
+          "description": "When `true`, first-party data is stored under a partner-specific key.\n\nNever populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "partner"
+      ],
       "type": "object"
     },
     "prebidjs.auctionOptions.IAuctionOptionsConfig": {
@@ -19570,6 +19928,207 @@
       ],
       "type": "object"
     },
+    "prebidjs.userSync.IIntentIqIdProvider": {
+      "additionalProperties": false,
+      "properties": {
+        "bidders": {
+          "description": "An array of bidder codes to which this user ID may be sent.",
+          "items": {
+            "$ref": "#/definitions/prebidjs.BidderCode"
+          },
+          "type": "array"
+        },
+        "name": {
+          "const": "intentIqId",
+          "description": "the provider name",
+          "type": "string"
+        },
+        "params": {
+          "$ref": "#/definitions/prebidjs.userSync.IIntentIqIdProviderParams",
+          "description": "provider specific params"
+        },
+        "storage": {
+          "$ref": "#/definitions/prebidjs.userSync.IUserIdStorage",
+          "description": "The publisher can specify some kind of local storage in which to store the results of the call to get the user ID. This can be either cookie or HTML5 storage. This is not needed when value is specified or the ID system is managing its own storage"
+        },
+        "value": {
+          "description": "Used only if the page has a separate mechanism for storing a User ID. The value is an object containing the values to be sent to the adapters."
+        }
+      },
+      "required": [
+        "name",
+        "params"
+      ],
+      "type": "object"
+    },
+    "prebidjs.userSync.IIntentIqIdProviderParams": {
+      "additionalProperties": false,
+      "description": "Parameters of the `intentIqId` userId provider.\n\nThis entry is never authored in `MoliConfig`. It is assembled by the `intentiq` module from `modules.intentiq.IntentIqModuleConfig` plus runtime-derived values and merged into the prebid `userSync` config - see `ads/modules/intentiq`.",
+      "properties": {
+        "ABTestingConfigurationSource": {
+          "$ref": "#/definitions/prebidjs.userSync.IntentIqABConfigSource",
+          "description": "Determines how the A/B test group is assigned. Defaults to `'IIQServer'`."
+        },
+        "abPercentage": {
+          "description": "Percentage of users placed in the WITH_IIQ (group A) cohort. Accepts 0-100; values outside that range are clamped. Defaults to 95. Only used when `ABTestingConfigurationSource` is `'percentage'` or `'IIQServer'` (no prior server termination cause).",
+          "type": "number"
+        },
+        "additionalParams": {
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          },
+          "description": "Freeform key-value pairs appended to every pixel request.\n\nOut of scope for v1 - never populated by moli.",
+          "type": "object"
+        },
+        "browserBlackList": {
+          "description": "Comma-separated list of browser names (lowercase) that should be excluded from identity resolution, e.g. `'chrome,safari'`.",
+          "type": "string"
+        },
+        "callback": {
+          "$comment": "(data: { eids: unknown[] } | string) => void",
+          "description": "Invoked when the identity lookup completes or times out. Receives the resolved EID payload or an empty string when the browser is blacklisted or the user is opted out.\n\nNot used by moli in v1 - always left unset.",
+          "properties": {
+            "namedArgs": {
+              "additionalProperties": false,
+              "properties": {
+                "data": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "eids": {
+                          "items": {},
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "eids"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "data"
+              ],
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "chTimeout": {
+          "description": "Timeout in milliseconds for fetching Client Hints before falling back to an empty string. Defaults to 10 ms.\n\nOut of scope for v1 - never populated by moli.",
+          "type": "number"
+        },
+        "domainName": {
+          "description": "Publisher domain name, used to build the referrer URL parameter.\n\nComputed at runtime by the `intentiq` module from `adUnitPathVariables.domain` - never configurable.",
+          "type": "string"
+        },
+        "gamObjectReference": {
+          "additionalProperties": {},
+          "description": "Reference to the GAM `googletag.pubads()` object for automatic targeting key injection.\n\nComputed at runtime by the `intentiq` module from `window.googletag` whenever `gamParameterName` is set - never configurable.",
+          "type": "object"
+        },
+        "gamParameterName": {
+          "description": "GAM targeting key used to pass the A/B group. Defaults to `'intent_iq_group'`.",
+          "type": "string"
+        },
+        "group": {
+          "description": "Explicit A/B group override. Only used when `ABTestingConfigurationSource` is `'group'`.",
+          "enum": [
+            "A",
+            "B"
+          ],
+          "type": "string"
+        },
+        "groupChanged": {
+          "$comment": "(group: 'A' | 'B', terminationCause?: number) => void",
+          "description": "Called whenever the resolved A/B group changes. Receives the new group (`'A'` | `'B'`) and the server termination-cause code when available.\n\nNot used by moli in v1 - always left unset.",
+          "properties": {
+            "namedArgs": {
+              "additionalProperties": false,
+              "properties": {
+                "group": {
+                  "enum": [
+                    "A",
+                    "B"
+                  ],
+                  "type": "string"
+                },
+                "terminationCause": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "group"
+              ],
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "iiqPixelServerAddress": {
+          "description": "Override for the IntentIQ pixel/sync server base URL. Derived from `region` if unset.\n\nOut of scope for v1 - never populated by moli.",
+          "type": "string"
+        },
+        "iiqServerAddress": {
+          "description": "Override for the IntentIQ API server base URL. Derived from `region` if unset.\n\nOut of scope for v1 - never populated by moli.",
+          "type": "string"
+        },
+        "pai": {
+          "description": "Partner-supplied Advertiser ID.\n\nOut of scope for v1 - never populated by moli.",
+          "type": "string"
+        },
+        "partner": {
+          "description": "Partner ID assigned by IntentIQ. Required.",
+          "type": "number"
+        },
+        "partnerClientId": {
+          "description": "Partner-supplied first-party client identifier.\n\nOut of scope for v1 - never populated by moli.",
+          "type": "string"
+        },
+        "partnerClientIdType": {
+          "description": "Type code for `partnerClientId`. Must be a positive integer recognised by the IntentIQ server.\n\nOut of scope for v1 - never populated by moli.",
+          "type": "number"
+        },
+        "pcid": {
+          "description": "Partner-supplied client identifier used internally by IntentIQ (first-party cookie id).\n\nOut of scope for v1 - never populated by moli.",
+          "type": "string"
+        },
+        "region": {
+          "description": "Geo-region routing hint for the IntentIQ API/sync servers.\n\nAlways hardcoded to `'gdpr'` by the `intentiq` module - never configurable.",
+          "type": "string"
+        },
+        "siloEnabled": {
+          "description": "When `true`, first-party data is stored under a partner-specific key so multiple IntentIQ configurations on the same page do not collide.\n\nOut of scope for v1 - never populated by moli.",
+          "type": "boolean"
+        },
+        "sourceMetaData": {
+          "description": "Human-readable metadata tag describing the integration source (e.g. `'prebid'`, `'amp'`). Translated to a numeric code internally.\n\nOut of scope for v1 - never populated by moli.",
+          "type": "string"
+        },
+        "sourceMetaDataExternal": {
+          "description": "Numeric metadata code for the integration source when a specific override is required.\n\nOut of scope for v1 - never populated by moli.",
+          "type": "number"
+        },
+        "timeoutInMillis": {
+          "description": "Milliseconds to wait for the server response before firing `callback` with whatever data is currently available. Defaults to 500 ms.\n\nOut of scope for v1 - never populated by moli.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "partner"
+      ],
+      "type": "object"
+    },
     "prebidjs.userSync.IPairIdParams": {
       "additionalProperties": false,
       "description": "Container of all module params.",
@@ -20026,6 +20585,16 @@
       ],
       "type": "object"
     },
+    "prebidjs.userSync.IntentIqABConfigSource": {
+      "description": "Controls how the IntentIQ A/B test group is assigned.\n\n- `'percentage'`  — random assignment based on `abPercentage`\n- `'group'`       — fixed group supplied via the `group` param\n- `'IIQServer'`   — server-driven assignment (default)\n- `'disabled'`    — A/B testing disabled; always use IIQ",
+      "enum": [
+        "percentage",
+        "group",
+        "IIQServer",
+        "disabled"
+      ],
+      "type": "string"
+    },
     "prebidjs.userSync.UserIdProvider": {
       "anyOf": [
         {
@@ -20063,6 +20632,9 @@
         },
         {
           "$ref": "#/definitions/prebidjs.userSync.IPairIdProvider"
+        },
+        {
+          "$ref": "#/definitions/prebidjs.userSync.IIntentIqIdProvider"
         }
       ],
       "description": "All supported id providers"
