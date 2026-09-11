@@ -1,0 +1,26 @@
+{
+  "description": "This contains all the modules that are available in the system",
+  "modules": [
+    "adReload",
+    "blocklistUrls",
+    "cleanup",
+    "custom",
+    "emetriq",
+    "geoedge",
+    "identityLink",
+    "inline-ai",
+    "intentIq",
+    "lazyLoad",
+    "prebidFirstPartyData",
+    "pubstack",
+    "stickyFooterAds2",
+    "stickyHeaderAd",
+    "skin",
+    "styles",
+    "utiq",
+    "yieldOptimization",
+    "configureFromEndpoint",
+    "interstitialModule",
+    "moliAnalytics"
+  ]
+}
