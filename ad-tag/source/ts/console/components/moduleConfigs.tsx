@@ -372,9 +372,9 @@ const IntentIqModule: React.FC<{ config: modules.intentiq.IntentIqModuleConfig }
         {config.abPercentage !== undefined && <Tag variant="grey">{config.abPercentage}%</Tag>}
       </Row>
     )}
-    {config.browserBlackList && (
-      <Row label="Browser blacklist">
-        <ListTags values={config.browserBlackList.split(',')} variant="grey" />
+    {config.browserBlockList && (
+      <Row label="Browser blocklist">
+        <ListTags values={config.browserBlockList.split(',')} variant="grey" />
       </Row>
     )}
     {config.scriptUrl && (

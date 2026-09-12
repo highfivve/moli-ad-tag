@@ -187,7 +187,7 @@ describe('IntentIQ Module', () => {
       const mergeConfigSpy = sandbox.spy(jsDomWindow.pbjs, 'mergeConfig');
       const module = createModule({
         ...intentIqConfig,
-        browserBlackList: 'chrome,safari',
+        browserBlockList: 'chrome,safari',
         abPercentage: 50,
         ABTestingConfigurationSource: 'group',
         group: 'B',
