@@ -3027,8 +3027,13 @@ export namespace modules {
       /**
        * Comma-separated list of browser names (lowercase) that should be excluded from identity
        * resolution, e.g. `'chrome,safari'`.
+       *
+       * Named `browserBlockList` (not `browserBlackList`) - we avoid non-inclusive terminology in
+       * our own naming. The underlying prebid `intentIqId`/`iiqAnalytics` params still use
+       * `browserBlackList`, since that's IntentIQ's own third-party API field name and out of our
+       * control; this module translates between the two at runtime.
        */
-      readonly browserBlackList?: string;
+      readonly browserBlockList?: string;
 
       /**
        * GAM targeting key used to pass the A/B group. Defaults to `'intent_iq_group'` in prebid.

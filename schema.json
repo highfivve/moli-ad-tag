@@ -2649,8 +2649,8 @@
           "description": "Percentage of users placed in the WITH_IIQ (group A) cohort. Accepts 0-100. Defaults to 95 in prebid. Only used when `ABTestingConfigurationSource` is `'percentage'` or `'IIQServer'`.",
           "type": "number"
         },
-        "browserBlackList": {
-          "description": "Comma-separated list of browser names (lowercase) that should be excluded from identity resolution, e.g. `'chrome,safari'`.",
+        "browserBlockList": {
+          "description": "Comma-separated list of browser names (lowercase) that should be excluded from identity resolution, e.g. `'chrome,safari'`.\n\nNamed `browserBlockList` (not `browserBlackList`) - we avoid non-inclusive terminology in our own naming. The underlying prebid `intentIqId`/`iiqAnalytics` params still use `browserBlackList`, since that's IntentIQ's own third-party API field name and out of our control; this module translates between the two at runtime.",
           "type": "string"
         },
         "enabled": {
@@ -7973,8 +7973,8 @@
           "description": "Percentage of users placed in the WITH_IIQ (group A) cohort. Accepts 0-100. Defaults to 95 in prebid. Only used when `ABTestingConfigurationSource` is `'percentage'` or `'IIQServer'`.",
           "type": "number"
         },
-        "browserBlackList": {
-          "description": "Comma-separated list of browser names (lowercase) that should be excluded from identity resolution, e.g. `'chrome,safari'`.",
+        "browserBlockList": {
+          "description": "Comma-separated list of browser names (lowercase) that should be excluded from identity resolution, e.g. `'chrome,safari'`.\n\nNamed `browserBlockList` (not `browserBlackList`) - we avoid non-inclusive terminology in our own naming. The underlying prebid `intentIqId`/`iiqAnalytics` params still use `browserBlackList`, since that's IntentIQ's own third-party API field name and out of our control; this module translates between the two at runtime.",
           "type": "string"
         },
         "enabled": {

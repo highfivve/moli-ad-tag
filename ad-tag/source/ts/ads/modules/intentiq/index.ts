@@ -117,7 +117,9 @@ export const createIntentIq = (): IModule => {
       ...(context.adUnitPathVariables__.domain
         ? { domainName: context.adUnitPathVariables__.domain }
         : {}),
-      ...(config.browserBlackList ? { browserBlackList: config.browserBlackList } : {}),
+      // config field is named browserBlockList (see moliConfig.ts); prebid's own param is
+      // browserBlackList - that's IntentIQ's third-party API field name, not ours to rename
+      ...(config.browserBlockList ? { browserBlackList: config.browserBlockList } : {}),
       ...(config.abPercentage === undefined ? {} : { abPercentage: config.abPercentage }),
       ...(config.ABTestingConfigurationSource
         ? { ABTestingConfigurationSource: config.ABTestingConfigurationSource }
