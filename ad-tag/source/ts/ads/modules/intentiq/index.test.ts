@@ -71,6 +71,12 @@ describe('IntentIQ Module', () => {
     return userIds[0] as prebidjs.userSync.IIntentIqIdProvider;
   };
 
+  /** the `iiqAnalytics` adapter of the first `pbjs.enableAnalytics` call */
+  const enabledAdapter = (
+    enableAnalyticsSpy: Sinon.SinonSpy
+  ): prebidjs.analytics.IIntentIqAnalyticsAdapter =>
+    enableAnalyticsSpy.firstCall.args[0][0] as prebidjs.analytics.IIntentIqAnalyticsAdapter;
+
   beforeEach(() => {
     jsDomWindow.pbjs = createPbjsStub();
     loadScriptStub.resolves();
@@ -255,10 +261,13 @@ describe('IntentIQ Module', () => {
         userSync: { userIds: [{ name: 'intentIqId', params: { partner: 999 } }] }
       });
       const mergeConfigSpy = sandbox.spy(jsDomWindow.pbjs, 'mergeConfig');
+      const enableAnalyticsSpy = sandbox.spy(jsDomWindow.pbjs, 'enableAnalytics');
       const module = createModule();
       await module.configureSteps__()[0](adPipelineContext(), []);
 
       expect(mergeConfigSpy).to.have.not.been.called;
+      // the userId entry is already there, but the analytics adapter still has to be enabled
+      expect(enableAnalyticsSpy).to.have.been.calledOnce;
     });
 
     it('should merge if other userId providers are configured', async () => {
@@ -288,6 +297,7 @@ describe('IntentIQ Module', () => {
 
     it('should do nothing if prebid is not configured', async () => {
       const mergeConfigSpy = sandbox.spy(jsDomWindow.pbjs, 'mergeConfig');
+      const enableAnalyticsSpy = sandbox.spy(jsDomWindow.pbjs, 'enableAnalytics');
       const module = createModule();
       await module.configureSteps__()[0](
         adPipelineContext(fullConsent({ 1323: true }), emptyConfig),
@@ -295,14 +305,80 @@ describe('IntentIQ Module', () => {
       );
 
       expect(mergeConfigSpy).to.have.not.been.called;
+      expect(enableAnalyticsSpy).to.have.not.been.called;
     });
 
     it('should do nothing in the test environment', async () => {
       const mergeConfigSpy = sandbox.spy(jsDomWindow.pbjs, 'mergeConfig');
+      const enableAnalyticsSpy = sandbox.spy(jsDomWindow.pbjs, 'enableAnalytics');
       const module = createModule();
       await module.configureSteps__()[0]({ ...adPipelineContext(), env__: 'test' }, []);
 
       expect(mergeConfigSpy).to.have.not.been.called;
+      expect(enableAnalyticsSpy).to.have.not.been.called;
+    });
+  });
+
+  describe('analytics adapter', () => {
+    it('should enable the iiqAnalytics adapter', async () => {
+      const enableAnalyticsSpy = sandbox.spy(jsDomWindow.pbjs, 'enableAnalytics');
+      const module = createModule();
+      await module.configureSteps__()[0](adPipelineContext(), []);
+
+      expect(enableAnalyticsSpy).to.have.been.calledOnce;
+      expect(enabledAdapter(enableAnalyticsSpy)).to.deep.equal({
+        provider: 'iiqAnalytics',
+        options: {
+          partner: 12345,
+          domainName: 'example.com',
+          region: 'gdpr'
+        }
+      });
+    });
+
+    it('should enable the adapter with the very same object the userId provider gets', async () => {
+      const googletagStub = createGoogletagStub();
+      jsDomWindow.googletag = googletagStub;
+      const mergeConfigSpy = sandbox.spy(jsDomWindow.pbjs, 'mergeConfig');
+      const enableAnalyticsSpy = sandbox.spy(jsDomWindow.pbjs, 'enableAnalytics');
+      const module = createModule({
+        ...intentIqConfig,
+        browserBlockList: 'chrome,safari',
+        abPercentage: 50,
+        ABTestingConfigurationSource: 'group',
+        group: 'B',
+        gamParameterName: 'intent_iq_group'
+      });
+      await module.configureSteps__()[0](adPipelineContext(), []);
+
+      // reference equality - IntentIQ requires one shared config object, not two equal ones
+      expect(enabledAdapter(enableAnalyticsSpy).options).to.equal(
+        mergedProvider(mergeConfigSpy).params
+      );
+      expect(enabledAdapter(enableAnalyticsSpy).options).to.deep.equal({
+        partner: 12345,
+        domainName: 'example.com',
+        region: 'gdpr',
+        browserBlackList: 'chrome,safari',
+        abPercentage: 50,
+        ABTestingConfigurationSource: 'group',
+        group: 'B',
+        gamParameterName: 'intent_iq_group',
+        gamObjectReference: googletagStub
+      });
+    });
+
+    it('should only enable the adapter once, even across requestAds cycles', async () => {
+      const enableAnalyticsSpy = sandbox.spy(jsDomWindow.pbjs, 'enableAnalytics');
+      const module = createModule();
+      const configureStep = module.configureSteps__()[0];
+      const context = adPipelineContext();
+
+      await configureStep(context, []);
+      await configureStep({ ...context, requestAdsCalls__: 2 }, []);
+      await configureStep({ ...context, requestAdsCalls__: 3 }, []);
+
+      expect(enableAnalyticsSpy).to.have.been.calledOnce;
     });
   });
 });

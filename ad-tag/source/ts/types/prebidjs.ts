@@ -1344,16 +1344,46 @@ export namespace prebidjs {
     export type IntentIqABConfigSource = 'percentage' | 'group' | 'IIQServer' | 'disabled';
 
     /**
-     * Parameters of the `intentIqId` userId provider.
+     * A single custom parameter appended to IntentIQ request and report URLs.
      *
-     * This entry is never authored in `MoliConfig`. It is assembled by the `intentiq` module from
-     * `modules.intentiq.IntentIqModuleConfig` plus runtime-derived values and merged into the
-     * prebid `userSync` config - see `ads/modules/intentiq`.
+     * @see https://github.com/prebid/Prebid.js/blob/master/libraries/intentIqUtils/handleAdditionalParams.ts
+     */
+    export interface IIntentIqAdditionalParam {
+      /**
+       * Name of the parameter, sent prefixed with `agp_`.
+       */
+      readonly parameterName: string;
+
+      /**
+       * Value to assign to the parameter.
+       */
+      readonly parameterValue: string | number;
+
+      /**
+       * Whether to send the parameter with, in order, the sync request, the VR request and the win
+       * report. Each entry is 1 to send and 0 to omit.
+       */
+      readonly destination: (0 | 1)[];
+    }
+
+    /**
+     * The single IntentIQ configuration object.
+     *
+     * IntentIQ requires that the `intentIqId` userId submodule and the `iiqAnalytics` analytics
+     * adapter are configured with the **same** object - the analytics adapter reads the A/B group
+     * and first-party data the userId submodule stored, so a divergent `partner`, `domainName` or
+     * `ABTestingConfigurationSource` silently breaks reporting. This type is therefore the union of
+     * both parameter sets, and the `intentiq` module builds exactly one instance of it and passes
+     * it to `userSync.userIds[].params` and to `pbjs.enableAnalytics` - see `ads/modules/intentiq`.
+     *
+     * It is never authored in `MoliConfig`. It is assembled by the module from
+     * `modules.intentiq.IntentIqModuleConfig` plus runtime-derived values.
      *
      * @see https://github.com/prebid/Prebid.js/blob/master/modules/intentIqIdSystem.ts
+     * @see https://github.com/prebid/Prebid.js/blob/master/modules/intentIqAnalyticsAdapter.ts
      * @see https://docs.prebid.org/dev-docs/modules/userid-submodules/intentiq.html
      */
-    export interface IIntentIqIdProviderParams {
+    export interface IIntentIqConfig {
       /**
        * Partner ID assigned by IntentIQ. Required.
        */
@@ -1451,11 +1481,15 @@ export namespace prebidjs {
       readonly sourceMetaDataExternal?: number;
 
       /**
-       * Freeform key-value pairs appended to every pixel request.
+       * Custom parameters appended to pixel request and report URLs.
+       *
+       * `intentIqIdSystem` types this as a `Record`, but both it and `intentIqAnalyticsAdapter`
+       * hand the value to `handleAdditionalParams`, which returns the URL unchanged unless the
+       * value is an array - so the array shape is the only one that does anything at runtime.
        *
        * Out of scope for v1 - never populated by moli.
        */
-      readonly additionalParams?: { [key: string]: string | number | boolean };
+      readonly additionalParams?: IIntentIqAdditionalParam[];
 
       /**
        * Timeout in milliseconds for fetching Client Hints before falling back to an empty string.
@@ -1514,6 +1548,46 @@ export namespace prebidjs {
        * Out of scope for v1 - never populated by moli.
        */
       readonly iiqPixelServerAddress?: string;
+
+      /**
+       * `iiqAnalytics` only. Set to `true` to allow manual win reporting via
+       * `window.intentIqAnalyticsAdapter_<partnerId>.reportExternalWin()`. Defaults to `false`.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly manualWinReportEnabled?: boolean;
+
+      /**
+       * `iiqAnalytics` only. Enable GAM predict-score reporting, which requires
+       * `gamObjectReference`. Defaults to `false`.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly gamPredictReporting?: boolean;
+
+      /**
+       * `iiqAnalytics` only. HTTP method used to send reports. Defaults to `'GET'`.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly reportMethod?: 'GET' | 'POST';
+
+      /**
+       * `iiqAnalytics` only. Override for the IntentIQ reporting server base URL. Derived from
+       * `region` if unset.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly reportingServerAddress?: string;
+
+      /**
+       * `iiqAnalytics` only. Controls how the `placementId` field in reports is populated:
+       * 1 = adUnitCode then placementId (default), 2 = placementId then adUnitCode,
+       * 3 = adUnitCode only, 4 = placementId only.
+       *
+       * Out of scope for v1 - never populated by moli.
+       */
+      readonly adUnitConfig?: 1 | 2 | 3 | 4;
     }
 
     /**
@@ -1521,7 +1595,7 @@ export namespace prebidjs {
      * @see https://docs.prebid.org/dev-docs/modules/userid-submodules/intentiq.html
      */
     export interface IIntentIqIdProvider extends IParameterizedUserIdProvider<
-      IIntentIqIdProviderParams,
+      IIntentIqConfig,
       'intentIqId'
     > {}
 
@@ -2283,12 +2357,23 @@ export namespace prebidjs {
    * @see https://docs.prebid.org/dev-docs/publisher-api-reference/enableAnalytics.html
    */
   export namespace analytics {
-    export type AnalyticsAdapter =
+    /**
+     * Analytics adapters that can be authored in `MoliConfig.prebid.analyticAdapters` and are
+     * enabled by the generic `pbjs.enableAnalytics` call in `prebidInit`.
+     */
+    export type ConfigurableAnalyticsAdapter =
       | IAdagioAnalyticsAdapter
       | IAgmaAnalyticsAdapter
       | IGoogleAnalyticsAdapter
-      | IGenericAnalyticsAdapter
-      | IIntentIqAnalyticsAdapter;
+      | IGenericAnalyticsAdapter;
+
+    /**
+     * Everything `pbjs.enableAnalytics` accepts. This is a superset of
+     * `ConfigurableAnalyticsAdapter`: `iiqAnalytics` is owned by the `intentiq` module, which
+     * enables it itself with the same config object it gives the `intentIqId` userId submodule, so
+     * it must not be authored in `MoliConfig`.
+     */
+    export type AnalyticsAdapter = ConfigurableAnalyticsAdapter | IIntentIqAnalyticsAdapter;
     export type AnalyticsProviders = AnalyticsAdapter['provider'];
 
     /**
@@ -2445,136 +2530,17 @@ export namespace prebidjs {
     }
 
     /**
-     * A single custom parameter appended to IntentIQ report URLs.
-     */
-    export interface IIntentIqAnalyticsAdapterAdditionalParam {
-      /**
-       * Name of the parameter, sent prefixed with `agp_`.
-       */
-      readonly parameterName: string;
-
-      /**
-       * Value to assign to the parameter.
-       */
-      readonly parameterValue: string | number;
-
-      /**
-       * Whether to send the parameter with, in order, the sync request, the VR request and the win
-       * report. Each entry is 1 to send and 0 to omit.
-       */
-      readonly destination: (0 | 1)[];
-    }
-
-    /**
-     * Options passed to `pbjs.enableAnalytics({ provider: 'iiqAnalytics', options: { ... } })`.
+     * `iiqAnalytics` analytics adapter. Enabled by the `intentiq` module - never authored in
+     * `MoliConfig.prebid.analyticAdapters`, which is why it is not part of
+     * `ConfigurableAnalyticsAdapter`.
      *
-     * The whole adapter entry is authored in `MoliConfig.prebid.analyticAdapters` and enabled by
-     * the generic `pbjs.enableAnalytics(analyticAdapters)` call in `prebidInit`. The ad-tag never
-     * derives or populates any of these options itself - the `intentiq` module only owns the
-     * `intentIqId` userId provider.
+     * Its options are the very same `userSync.IIntentIqConfig` object the module passes to the
+     * `intentIqId` userId submodule. IntentIQ requires both to share one object.
      *
      * @see https://github.com/prebid/Prebid.js/blob/master/modules/intentIqAnalyticsAdapter.ts
+     * @see https://docs.prebid.org/dev-docs/analytics/intentiq.html
      */
-    export interface IIntentIqAnalyticsAdapterOptions {
-      /**
-       * Partner ID assigned by IntentIQ. Required.
-       */
-      readonly partner: number;
-
-      /**
-       * Set to `true` to allow manual win reporting via
-       * `window.intentIqAnalyticsAdapter_<partnerId>.reportExternalWin()`. Defaults to `false`.
-       *
-       * Never populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.
-       */
-      readonly manualWinReportEnabled?: boolean;
-
-      /**
-       * Enable GAM predict-score reporting. Defaults to `false`.
-       *
-       * Never populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.
-       */
-      readonly gamPredictReporting?: boolean;
-
-      /**
-       * HTTP method used to send reports. Defaults to `'GET'`.
-       *
-       * Never populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.
-       */
-      readonly reportMethod?: 'GET' | 'POST';
-
-      /**
-       * Override for the IntentIQ reporting server base URL. Derived from `region` if unset.
-       *
-       * Never populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.
-       */
-      readonly reportingServerAddress?: string;
-
-      /**
-       * Geo-region routing hint for the reporting server. Should be set to `'gdpr'`, matching the
-       * region the `intentiq` module hardcodes for the userId provider.
-       */
-      readonly region?: string;
-
-      /**
-       * Controls how the `placementId` field in reports is populated:
-       * 1 = adUnitCode then placementId (default), 2 = placementId then adUnitCode,
-       * 3 = adUnitCode only, 4 = placementId only.
-       *
-       * Never populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.
-       */
-      readonly adUnitConfig?: 1 | 2 | 3 | 4;
-
-      /**
-       * Determines how the A/B test group is assigned. Defaults to `'IIQServer'`. Should match the
-       * `intentiq` module config, which drives the userId provider.
-       */
-      readonly ABTestingConfigurationSource?: userSync.IntentIqABConfigSource;
-
-      /**
-       * Explicit A/B group override. Only used when `ABTestingConfigurationSource` is `'group'`.
-       */
-      readonly group?: 'A' | 'B';
-
-      /**
-       * Percentage of users placed in the WITH_IIQ cohort (0-100). Defaults to 95.
-       */
-      readonly abPercentage?: number;
-
-      /**
-       * Comma-separated list of browser names (lowercase) excluded from reporting, e.g.
-       * `'chrome,safari'`. Should match the `intentiq` module config.
-       */
-      readonly browserBlackList?: string;
-
-      /**
-       * Publisher domain name appended to report URLs. Should match the domain the
-       * `intentiq` module derives for the userId provider.
-       */
-      readonly domainName?: string;
-
-      /**
-       * Custom parameters appended to report URLs.
-       *
-       * Never populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.
-       */
-      readonly additionalParams?: IIntentIqAnalyticsAdapterAdditionalParam[];
-
-      /**
-       * When `true`, first-party data is stored under a partner-specific key.
-       *
-       * Never populated by the ad-tag - set it in `MoliConfig.prebid.analyticAdapters` if needed.
-       */
-      readonly siloEnabled?: boolean;
-
-      /**
-       * Reference to the `googletag` object, used for predict-score reporting. Should match the
-       * reference the `intentiq` module passes to the userId provider.
-       */
-      readonly gamObjectReference?: Record<string, unknown>;
-    }
-
-    export interface IIntentIqAnalyticsAdapter extends IAnalyticsAdapter<IIntentIqAnalyticsAdapterOptions> {
+    export interface IIntentIqAnalyticsAdapter extends IAnalyticsAdapter<userSync.IIntentIqConfig> {
       readonly provider: 'iiqAnalytics';
     }
   }
