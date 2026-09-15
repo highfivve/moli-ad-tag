@@ -1,5 +1,11 @@
 # IntentIQ is a module that owns its prebid userId config
 
+> **Partly superseded by [ADR 0013](./0013-intentiq-module-owns-the-iiqanalytics-adapter-too.md).**
+> The "Analytics stays entirely in the config" decision below no longer holds: the module owns the
+> `iiqAnalytics` adapter as well, because IntentIQ requires both integration points to share one
+> config object. Everything else here — the userId provider as a module, and why `mergeConfig` is
+> safe — still stands.
+
 IntentIQ has two prebid integration points: the `intentIqId` userId submodule and the
 `iiqAnalytics` analytics adapter. The first implementation (GD-10371, since reverted) wired both
 into `ads/prebid.ts`: publishers were expected to author an `intentIqId` entry in

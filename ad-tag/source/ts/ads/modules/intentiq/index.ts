@@ -2,7 +2,8 @@
  * # [IntentIQ](https://www.intentiq.com/)
  *
  * IntentIQ is an identity resolution provider. This module configures the
- * [`intentIqId` prebid userId submodule](https://docs.prebid.org/dev-docs/modules/userid-submodules/intentiq.html)
+ * [`intentIqId` prebid userId submodule](https://docs.prebid.org/dev-docs/modules/userid-submodules/intentiq.html),
+ * enables the [`iiqAnalytics` analytics adapter](https://docs.prebid.org/dev-docs/analytics/intentiq.html)
  * and optionally loads IntentIQ's alternative raw CDN tag script.
  *
  * ## Integration
@@ -26,16 +27,15 @@
  *
  * ## Prebid configuration
  *
- * The module is the **only** writer of the `intentIqId` userSync entry. The entry is assembled
- * from the module configuration plus values that are only known at runtime (`domainName`,
- * `gamObjectReference`, `region`) and merged into the prebid configuration with
- * `pbjs.mergeConfig`.
+ * IntentIQ requires that the userId submodule and the analytics adapter are configured with the
+ * **same** object - the analytics adapter reads the A/B group and first-party data the userId
+ * submodule stored. So the module builds one `prebidjs.userSync.IIntentIqConfig` from the module
+ * configuration plus values that are only known at runtime (`domainName`, `gamObjectReference`,
+ * `region`) and passes that one object to both.
  *
- * ## Analytics
- *
- * The `iiqAnalytics` analytics adapter is not part of this module. It is configured in
- * `MoliConfig.prebid.analyticAdapters` and enabled by the generic `pbjs.enableAnalytics` call in
- * the prebid init step.
+ * The module is the **only** writer of the `intentIqId` userSync entry, which it merges into the
+ * prebid configuration with `pbjs.mergeConfig`, and the only writer of the `iiqAnalytics` adapter,
+ * which it enables with `pbjs.enableAnalytics`. Neither is authored in `MoliConfig`.
  *
  * @module
  */
@@ -63,6 +63,13 @@ const name = 'intentiq';
 
 export const createIntentIq = (): IModule => {
   let intentIqConfig: modules.intentiq.IntentIqModuleConfig | null = null;
+
+  /**
+   * `pbjs.enableAnalytics` has no "already enabled" check - calling it twice creates a second
+   * `iiqAnalytics` adapter instance that reports every auction a second time. The configure step
+   * runs once per requestAds cycle (SPA), so we keep enabling to the first cycle ourselves.
+   */
+  let analyticsEnabled: boolean = false;
 
   const hasVendorConsent = (context: AdPipelineContext): boolean =>
     !context.tcData__.gdprApplies || Boolean(context.tcData__.vendor.consents[gvlid]);
@@ -96,12 +103,41 @@ export const createIntentIq = (): IModule => {
   };
 
   /**
-   * Builds the `intentIqId` userId provider from the module configuration. `domainName`,
-   * `gamObjectReference` and `region` are runtime values and never configurable.
+   * Builds the single IntentIQ config object shared by the `intentIqId` userId submodule and the
+   * `iiqAnalytics` adapter. `domainName`, `gamObjectReference` and `region` are runtime values and
+   * never configurable.
    */
-  const mkUserIdProvider = (
+  const mkIntentIqConfig = (
     config: modules.intentiq.IntentIqModuleConfig,
     context: AdPipelineContext
+  ): prebidjs.userSync.IIntentIqConfig => ({
+    partner: config.partner,
+    region: 'gdpr',
+    // the domain ad unit path variable is optional, so there may be no domain to send
+    ...(context.adUnitPathVariables__.domain
+      ? { domainName: context.adUnitPathVariables__.domain }
+      : {}),
+    // config field is named browserBlockList (see moliConfig.ts); prebid's own param is
+    // browserBlackList - that's IntentIQ's third-party API field name, not ours to rename
+    ...(config.browserBlockList ? { browserBlackList: config.browserBlockList } : {}),
+    ...(config.abPercentage === undefined ? {} : { abPercentage: config.abPercentage }),
+    ...(config.ABTestingConfigurationSource
+      ? { ABTestingConfigurationSource: config.ABTestingConfigurationSource }
+      : {}),
+    ...(config.group ? { group: config.group } : {}),
+    // the userId submodule sets the gam targeting key itself, which requires a googletag reference
+    ...(config.gamParameterName
+      ? {
+          gamParameterName: config.gamParameterName,
+          gamObjectReference: context.window__.googletag as unknown as Record<string, unknown>
+        }
+      : {})
+  });
+
+  /** Builds the `intentIqId` userId provider around the shared config object. */
+  const mkUserIdProvider = (
+    config: modules.intentiq.IntentIqModuleConfig,
+    intentIqConfigObject: prebidjs.userSync.IIntentIqConfig
   ): prebidjs.userSync.IIntentIqIdProvider => ({
     name: 'intentIqId',
     storage: {
@@ -110,32 +146,10 @@ export const createIntentIq = (): IModule => {
       expires: config.storage?.expires ?? 0,
       refreshInSeconds: config.storage?.refreshInSeconds ?? 0
     },
-    params: {
-      partner: config.partner,
-      region: 'gdpr',
-      // the domain ad unit path variable is optional, so there may be no domain to send
-      ...(context.adUnitPathVariables__.domain
-        ? { domainName: context.adUnitPathVariables__.domain }
-        : {}),
-      // config field is named browserBlockList (see moliConfig.ts); prebid's own param is
-      // browserBlackList - that's IntentIQ's third-party API field name, not ours to rename
-      ...(config.browserBlockList ? { browserBlackList: config.browserBlockList } : {}),
-      ...(config.abPercentage === undefined ? {} : { abPercentage: config.abPercentage }),
-      ...(config.ABTestingConfigurationSource
-        ? { ABTestingConfigurationSource: config.ABTestingConfigurationSource }
-        : {}),
-      ...(config.group ? { group: config.group } : {}),
-      // the userId submodule sets the gam targeting key itself, which requires a googletag reference
-      ...(config.gamParameterName
-        ? {
-            gamParameterName: config.gamParameterName,
-            gamObjectReference: context.window__.googletag as unknown as Record<string, unknown>
-          }
-        : {})
-    }
+    params: intentIqConfigObject
   });
 
-  const configureUserId = (
+  const configurePrebid = (
     config: modules.intentiq.IntentIqModuleConfig,
     context: AdPipelineContext
   ): Promise<void> => {
@@ -147,22 +161,31 @@ export const createIntentIq = (): IModule => {
     if (!context.adUnitPathVariables__.domain) {
       context.logger__.warn(
         'IntentIQ',
-        'no domain ad unit path variable set. The intentIqId provider will be configured without a domainName'
+        'no domain ad unit path variable set. IntentIQ will be configured without a domainName'
       );
     }
+
+    // one object for both integration points - see the module documentation
+    const intentIqConfigObject = mkIntentIqConfig(config, context);
 
     context.window__.pbjs.que.push(() => {
       const userIds = context.window__.pbjs.getConfig().userSync?.userIds;
       if (userIds?.some(userId => userId.name === 'intentIqId')) {
         context.logger__.debug('IntentIQ', 'intentIqId userId provider already configured');
-        return;
+      } else {
+        // mergeConfig appends to the existing `userSync.userIds` array. This is only safe because
+        // this module is the single writer of the intentIqId entry.
+        context.window__.pbjs.mergeConfig({
+          userSync: { userIds: [mkUserIdProvider(config, intentIqConfigObject)] }
+        });
       }
 
-      // mergeConfig appends to the existing `userSync.userIds` array. This is only safe because
-      // this module is the single writer of the intentIqId entry.
-      context.window__.pbjs.mergeConfig({
-        userSync: { userIds: [mkUserIdProvider(config, context)] }
-      });
+      if (!analyticsEnabled) {
+        analyticsEnabled = true;
+        context.window__.pbjs.enableAnalytics([
+          { provider: 'iiqAnalytics', options: intentIqConfigObject }
+        ]);
+      }
     });
 
     return Promise.resolve();
@@ -171,7 +194,7 @@ export const createIntentIq = (): IModule => {
   return {
     name,
     configKey: 'intentiq',
-    description: 'Configures the IntentIQ prebid userId submodule',
+    description: 'Configures the IntentIQ prebid userId submodule and analytics adapter',
     moduleType: 'identity' as ModuleType,
 
     config__(): Object | null {
@@ -203,7 +226,7 @@ export const createIntentIq = (): IModule => {
       return config
         ? [
             mkConfigureStepOncePerRequestAdsCycle(`${name}-configure`, ctx =>
-              configureUserId(config, ctx)
+              configurePrebid(config, ctx)
             )
           ]
         : [];

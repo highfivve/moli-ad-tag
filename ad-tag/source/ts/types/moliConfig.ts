@@ -1283,10 +1283,14 @@ export namespace headerbidding {
      * Note: the configuration should contain no duplicate adapters as the ad tag will make no
      *       attempt to deduplicate.
      *
+     * Note: `iiqAnalytics` cannot be configured here. The `intentiq` module enables it itself with
+     *       the same config object it gives the `intentIqId` userId submodule - see
+     *       `modules.intentiq.IntentIqModuleConfig`.
+     *
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference/enableAnalytics.html
      * @see https://docs.prebid.org/overview/analytics.html
      */
-    readonly analyticAdapters?: prebidjs.analytics.AnalyticsAdapter[];
+    readonly analyticAdapters?: prebidjs.analytics.ConfigurableAnalyticsAdapter[];
 
     /** prebid bidder supply chain configuration */
     readonly schain: {
@@ -2998,12 +3002,15 @@ export namespace modules {
     /**
      * ## IntentIQ module configuration
      *
-     * Configures the `intentIqId` prebid userId provider. The module is the only writer of that
-     * userSync entry - it is never authored in `MoliConfig.prebid.config.userSync`.
+     * Configures **both** IntentIQ prebid integration points from this single config: the
+     * `intentIqId` userId provider and the `iiqAnalytics` analytics adapter. IntentIQ requires the
+     * two to share one config object, so the module builds one and passes it to both - the
+     * analytics adapter is not configured in `MoliConfig.prebid.analyticAdapters`, and the userId
+     * entry is not authored in `MoliConfig.prebid.config.userSync`. The module is the only writer
+     * of either.
      *
-     * Note that the `iiqAnalytics` analytics adapter is **not** part of this configuration. It is
-     * configured directly in `MoliConfig.prebid.analyticAdapters` and enabled by the generic
-     * `pbjs.enableAnalytics` call in the prebid init step.
+     * The analytics adapter is enabled whenever this module is enabled - there is no separate
+     * toggle, since analytics without the matching userId config reports nothing useful.
      *
      * @example
      * ```json

@@ -249,7 +249,7 @@ describe('prebid', () => {
 
     it('should enableAnalytics if the prebid config has it', async () => {
       const enableAnalyticsSpy = sandbox.spy(dom.window.pbjs, 'enableAnalytics');
-      const analyticsAdapters: prebidjs.analytics.AnalyticsAdapter[] = [
+      const analyticsAdapters: prebidjs.analytics.ConfigurableAnalyticsAdapter[] = [
         { provider: 'agma', options: { code: 'foo' } },
         { provider: 'ga', options: {} }
       ];
