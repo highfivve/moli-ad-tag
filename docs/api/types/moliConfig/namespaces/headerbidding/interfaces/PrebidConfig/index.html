@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.8.1">
 <title data-rh="true">Interface: PrebidConfig | The Publisher Ad Tag</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://highfivve.github.io/moli-ad-tag/docs/api/types/moliConfig/namespaces/headerbidding/interfaces/PrebidConfig"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Interface: PrebidConfig | The Publisher Ad Tag"><meta data-rh="true" name="description" content="Properties"><meta data-rh="true" property="og:description" content="Properties"><link data-rh="true" rel="icon" href="/moli-ad-tag/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://highfivve.github.io/moli-ad-tag/docs/api/types/moliConfig/namespaces/headerbidding/interfaces/PrebidConfig"><link data-rh="true" rel="alternate" href="https://highfivve.github.io/moli-ad-tag/docs/api/types/moliConfig/namespaces/headerbidding/interfaces/PrebidConfig" hreflang="en"><link data-rh="true" rel="alternate" href="https://highfivve.github.io/moli-ad-tag/docs/api/types/moliConfig/namespaces/headerbidding/interfaces/PrebidConfig" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"types/moliConfig","item":"https://highfivve.github.io/moli-ad-tag/docs/api/types/moliConfig/"},{"@type":"ListItem","position":2,"name":"headerbidding","item":"https://highfivve.github.io/moli-ad-tag/docs/api/types/moliConfig/namespaces/headerbidding/"},{"@type":"ListItem","position":3,"name":"Interface: PrebidConfig","item":"https://highfivve.github.io/moli-ad-tag/docs/api/types/moliConfig/namespaces/headerbidding/interfaces/PrebidConfig"}]}</script><link rel="stylesheet" href="/moli-ad-tag/assets/css/styles.d5c9ce24.css">
-<script src="/moli-ad-tag/assets/js/runtime~main.e0a6d38d.js" defer="defer"></script>
-<script src="/moli-ad-tag/assets/js/main.8a52f723.js" defer="defer"></script>
+<script src="/moli-ad-tag/assets/js/runtime~main.7afde0aa.js" defer="defer"></script>
+<script src="/moli-ad-tag/assets/js/main.d83a4f3b.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><defs>
@@ -15,11 +15,14 @@
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="properties">Properties<a href="#properties" class="hash-link" aria-label="Direct link to Properties" title="Direct link to Properties">​</a></h2>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="analyticadapters">analyticAdapters?<a href="#analyticadapters" class="hash-link" aria-label="Direct link to analyticAdapters?" title="Direct link to analyticAdapters?">​</a></h3>
 <blockquote>
-<p><code>readonly</code> <code>optional</code> <strong>analyticAdapters</strong>: <a href="/moli-ad-tag/docs/api/types/prebidjs/namespaces/prebidjs/namespaces/analytics/type-aliases/AnalyticsAdapter"><code>AnalyticsAdapter</code></a>[]</p>
+<p><code>readonly</code> <code>optional</code> <strong>analyticAdapters</strong>: <a href="/moli-ad-tag/docs/api/types/prebidjs/namespaces/prebidjs/namespaces/analytics/type-aliases/ConfigurableAnalyticsAdapter"><code>ConfigurableAnalyticsAdapter</code></a>[]</p>
 </blockquote>
 <p>optional list of analytic adapters that will be enabled through the <code>enableAnalytics</code> API.</p>
 <p>Note: the configuration should contain no duplicate adapters as the ad tag will make no
 attempt to deduplicate.</p>
+<p>Note: <code>iiqAnalytics</code> cannot be configured here. The <code>intentiq</code> module enables it itself with
+the same config object it gives the <code>intentIqId</code> userId submodule - see
+<code>modules.intentiq.IntentIqModuleConfig</code>.</p>
 <h4 class="anchor anchorWithStickyNavbar_LWe7" id="see">See<a href="#see" class="hash-link" aria-label="Direct link to See" title="Direct link to See">​</a></h4>
 <ul>
 <li><a href="https://docs.prebid.org/dev-docs/publisher-api-reference/enableAnalytics.html" target="_blank" rel="noopener noreferrer">https://docs.prebid.org/dev-docs/publisher-api-reference/enableAnalytics.html</a></li>
