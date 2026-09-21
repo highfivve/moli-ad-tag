@@ -22,7 +22,13 @@ export const initAdTag = (window: Window): MoliRuntime.MoliTag => {
   const moli: MoliRuntime.MoliTag = createMoliTag(window);
   moliWindow.moli = moli;
 
-  queueCommands.forEach(cmd => cmd(moli));
+  queueCommands.forEach(cmd => {
+    try {
+      cmd(moli);
+    } catch (e) {
+      console.error('moli.que command failed', e);
+    }
+  });
 
   return moli;
 };
