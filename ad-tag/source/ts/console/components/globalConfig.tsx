@@ -190,9 +190,12 @@ export class GlobalConfig
   parseAdsTxtEntries(adstxtEntries: string): string[] | undefined {
     // Split the entries string on each new line and comma. Strip inline comments and
     // surrounding whitespace, as ads.txt allows e.g. `highfivve.com, 2004, DIRECT`
-    const entriesArray = adstxtEntries
-      .split(/\r?\n/)
-      .map(line => line.split('#')[0].split(',').map(field => field.trim()));
+    const entriesArray = adstxtEntries.split(/\r?\n/).map(line =>
+      line
+        .split('#')[0]
+        .split(',')
+        .map(field => field.trim())
+    );
     const publisherEntry = entriesArray
       // filter out lines that don't carry relevant info e.g. header of the ads.txt
       .filter(entry => entry.length > 1)
