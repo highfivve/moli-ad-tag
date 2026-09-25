@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.8.1">
 <title data-rh="true">intentiq | The Publisher Ad Tag</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://highfivve.github.io/moli-ad-tag/docs/modules/intentiq"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="intentiq | The Publisher Ad Tag"><meta data-rh="true" name="description" content="IntentIQ is an identity resolution provider. This module configures the"><meta data-rh="true" property="og:description" content="IntentIQ is an identity resolution provider. This module configures the"><link data-rh="true" rel="icon" href="/moli-ad-tag/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://highfivve.github.io/moli-ad-tag/docs/modules/intentiq"><link data-rh="true" rel="alternate" href="https://highfivve.github.io/moli-ad-tag/docs/modules/intentiq" hreflang="en"><link data-rh="true" rel="alternate" href="https://highfivve.github.io/moli-ad-tag/docs/modules/intentiq" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"intentiq","item":"https://highfivve.github.io/moli-ad-tag/docs/modules/intentiq"}]}</script><link rel="stylesheet" href="/moli-ad-tag/assets/css/styles.d5c9ce24.css">
-<script src="/moli-ad-tag/assets/js/runtime~main.7afde0aa.js" defer="defer"></script>
+<script src="/moli-ad-tag/assets/js/runtime~main.7c9c689c.js" defer="defer"></script>
 <script src="/moli-ad-tag/assets/js/main.d83a4f3b.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -30,6 +30,10 @@ configuration plus values that are only known at runtime (<code>domainName</code
 <p>The module is the <strong>only</strong> writer of the <code>intentIqId</code> userSync entry, which it merges into the
 prebid configuration with <code>pbjs.mergeConfig</code>, and the only writer of the <code>iiqAnalytics</code> adapter,
 which it enables with <code>pbjs.enableAnalytics</code>. Neither is authored in <code>MoliConfig</code>.</p>
+<p>Right after the merge the module calls <code>pbjs.refreshUserIds({ submoduleNames: [&#x27;intentIqId&#x27;] })</code>.
+Prebid&#x27;s userId module may already have initialized between the core <code>setConfig</code> and this
+<code>mergeConfig</code> (they are separate <code>pbjs.que</code> commands), in which case <code>intentIqId</code> would never be
+initialized for the page view. The refresh closes that gap and is a no-op if init hasn&#x27;t run yet.</p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions">​</a></h2>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="createintentiq">createIntentIq()<a href="#createintentiq" class="hash-link" aria-label="Direct link to createIntentIq()" title="Direct link to createIntentIq()">​</a></h3>
 <blockquote>
