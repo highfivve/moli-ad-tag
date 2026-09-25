@@ -68,6 +68,9 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     getUserIdsAsync(): Promise<prebidjs.userSync.UserIds> {
       return Promise.resolve({});
     },
+    refreshUserIds(): Promise<prebidjs.userSync.UserIds> {
+      return Promise.resolve({});
+    },
     enableAnalytics(_: prebidjs.analytics.AnalyticsAdapter[]): void {
       return;
     },

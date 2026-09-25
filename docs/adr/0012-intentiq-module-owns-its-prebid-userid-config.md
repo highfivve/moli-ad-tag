@@ -49,3 +49,18 @@ so repeated runs (SPA, or a publisher-authored entry appearing later) cannot pro
 This is the pattern to follow for future vendor userId providers that need runtime-derived values:
 a module that owns one prebid config key end to end, rather than vendor-specific branches in
 `prebid.ts` plus a config the portal has to keep consistent with them.
+
+## Amendment (2026-09-25): `mergeConfig` alone is not enough for initialization
+
+The section above covers config *merging*, but not *timing*. `prebidConfigure` calls
+`pbjs.setConfig` with the core `userSync.userIds` and this module calls `pbjs.mergeConfig` in a
+separate `pbjs.que` command; prebid runs those commands individually, not atomically. Prebid's
+userId module starts initializing as soon as `setConfig` delivers `userIds`, and it only does so
+once. When consent is already resolved, that init can run in the gap before the merge, and
+`intentIqId` is then registered but never initialized for the page view (no ID in the first
+auctions of a session; observed on live traffic).
+
+The configure step therefore calls `pbjs.refreshUserIds({ submoduleNames: ['intentIqId'] })` right
+after the merge. If userId init hasn't run yet the refresh is a no-op and normal init picks up
+`intentIqId`; if it has, the refresh initializes just `intentIqId`, and `auctionDelay` still waits
+for it. The promise is not awaited; a rejection is only logged.

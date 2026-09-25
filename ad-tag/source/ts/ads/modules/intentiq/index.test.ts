@@ -11,6 +11,7 @@ import {
   emptyConfig,
   emptyRuntimeConfig,
   newGlobalAuctionContext,
+  newNoopLogger,
   noopLogger
 } from 'ad-tag/stubs/moliStubs';
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
@@ -295,8 +296,70 @@ describe('IntentIQ Module', () => {
       expect(mergeConfigSpy).to.have.been.calledTwice;
     });
 
+    it('should refresh the intentIqId user id right after the merge', async () => {
+      const mergeConfigSpy = sandbox.spy(jsDomWindow.pbjs, 'mergeConfig');
+      const refreshUserIdsSpy = sandbox.spy(jsDomWindow.pbjs, 'refreshUserIds');
+      const module = createModule();
+      await module.configureSteps__()[0](adPipelineContext(), []);
+
+      expect(refreshUserIdsSpy).to.have.been.calledOnce;
+      expect(refreshUserIdsSpy).to.have.been.calledOnceWithExactly({
+        submoduleNames: ['intentIqId']
+      });
+      expect(refreshUserIdsSpy).to.have.been.calledImmediatelyAfter(mergeConfigSpy);
+    });
+
+    it('should not refresh user ids if an intentIqId provider is already configured', async () => {
+      sandbox.stub(jsDomWindow.pbjs, 'getConfig').returns({
+        userSync: { userIds: [{ name: 'intentIqId', params: { partner: 999 } }] }
+      });
+      const refreshUserIdsSpy = sandbox.spy(jsDomWindow.pbjs, 'refreshUserIds');
+      const module = createModule();
+      await module.configureSteps__()[0](adPipelineContext(), []);
+
+      expect(refreshUserIdsSpy).to.have.not.been.called;
+    });
+
+    it('should not refresh user ids again on a second requestAds cycle', async () => {
+      // stateful getConfig, so the second cycle sees the provider merged by the first one
+      let userIds: prebidjs.userSync.UserIdProvider[] = [];
+      sandbox
+        .stub(jsDomWindow.pbjs, 'getConfig')
+        .callsFake(() => ({ userSync: { userIds } }) as prebidjs.IPrebidJsConfig);
+      sandbox.stub(jsDomWindow.pbjs, 'mergeConfig').callsFake(config => {
+        userIds = [...userIds, ...(config.userSync?.userIds ?? [])];
+      });
+      const refreshUserIdsSpy = sandbox.spy(jsDomWindow.pbjs, 'refreshUserIds');
+      const module = createModule();
+      const configureStep = module.configureSteps__()[0];
+      const context = adPipelineContext();
+
+      await configureStep(context, []);
+      await configureStep({ ...context, requestAdsCalls__: 2 }, []);
+
+      expect(refreshUserIdsSpy).to.have.been.calledOnce;
+    });
+
+    it('should log and swallow a rejected refreshUserIds promise', async () => {
+      const error = new Error('refresh canceled');
+      sandbox.stub(jsDomWindow.pbjs, 'refreshUserIds').rejects(error);
+      const logger = newNoopLogger();
+      const errorSpy = sandbox.spy(logger, 'error');
+      const module = createModule();
+      await module.configureSteps__()[0]({ ...adPipelineContext(), logger__: logger }, []);
+      // let the rejection handler run
+      await Promise.resolve();
+
+      expect(errorSpy).to.have.been.calledOnceWithExactly(
+        'IntentIQ',
+        'failed to refresh user ids',
+        error
+      );
+    });
+
     it('should do nothing if prebid is not configured', async () => {
       const mergeConfigSpy = sandbox.spy(jsDomWindow.pbjs, 'mergeConfig');
+      const refreshUserIdsSpy = sandbox.spy(jsDomWindow.pbjs, 'refreshUserIds');
       const enableAnalyticsSpy = sandbox.spy(jsDomWindow.pbjs, 'enableAnalytics');
       const module = createModule();
       await module.configureSteps__()[0](
@@ -305,6 +368,7 @@ describe('IntentIQ Module', () => {
       );
 
       expect(mergeConfigSpy).to.have.not.been.called;
+      expect(refreshUserIdsSpy).to.have.not.been.called;
       expect(enableAnalyticsSpy).to.have.not.been.called;
     });
 
