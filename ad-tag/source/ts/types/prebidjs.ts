@@ -167,6 +167,20 @@ export namespace prebidjs {
     getUserIdsAsync(): Promise<userSync.UserIds>;
 
     /**
+     * Force (re)initialization of ID submodules, regardless of `auctionDelay` / `syncDelay` settings.
+     * Resolves to the same value as `getUserIds()` once the refresh is complete. A refresh that is
+     * already in progress is canceled.
+     *
+     * @param options.submoduleNames submodules to refresh. If omitted, all submodules are refreshed.
+     * @param callback called when the refresh is complete
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/refreshUserIds.html
+     */
+    refreshUserIds(
+      options?: { submoduleNames?: string[] },
+      callback?: () => void
+    ): Promise<userSync.UserIds>;
+
+    /**
      * Enable sending analytics data to the analytics provider of your choice.
      *
      * For usage, see Integrate with the [Prebid Analytics API](http://prebid.org/dev-docs/integrate-with-the-prebid-analytics-api.html)

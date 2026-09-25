@@ -37,6 +37,11 @@
  * prebid configuration with `pbjs.mergeConfig`, and the only writer of the `iiqAnalytics` adapter,
  * which it enables with `pbjs.enableAnalytics`. Neither is authored in `MoliConfig`.
  *
+ * Right after the merge the module calls `pbjs.refreshUserIds({ submoduleNames: ['intentIqId'] })`.
+ * Prebid's userId module may already have initialized between the core `setConfig` and this
+ * `mergeConfig` (they are separate `pbjs.que` commands), in which case `intentIqId` would never be
+ * initialized for the page view. The refresh closes that gap and is a no-op if init hasn't run yet.
+ *
  * @module
  */
 import { IModule, ModuleType } from 'ad-tag/types/module';
@@ -178,6 +183,13 @@ export const createIntentIq = (): IModule => {
         context.window__.pbjs.mergeConfig({
           userSync: { userIds: [mkUserIdProvider(config, intentIqConfigObject)] }
         });
+        // prebid's userId module initializes as soon as `setConfig` (prebid.ts) delivers the
+        // userIds, and that runs in a separate que command. With consent already resolved, init can
+        // run before this merge and never picks up intentIqId. The refresh initializes just
+        // intentIqId in that case, and is a no-op if userId init hasn't run yet.
+        context.window__.pbjs
+          .refreshUserIds({ submoduleNames: ['intentIqId'] })
+          .catch(error => context.logger__.error('IntentIQ', 'failed to refresh user ids', error));
       }
 
       if (!analyticsEnabled) {
