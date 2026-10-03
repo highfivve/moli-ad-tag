@@ -5,7 +5,7 @@ import sinonChai from 'sinon-chai';
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { modules, MoliConfig } from 'ad-tag/types/moliConfig';
 import { prebidjs } from 'ad-tag/types/prebidjs';
-import { createIntentIq } from 'ad-tag/ads/modules/intentiq/index';
+import { createIntentIq, hasUserIdMergeRaceFix } from 'ad-tag/ads/modules/intentiq/index';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 import {
   emptyConfig,
@@ -309,6 +309,28 @@ describe('IntentIQ Module', () => {
       expect(refreshUserIdsSpy).to.have.been.calledImmediatelyAfter(mergeConfigSpy);
     });
 
+    ['v11.40.0', 'v11.40.1', 'v11.41.0-pre', 'v12.0.0'].forEach(version =>
+      it(`should not refresh user ids with prebid ${version}, which fixed the merge race`, async () => {
+        jsDomWindow.pbjs = { ...jsDomWindow.pbjs, version };
+        const mergeConfigSpy = sandbox.spy(jsDomWindow.pbjs, 'mergeConfig');
+        const refreshUserIdsSpy = sandbox.spy(jsDomWindow.pbjs, 'refreshUserIds');
+        const module = createModule();
+        await module.configureSteps__()[0](adPipelineContext(), []);
+
+        expect(mergeConfigSpy).to.have.been.calledOnce;
+        expect(refreshUserIdsSpy).to.have.not.been.called;
+      })
+    );
+
+    it('should refresh user ids with prebid versions before 11.40.0', async () => {
+      jsDomWindow.pbjs = { ...jsDomWindow.pbjs, version: 'v11.39.2' };
+      const refreshUserIdsSpy = sandbox.spy(jsDomWindow.pbjs, 'refreshUserIds');
+      const module = createModule();
+      await module.configureSteps__()[0](adPipelineContext(), []);
+
+      expect(refreshUserIdsSpy).to.have.been.calledOnce;
+    });
+
     it('should not refresh user ids if an intentIqId provider is already configured', async () => {
       sandbox.stub(jsDomWindow.pbjs, 'getConfig').returns({
         userSync: { userIds: [{ name: 'intentIqId', params: { partner: 999 } }] }
@@ -444,5 +466,24 @@ describe('IntentIQ Module', () => {
 
       expect(enableAnalyticsSpy).to.have.been.calledOnce;
     });
+  });
+
+  describe('hasUserIdMergeRaceFix', () => {
+    [
+      { version: 'v11.40.0', expected: true },
+      { version: '11.40.0', expected: true },
+      { version: 'v11.40.0-pre', expected: true },
+      { version: 'v11.40.3', expected: true },
+      { version: 'v11.100.0', expected: true },
+      { version: 'v12.0.0', expected: true },
+      { version: 'v11.39.9', expected: false },
+      { version: 'v10.99.0', expected: false },
+      { version: 'none', expected: false },
+      { version: '', expected: false }
+    ].forEach(({ version, expected }) =>
+      it(`should return ${expected} for '${version}'`, () => {
+        expect(hasUserIdMergeRaceFix(version)).to.equal(expected);
+      })
+    );
   });
 });

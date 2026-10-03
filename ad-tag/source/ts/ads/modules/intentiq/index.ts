@@ -41,6 +41,8 @@
  * Prebid's userId module may already have initialized between the core `setConfig` and this
  * `mergeConfig` (they are separate `pbjs.que` commands), in which case `intentIqId` would never be
  * initialized for the page view. The refresh closes that gap and is a no-op if init hasn't run yet.
+ * Prebid.js 11.40.0 fixed this race itself (https://github.com/prebid/Prebid.js/pull/15691), so the
+ * refresh is skipped from that version on.
  *
  * @module
  */
@@ -65,6 +67,32 @@ import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
 const gvlid: string = '1323';
 
 const name = 'intentiq';
+
+/**
+ * First prebid version that picks up userIds added by `mergeConfig` after userId init.
+ *
+ * @see https://github.com/prebid/Prebid.js/pull/15691
+ */
+const userIdMergeRaceFixedVersion: [number, number, number] = [11, 40, 0];
+
+/**
+ * @param version `pbjs.version`, e.g. `v11.40.0` or `v11.40.0-pre`
+ * @returns true if the prebid version is known to have fixed the userId merge race. An unparseable
+ *          version returns false, so the refresh workaround stays in place.
+ */
+export const hasUserIdMergeRaceFix = (version: string): boolean => {
+  const match = /^v?(\d+)\.(\d+)\.(\d+)/.exec(version);
+  if (!match) {
+    return false;
+  }
+  const parsed = match.slice(1, 4).map(Number);
+  for (let i = 0; i < 3; i++) {
+    if (parsed[i] !== userIdMergeRaceFixedVersion[i]) {
+      return parsed[i] > userIdMergeRaceFixedVersion[i];
+    }
+  }
+  return true;
+};
 
 export const createIntentIq = (): IModule => {
   let intentIqConfig: modules.intentiq.IntentIqModuleConfig | null = null;
@@ -187,9 +215,14 @@ export const createIntentIq = (): IModule => {
         // userIds, and that runs in a separate que command. With consent already resolved, init can
         // run before this merge and never picks up intentIqId. The refresh initializes just
         // intentIqId in that case, and is a no-op if userId init hasn't run yet.
-        context.window__.pbjs
-          .refreshUserIds({ submoduleNames: ['intentIqId'] })
-          .catch(error => context.logger__.error('IntentIQ', 'failed to refresh user ids', error));
+        // Prebid fixed this race in 11.40.0, so newer versions don't need the refresh.
+        if (!hasUserIdMergeRaceFix(context.window__.pbjs.version)) {
+          context.window__.pbjs
+            .refreshUserIds({ submoduleNames: ['intentIqId'] })
+            .catch(error =>
+              context.logger__.error('IntentIQ', 'failed to refresh user ids', error)
+            );
+        }
       }
 
       if (!analyticsEnabled) {

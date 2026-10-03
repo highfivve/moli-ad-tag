@@ -64,3 +64,11 @@ The configure step therefore calls `pbjs.refreshUserIds({ submoduleNames: ['inte
 after the merge. If userId init hasn't run yet the refresh is a no-op and normal init picks up
 `intentIqId`; if it has, the refresh initializes just `intentIqId`, and `auctionDelay` still waits
 for it. The promise is not awaited; a rejection is only logged.
+
+## Amendment (2026-10-03): refresh only for Prebid.js < 11.40.0
+
+Prebid.js fixed the race upstream in 11.40.0 (https://github.com/prebid/Prebid.js/pull/15691):
+userIds added via `mergeConfig` after userId init are now picked up by prebid itself. The configure
+step parses `pbjs.version` and skips `refreshUserIds` from 11.40.0 on (pre-release suffixes like
+`-pre` are ignored). An unparseable version keeps the refresh, so the workaround fails safe. Drop
+the refresh entirely once every bundle ships Prebid.js >= 11.40.0.
