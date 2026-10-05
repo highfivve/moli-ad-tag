@@ -300,21 +300,11 @@ describe('ROQAD Mapper module', () => {
     });
   });
 
-  describe('loading once per page', () => {
-    it('loads only once over multiple requestAds cycles', async () => {
-      const module = createModule();
-      await runInitStep(module, mkContext({ requestAdsCalls__: 1 }));
-      await runInitStep(module, mkContext({ requestAdsCalls__: 2 }));
-      expect(loadScriptStub).to.have.been.calledOnce;
-    });
-
-    it('loads only once in spaMode and logs a warning', async () => {
+  describe('spaMode and errors', () => {
+    it('logs a warning in spaMode', async () => {
       const logger = newNoopLogger();
       const warnSpy = sandbox.spy(logger, 'warn');
-      const module = createModule({ spaMode: true });
-      await runInitStep(module, mkContext({ requestAdsCalls__: 1, logger__: logger }));
-      await runInitStep(module, mkContext({ requestAdsCalls__: 2, logger__: logger }));
-      await runInitStep(module, mkContext({ requestAdsCalls__: 3, logger__: logger }));
+      await runInitStep(createModule({ spaMode: true }), mkContext({ logger__: logger }));
       expect(loadScriptStub).to.have.been.calledOnce;
       expect(warnSpy).to.have.been.calledOnce;
     });

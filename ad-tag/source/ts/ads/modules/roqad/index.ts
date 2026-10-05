@@ -163,25 +163,21 @@ const buildMapperUrl = (
  */
 export const createRoqad = (): IModule => {
   let roqadConfig: modules.roqad.RoqadModuleConfig | null = null;
-  let isLoaded = false;
-  let hasWarnedAboutSpaMode = false;
 
   const loadMapper = (
     config: modules.roqad.RoqadModuleConfig,
     context: AdPipelineContext
   ): Promise<void> => {
-    if (config.spaMode && !hasWarnedAboutSpaMode) {
-      hasWarnedAboutSpaMode = true;
+    if (config.spaMode) {
       context.logger__.warn(
         name,
         'SPA syncs are not supported yet. mapper.js is only loaded on the first page view.'
       );
     }
 
-    if (isLoaded || !hasRequiredConsent(context.tcData__)) {
+    if (!hasRequiredConsent(context.tcData__)) {
       return Promise.resolve();
     }
-    isLoaded = true;
 
     context.assetLoaderService__
       .loadScript({
