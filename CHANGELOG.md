@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### 🚀 New Features
+
+- GD-10451: Add the ROQAD Mapper module (`modules.roqad`). Loads ROQAD's `mapper.js` once per page
+  load after consent (vendors 4 + 301, purpose 1) with fixed parameters and key-value based
+  parameter mappings. Part of the `all` and `highfivve` bundles.
+- Add `audience.hem.sha256BasicNormalized`: SHA-256 of the trimmed and lower-cased email address,
+  without Gmail-specific normalisation.
+
 ### 🐛 Bug Fixes
 
 - Fix `refreshInfiniteAdSlot` calls being silently dropped when they arrive while the ad tag is in
