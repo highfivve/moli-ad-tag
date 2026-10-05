@@ -3335,6 +3335,99 @@ export namespace modules {
     }
   }
 
+  /**
+   * Configuration types for the ROQAD Mapper module (`configKey: roqad`).
+   *
+   * ROQAD's `mapper.js` receives all page data as query parameters on the script URL. The fixed
+   * parameters (`zdid`, `env`, `eventType`, `publisher_name`, `partner_dom`, `z_e_sha2_l`) are set
+   * by the module itself; additional parameters are derived from key-values via
+   * {@link RoqadParameterMapping}s.
+   */
+  export namespace roqad {
+    /**
+     * A ROQAD Parameter Mapping that reads one key-value and writes it as a string URL parameter.
+     *
+     * Multi-valued key-values (arrays) are sent as a comma-separated list, with every element
+     * URL-encoded individually.
+     *
+     * @example
+     * ```json
+     * { "roqadValueType": "string", "key": "channel", "parameter": "category", "defaultValue": "none" }
+     * ```
+     */
+    export interface RoqadStringParameterMapping {
+      /**
+       * Discriminator for the mapping type. Currently only `string` exists.
+       */
+      readonly roqadValueType: 'string';
+
+      /**
+       * The key-value key to read. Targeting key-values (`targeting.keyValues` in the config) and
+       * runtime key-values (`moli.setTargeting`) are merged; runtime key-values take precedence.
+       */
+      readonly key: string;
+
+      /**
+       * The name of the URL parameter that is sent to ROQAD.
+       */
+      readonly parameter: string;
+
+      /**
+       * Value used if the key-value is missing, an empty string or an empty array.
+       * If not set, the parameter is omitted in that case.
+       */
+      readonly defaultValue?: string;
+    }
+
+    /**
+     * A rule that turns one page key-value into one ROQAD Mapper URL parameter.
+     *
+     * Discriminated by `roqadValueType`. Currently only {@link RoqadStringParameterMapping} exists.
+     */
+    export type RoqadParameterMapping = RoqadStringParameterMapping;
+
+    /**
+     * ## ROQAD Mapper module configuration
+     *
+     * @example
+     * ```json
+     * {
+     *   "enabled": true,
+     *   "zdid": "1234",
+     *   "publisherName": "example-publisher",
+     *   "spaMode": false,
+     *   "mappingDefinitions": [
+     *     { "roqadValueType": "string", "key": "channel", "parameter": "category" }
+     *   ]
+     * }
+     * ```
+     */
+    export interface RoqadModuleConfig extends IModuleConfig {
+      /**
+       * The ROQAD / zeotap data source id. Sent as `zdid` parameter.
+       */
+      readonly zdid: string;
+
+      /**
+       * The publisher name as agreed with ROQAD. Sent as `publisher_name` parameter.
+       */
+      readonly publisherName: string;
+
+      /**
+       * Set to `true` if the publisher runs a single page application.
+       *
+       * NOTE: SPA syncs are not supported yet. The mapper script is loaded only once on the first
+       * page view and a warning is logged.
+       */
+      readonly spaMode: boolean;
+
+      /**
+       * Mappings from key-values to additional ROQAD URL parameters.
+       */
+      readonly mappingDefinitions: ReadonlyArray<RoqadParameterMapping>;
+    }
+  }
+
   export namespace interstitial {
     export type InterstitialModuleConfig = {
       readonly enabled: boolean;
@@ -3695,6 +3788,7 @@ export namespace modules {
     readonly inlineAi?: Overridable<inlineAi.InlineAiModuleConfig>;
     readonly intentiq?: Overridable<intentiq.IntentIqModuleConfig>;
     readonly pubstack?: Overridable<pubstack.PubstackConfig>;
+    readonly roqad?: Overridable<roqad.RoqadModuleConfig>;
     readonly skin?: Overridable<skin.SkinModuleConfig>;
     readonly stickyHeaderAd?: Overridable<stickyHeaderAd.StickyHeaderAdConfig>;
     readonly utiq?: Overridable<utiq.UtiqConfig>;

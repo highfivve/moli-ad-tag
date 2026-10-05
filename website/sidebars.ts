@@ -23,6 +23,7 @@ const sidebars: SidebarsConfig = {
         'features/tam',
         'features/consent',
         'features/targeting',
+        'features/first-party-data',
         'features/labels',
         'features/ad-volume',
         'features/set-config',

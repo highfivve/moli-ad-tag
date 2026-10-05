@@ -168,6 +168,7 @@ const config: Config = {
           '../ad-tag/source/ts/ads/modules/lazy-load/index.ts',
           '../ad-tag/source/ts/ads/modules/prebid-first-party-data/index.ts',
           '../ad-tag/source/ts/ads/modules/pubstack/index.ts',
+          '../ad-tag/source/ts/ads/modules/roqad/index.ts',
           '../ad-tag/source/ts/ads/modules/sticky-footer-ad/index.ts',
           '../ad-tag/source/ts/ads/modules/sticky-footer-ad-v2/index.ts',
           '../ad-tag/source/ts/ads/modules/sticky-header-ad/index.ts',
