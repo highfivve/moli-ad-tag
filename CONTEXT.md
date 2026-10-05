@@ -230,3 +230,29 @@ first cycle (`requestAdsCalls__ === 1`) pushes `['init', ...]`/`['mount', ...]` 
 every later cycle first pushes `['destroy']` to tear down the previous run's placements before
 re-applying the mode - see `docs/inline/init.md`. The InlineAI script itself still loads only
 once, regardless of how many cycles run.
+
+### ROQAD Mapper
+ROQAD's cookie-sync / audience script (`mapper.js`), integrated as its own [Module]
+(`configKey: roqad`). Page data reaches ROQAD only as query parameters on the script URL.
+_Avoid_: zeotap — ROQAD belongs to the zeotap family (shared parameter names like `z_e_sha2_l`,
+`ctry`) but is a separate integration and is never configured through the zeotap module.
+
+### ROQAD Parameter Mapping
+A rule that turns one page key-value into one [ROQAD Mapper] URL parameter (`key` → `parameter`),
+with an optional default. All ROQAD parameters are strings; multi-valued key-values become a
+comma-separated string. Fixed parameters (`zdid`, `env`, `eventType`, `publisher_name`,
+`partner_dom`, `z_e_sha2_l`) are not mappings.
+_Avoid_: adex mapping definition — adex mappings target structured JSON attributes, ROQAD
+mappings target flat URL parameters.
+
+### Gmail-Normalised Email
+An email address trimmed, lower-cased and, for Gmail addresses, stripped of `.` and of any
+`+suffix` before the `@`. The default normalisation highfivve asks publishers to apply before
+hashing; the basis of `hem.md5`, `hem.sha1`, `hem.sha256` and `hem.sha256ofMD5`.
+_Avoid_: normalised email (ambiguous — say which normalisation).
+
+### Basic-Normalised Email
+An email address only trimmed and lower-cased — no Gmail-specific rules. Required by partners
+that hash without Gmail rules (ROQAD); the basis of `hem.sha256BasicNormalized`. For non-Gmail
+addresses, and Gmail addresses without `.`/`+`, it equals the [Gmail-Normalised Email].
+_Avoid_: raw email, unnormalised email.

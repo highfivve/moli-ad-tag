@@ -652,6 +652,30 @@ const ZeotapModule: React.FC<{ config: modules.zeotap.ZeotapModuleConfig }> = ({
   </>
 );
 
+const RoqadModule: React.FC<{ config: modules.roqad.RoqadModuleConfig }> = ({ config }) => (
+  <>
+    <Row label="zdid">
+      <Tag>{config.zdid}</Tag>
+    </Row>
+    <Row label="Publisher name">
+      <Tag>{config.publisherName}</Tag>
+    </Row>
+    <Row label="SPA mode">
+      <BoolTag value={config.spaMode} />
+    </Row>
+    <Row label="Parameter mappings">
+      <ListTags
+        values={config.mappingDefinitions.map(
+          mapping =>
+            `${mapping.key} → ${mapping.parameter}` +
+            (mapping.defaultValue !== undefined ? ` (default: ${mapping.defaultValue})` : '')
+        )}
+        variant="grey"
+      />
+    </Row>
+  </>
+);
+
 const InterstitialModule: React.FC<{ config: modules.interstitial.InterstitialModuleConfig }> = ({
   config
 }) => (
@@ -765,6 +789,7 @@ const moduleComponents: {
   inlineAi: InlineAiModule,
   intentiq: IntentIqModule,
   pubstack: PubstackModule,
+  roqad: RoqadModule,
   skin: SkinModule,
   styles: StylesModule,
   stickyHeaderAd: StickyHeaderAdModule,

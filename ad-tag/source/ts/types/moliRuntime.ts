@@ -1369,6 +1369,23 @@ export namespace MoliRuntime {
        * hased email address(sha-256 of m5) of the logged-in user, provided by NMMS
        */
       readonly sha256ofMD5?: string;
+
+      /**
+       * SHA-256 hash of the basic-normalised email address of the logged-in user, provided by the
+       * publisher.
+       *
+       * Basic normalisation only trims and lower-cases the email address. Unlike `sha256`, no
+       * Gmail-specific rules (removing `.` and `+suffix` before the `@`) are applied.
+       *
+       * Required by partners that hash without Gmail rules, e.g. ROQAD.
+       *
+       * @example
+       * ```js
+       * // ' John.Doe+news@Gmail.com ' -> 'john.doe+news@gmail.com' -> sha256
+       * moli.setConfig({ audience: { hem: { sha256BasicNormalized: '<sha256 hex>' } } });
+       * ```
+       */
+      readonly sha256BasicNormalized?: string;
     };
   }
 }
