@@ -1,8 +1,8 @@
 /**
- * # [ROQAD](https://roq.ad/) Mapper
+ * # [ROQAD](https://roq.ad/) Cookie Sync
  *
- * Loads ROQAD's `mapper.js` once per page load after consent was given. All page data is passed
- * to ROQAD as query parameters on the script URL.
+ * Performs the ROQAD Cookie Sync once per `requestAds()` cycle after consent was given. All page
+ * data is passed to ROQAD as query parameters on the sync URL.
  *
  * ROQAD belongs to the zeotap family, but is a separate integration. Do not configure it through
  * the zeotap module.
@@ -25,7 +25,7 @@
  *       "enabled": true,
  *       "zdid": "1234",
  *       "publisherName": "example-publisher",
- *       "spaMode": false,
+ *       "syncMethod": "pixel",
  *       "mappingDefinitions": [
  *         { "roqadValueType": "string", "key": "channel", "parameter": "category", "defaultValue": "none" },
  *         { "roqadValueType": "string", "key": "tags", "parameter": "interests" }
@@ -34,6 +34,15 @@
  *   }
  * }
  * ```
+ *
+ * ### Sync methods
+ *
+ * | `syncMethod`       | How                                                                          |
+ * | ------------------ | ---------------------------------------------------------------------------- |
+ * | `mapper` (default) | Loads `https://zd.rqtrk.eu/mapper.js` as a script tag. The script reads the  |
+ * |                    | TCF consent from the CMP itself.                                             |
+ * | `pixel`            | Loads `https://zd.rqtrk.eu/` in a hidden iframe (`#h5v-roqad-sync`) and      |
+ * |                    | passes the TCF consent as URL parameters.                                    |
  *
  * ### Fixed parameters
  *
@@ -47,6 +56,15 @@
  * | `z_e_sha2_l`     | `audience.hem.sha256BasicNormalized`, falls back to `audience.hem.sha256`.  |
  * |                  | Omitted if neither is set.                                                  |
  *
+ * The `pixel` sync method additionally sends the consent parameters
+ *
+ * | Parameter      | Value                                                                         |
+ * | -------------- | ----------------------------------------------------------------------------- |
+ * | `cmp`          | always `1`                                                                    |
+ * | `gdpr`         | `1` if GDPR applies, `0` if it does not apply. Omitted if unknown.            |
+ * | `gdpr_consent` | the TCF consent string. Omitted if empty.                                     |
+ * | `uc`           | always `1_2`                                                                  |
+ *
  * ### Parameter mappings
  *
  * Each entry in `mappingDefinitions` reads one key-value and sends it as one URL parameter.
@@ -57,12 +75,16 @@
  * ### Consent
  *
  * If GDPR applies, vendor consent for ROQAD (4) and zeotap (301) and consent for purpose 1 are
- * required. Without GDPR the script is always loaded.
+ * required. Without GDPR the sync always runs. This applies to both sync methods.
  *
  * ### Single page applications
  *
- * SPA syncs are not supported yet. With `spaMode: true` the script is loaded only once on the
- * first page view and a warning is logged.
+ * The sync runs once per `requestAds()` cycle, i.e. once per page load and once per virtual page
+ * view in a single page application. Lazy loading and slot refreshes do not trigger a sync.
+ *
+ * Use `syncMethod: 'pixel'` for single page applications. The previous iframe is removed before
+ * each sync, so there is always at most one. With `mapper` every sync leaves a script tag and a
+ * `<div>` added by ROQAD in the page.
  *
  * @module
  */
@@ -73,7 +95,7 @@ import {
   AdPipelineContext,
   ConfigureStep,
   InitStep,
-  mkInitStep,
+  mkConfigureStepOncePerRequestAdsCycle,
   PrepareRequestAdsStep
 } from 'ad-tag/ads/adPipeline';
 import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
@@ -81,6 +103,10 @@ import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
 const name = 'roqad';
 
 const mapperUrl = 'https://zd.rqtrk.eu/mapper.js';
+
+const pixelUrl = 'https://zd.rqtrk.eu/';
+
+const syncIframeId = 'h5v-roqad-sync';
 
 /**
  * IAB global vendor list ids that must have consent: Roq.ad (4) and zeotap (301)
@@ -115,10 +141,14 @@ const encodeMappedValue = (
   return mapping.defaultValue !== undefined ? encodeURIComponent(mapping.defaultValue) : undefined;
 };
 
-const buildMapperUrl = (
+/**
+ * The fixed parameters and the parameter mappings, already URL-encoded. Shared by both sync
+ * methods.
+ */
+const buildPageParameters = (
   config: modules.roqad.RoqadModuleConfig,
   context: AdPipelineContext
-): string => {
+): ReadonlyArray<UrlParameter> => {
   const hem = context.runtimeConfig__.audience?.hem;
   const hashedEmail = hem?.sha256BasicNormalized ?? hem?.sha256;
   const isMobile = context.labelConfigService__.getSupportedLabels().includes('mobile');
@@ -137,7 +167,7 @@ const buildMapperUrl = (
     ['z_e_sha2_l', hashedEmail]
   ];
 
-  const parameters: ReadonlyArray<UrlParameter> = [
+  return [
     ...fixedParameters.map(([parameter, value]): UrlParameter => [
       parameter,
       value !== undefined ? encodeURIComponent(value) : undefined
@@ -147,45 +177,94 @@ const buildMapperUrl = (
       encodeMappedValue(keyValues, mapping)
     ])
   ];
+};
 
+/**
+ * The TCF v2 consent parameters that `mapper.js` would add itself.
+ */
+const buildConsentParameters = (tcData: tcfapi.responses.TCData): ReadonlyArray<UrlParameter> => {
+  const gdpr = tcData.gdprApplies === undefined ? undefined : tcData.gdprApplies ? '1' : '0';
+  // CMPs may provide a tcString even if gdpr does not apply
+  const tcString = 'tcString' in tcData ? tcData.tcString : undefined;
+  return [
+    ['cmp', '1'],
+    ['gdpr', gdpr],
+    ['gdpr_consent', tcString ? encodeURIComponent(tcString) : undefined],
+    ['uc', '1_2']
+  ];
+};
+
+const buildUrl = (baseUrl: string, parameters: ReadonlyArray<UrlParameter>): string => {
   const query = parameters
     .filter((entry): entry is readonly [string, string] => entry[1] !== undefined)
     .map(([parameter, value]) => `${encodeURIComponent(parameter)}=${value}`)
     .join('&');
 
-  return `${mapperUrl}?${query}`;
+  return `${baseUrl}?${query}`;
 };
 
 /**
- * Creates the ROQAD Mapper module.
+ * Creates the ROQAD Cookie Sync module.
  *
  * @see modules.roqad.RoqadModuleConfig
  */
 export const createRoqad = (): IModule => {
   let roqadConfig: modules.roqad.RoqadModuleConfig | null = null;
 
-  const loadMapper = (
+  /**
+   * The iframe of the last pixel sync. Removed before the next sync.
+   */
+  let syncIframe: HTMLIFrameElement | null = null;
+
+  const syncWithMapper = (
     config: modules.roqad.RoqadModuleConfig,
     context: AdPipelineContext
-  ): Promise<void> => {
-    if (config.spaMode) {
-      context.logger__.warn(
-        name,
-        'SPA syncs are not supported yet. mapper.js is only loaded on the first page view.'
-      );
-    }
-
-    if (!hasRequiredConsent(context.tcData__)) {
-      return Promise.resolve();
-    }
-
+  ): void => {
     context.assetLoaderService__
       .loadScript({
         name,
         loadMethod: AssetLoadMethod.TAG,
-        assetUrl: buildMapperUrl(config, context)
+        assetUrl: buildUrl(mapperUrl, buildPageParameters(config, context))
       })
       .catch(error => context.logger__.error(name, 'failed to load mapper.js', error));
+  };
+
+  const syncWithPixel = (
+    config: modules.roqad.RoqadModuleConfig,
+    context: AdPipelineContext
+  ): void => {
+    const document = context.window__.document;
+    // no-op if the single page application already removed it
+    syncIframe?.remove();
+
+    const iframe = document.createElement('iframe');
+    iframe.id = syncIframeId;
+    iframe.title = 'ROQAD cookie sync';
+    iframe.width = '0';
+    iframe.height = '0';
+    iframe.style.display = 'none';
+    iframe.style.border = '0';
+    iframe.src = buildUrl(pixelUrl, [
+      ...buildPageParameters(config, context),
+      ...buildConsentParameters(context.tcData__)
+    ]);
+    document.body.appendChild(iframe);
+    syncIframe = iframe;
+  };
+
+  const sync = (
+    config: modules.roqad.RoqadModuleConfig,
+    context: AdPipelineContext
+  ): Promise<void> => {
+    if (!hasRequiredConsent(context.tcData__)) {
+      return Promise.resolve();
+    }
+
+    if (config.syncMethod === 'pixel') {
+      syncWithPixel(config, context);
+    } else {
+      syncWithMapper(config, context);
+    }
 
     return Promise.resolve();
   };
@@ -193,7 +272,7 @@ export const createRoqad = (): IModule => {
   return {
     name,
     configKey: 'roqad',
-    description: 'Loads the ROQAD mapper script with page data after consent was given',
+    description: 'Performs the ROQAD cookie sync with page data after consent was given',
     moduleType: 'dmp' as ModuleType,
 
     config__: (): modules.roqad.RoqadModuleConfig | null => roqadConfig,
@@ -205,11 +284,15 @@ export const createRoqad = (): IModule => {
     },
 
     initSteps__(): InitStep[] {
-      const config = roqadConfig;
-      return config ? [mkInitStep(name, context => loadMapper(config, context))] : [];
+      return [];
     },
 
-    configureSteps__: (): ConfigureStep[] => [],
+    configureSteps__(): ConfigureStep[] {
+      const config = roqadConfig;
+      return config
+        ? [mkConfigureStepOncePerRequestAdsCycle(name, context => sync(config, context))]
+        : [];
+    },
 
     prepareRequestAdsSteps__: (): PrepareRequestAdsStep[] => []
   };

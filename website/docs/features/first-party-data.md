@@ -25,7 +25,7 @@ describe, per module, which config fields map which moli data into which partner
 
 | Module    | Data sent                                                                                              | Mapping mechanism                                                                                              | Consent (if GDPR applies)                     |
 | --------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| `roqad`   | Script URL query parameters: fixed parameters, `audience.hem` hashed email, mapped key-values          | `mappingDefinitions`: key-value `key` → URL `parameter`, optional `defaultValue`. Config + runtime key-values. | Vendors 4 (ROQAD) and 301 (zeotap), purpose 1 |
+| `roqad`   | Sync URL query parameters: fixed parameters, `audience.hem` hashed email, mapped key-values            | `mappingDefinitions`: key-value `key` → URL `parameter`, optional `defaultValue`. Config + runtime key-values. | Vendors 4 (ROQAD) and 301 (zeotap), purpose 1 |
 | `zeotap`  | Script URL query parameters: mapped key-values, `countryCode`, `hashedEmailAddress` from module config | `dataKeyValues`: `keyValueKey` → `parameterKey`; `exclusionKeyValues` block loading. Config key-values only.   | Vendor 301, purposes 1, 3, 4, 5, 6, 7, 9, 10  |
 | `emetriq` | Web: `window._enqAdpParam`. App: tracking pixel parameters. Optional login event with hashed email.    | `customMappingDefinition`: key-value `key` → custom parameter `param` (`c_…`). Config + runtime key-values.    | Vendor 213                                    |
 
@@ -61,8 +61,9 @@ moli.registerModule(createRoqad());
 
 ## ROQAD
 
-The `roqad` module loads ROQAD's `mapper.js` (`https://zd.rqtrk.eu/mapper.js`) once per page load.
-All page data is passed to ROQAD as query parameters on the script URL.
+The `roqad` module performs the ROQAD Cookie Sync once per `requestAds()` cycle - once per page
+load, and once per virtual page view in a [single page application](#roqad-spa). All page data is
+passed to ROQAD as query parameters on the sync URL.
 
 ROQAD belongs to the zeotap family and shares some parameter names (e.g. `z_e_sha2_l`), but it is a
 separate integration. Do not configure ROQAD through the `zeotap` module.
@@ -76,7 +77,7 @@ separate integration. Do not configure ROQAD through the `zeotap` module.
       "enabled": true,
       "zdid": "1234",
       "publisherName": "example-publisher",
-      "spaMode": false,
+      "syncMethod": "mapper",
       "mappingDefinitions": [
         {
           "roqadValueType": "string",
@@ -95,10 +96,20 @@ separate integration. Do not configure ROQAD through the `zeotap` module.
 | -------------------- | ----------------------------------------------------------------------------------- |
 | `zdid`               | The ROQAD / zeotap data source id. Sent as `zdid`.                                  |
 | `publisherName`      | The publisher name as agreed with ROQAD. Sent as `publisher_name`.                  |
-| `spaMode`            | Set to `true` for single page applications. See [below](#roqad-spa).                |
+| `syncMethod`         | _optional_ `mapper` (default) or `pixel`. See [below](#roqad-sync-method).          |
 | `mappingDefinitions` | Mappings from key-values to additional URL parameters. See [below](#roqad-mapping). |
 
-### Fixed parameters
+### Sync method {#roqad-sync-method}
+
+| `syncMethod`       | Description                                                                                                                                                                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `mapper` (default) | Loads ROQAD's `mapper.js` (`https://zd.rqtrk.eu/mapper.js`) as a script tag. The script reads the TCF consent from the CMP itself.                                                                                                   |
+| `pixel`            | Loads the sync URL (`https://zd.rqtrk.eu/`) directly in a hidden iframe with the id `h5v-roqad-sync`, appended to `document.body`. moli passes the TCF consent as [URL parameters](#roqad-consent-parameters). Recommended for SPAs. |
+
+Both methods send the same [fixed parameters](#roqad-fixed-parameters) and
+[parameter mappings](#roqad-mapping).
+
+### Fixed parameters {#roqad-fixed-parameters}
 
 These parameters are always set by the module and are not configurable as mappings.
 
@@ -156,18 +167,56 @@ window.moli.que.push(function (moli) {
 });
 ```
 
-and no `channel` key-value, the mapper URL contains `category=none&interests=cars,e-bikes`.
+and no `channel` key-value, the sync URL contains `category=none&interests=cars,e-bikes`.
 
 ### Consent
 
-If GDPR applies, the script is only loaded with vendor consent for ROQAD (`4`) **and** zeotap
-(`301`) and consent for purpose 1 (store information on a device). If GDPR does not apply, the
-script is always loaded. See [Consent](./consent.md).
+If GDPR applies, the sync only runs with vendor consent for ROQAD (`4`) **and** zeotap (`301`) and
+consent for purpose 1 (store information on a device). If GDPR does not apply, the sync always
+runs. This applies to both sync methods. See [Consent](./consent.md).
+
+#### Consent parameters {#roqad-consent-parameters}
+
+With `syncMethod: "pixel"` there is no `mapper.js` that reads the consent from the CMP, so moli
+appends these parameters after the mapped parameters:
+
+| Parameter      | Value                                                        |
+| -------------- | ------------------------------------------------------------ |
+| `cmp`          | always `1`                                                   |
+| `gdpr`         | `1` if GDPR applies, `0` if it does not. Omitted if unknown. |
+| `gdpr_consent` | The URL-encoded TCF consent string. Omitted if it is empty.  |
+| `uc`           | always `1_2`                                                 |
+
+The `mapper` sync method sends no consent parameters.
 
 ### Single page applications {#roqad-spa}
 
-SPA syncs are not supported yet. The script is loaded in the init phase, so only once on the first
-page view, with the key-values present at that time. With `spaMode: true` a warning is logged.
+The sync runs in the configure phase, once per `requestAds()` cycle. Without SPA mode that is once
+per page load; in a [single page application](./single-page-app.md) it is once per virtual page
+view, with the key-values present at that time. Lazy loading and slot refreshes run the ad pipeline
+again, but never trigger another sync.
+
+Use `"syncMethod": "pixel"` for single page applications:
+
+```json
+{
+  "modules": {
+    "roqad": {
+      "enabled": true,
+      "zdid": "1234",
+      "publisherName": "example-publisher",
+      "syncMethod": "pixel",
+      "mappingDefinitions": []
+    }
+  }
+}
+```
+
+- **`pixel`**: before every sync, the previous iframe is removed. There is always at most one
+  `#h5v-roqad-sync` iframe on the page. If your application already removed it, e.g. by
+  replacing the body content, a new one is appended without error.
+- **`mapper`**: every sync adds a new script tag, and `mapper.js` adds a `<div>` to the page. These
+  elements are not cleaned up and accumulate over the lifetime of the single page application.
 
 ## Zeotap
 

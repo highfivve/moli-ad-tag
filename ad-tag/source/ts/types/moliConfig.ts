@@ -3336,9 +3336,9 @@ export namespace modules {
   }
 
   /**
-   * Configuration types for the ROQAD Mapper module (`configKey: roqad`).
+   * Configuration types for the ROQAD Cookie Sync module (`configKey: roqad`).
    *
-   * ROQAD's `mapper.js` receives all page data as query parameters on the script URL. The fixed
+   * ROQAD receives all page data as query parameters on the sync URL. The fixed
    * parameters (`zdid`, `env`, `eventType`, `publisher_name`, `partner_dom`, `z_e_sha2_l`) are set
    * by the module itself; additional parameters are derived from key-values via
    * {@link RoqadParameterMapping}s.
@@ -3380,14 +3380,25 @@ export namespace modules {
     }
 
     /**
-     * A rule that turns one page key-value into one ROQAD Mapper URL parameter.
+     * A rule that turns one page key-value into one ROQAD Cookie Sync URL parameter.
      *
      * Discriminated by `roqadValueType`. Currently only {@link RoqadStringParameterMapping} exists.
      */
     export type RoqadParameterMapping = RoqadStringParameterMapping;
 
     /**
-     * ## ROQAD Mapper module configuration
+     * How the ROQAD Cookie Sync is performed.
+     *
+     * - `mapper` - loads ROQAD's `mapper.js` as a script tag. The script reads the TCF consent from
+     *   the CMP itself. Every sync leaves a script tag and a `<div>` in the page.
+     * - `pixel` - loads the sync URL directly in a hidden iframe and passes the TCF consent as URL
+     *   parameters. The previous iframe is removed on every sync. Recommended for single page
+     *   applications.
+     */
+    export type RoqadSyncMethod = 'mapper' | 'pixel';
+
+    /**
+     * ## ROQAD Cookie Sync module configuration
      *
      * @example
      * ```json
@@ -3395,7 +3406,7 @@ export namespace modules {
      *   "enabled": true,
      *   "zdid": "1234",
      *   "publisherName": "example-publisher",
-     *   "spaMode": false,
+     *   "syncMethod": "pixel",
      *   "mappingDefinitions": [
      *     { "roqadValueType": "string", "key": "channel", "parameter": "category" }
      *   ]
@@ -3414,12 +3425,12 @@ export namespace modules {
       readonly publisherName: string;
 
       /**
-       * Set to `true` if the publisher runs a single page application.
+       * How the ROQAD Cookie Sync is performed. Use `pixel` for single page applications.
        *
-       * NOTE: SPA syncs are not supported yet. The mapper script is loaded only once on the first
-       * page view and a warning is logged.
+       * @default 'mapper'
+       * @see RoqadSyncMethod
        */
-      readonly spaMode: boolean;
+      readonly syncMethod?: RoqadSyncMethod;
 
       /**
        * Mappings from key-values to additional ROQAD URL parameters.

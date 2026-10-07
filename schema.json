@@ -3337,9 +3337,10 @@
           "description": "The publisher name as agreed with ROQAD. Sent as `publisher_name` parameter.",
           "type": "string"
         },
-        "spaMode": {
-          "description": "Set to `true` if the publisher runs a single page application.\n\nNOTE: SPA syncs are not supported yet. The mapper script is loaded only once on the first page view and a warning is logged.",
-          "type": "boolean"
+        "syncMethod": {
+          "$ref": "#/definitions/modules.roqad.RoqadSyncMethod",
+          "default": "mapper",
+          "description": "How the ROQAD Cookie Sync is performed. Use `pixel` for single page applications."
         },
         "zdid": {
           "description": "The ROQAD / zeotap data source id. Sent as `zdid` parameter.",
@@ -3350,7 +3351,6 @@
         "enabled",
         "mappingDefinitions",
         "publisherName",
-        "spaMode",
         "zdid"
       ],
       "type": "object"
@@ -8420,7 +8420,7 @@
     },
     "modules.roqad.RoqadModuleConfig": {
       "additionalProperties": false,
-      "description": "## ROQAD Mapper module configuration",
+      "description": "## ROQAD Cookie Sync module configuration",
       "properties": {
         "enabled": {
           "description": "If set to true the module will be enabled.",
@@ -8441,9 +8441,10 @@
           "description": "The publisher name as agreed with ROQAD. Sent as `publisher_name` parameter.",
           "type": "string"
         },
-        "spaMode": {
-          "description": "Set to `true` if the publisher runs a single page application.\n\nNOTE: SPA syncs are not supported yet. The mapper script is loaded only once on the first page view and a warning is logged.",
-          "type": "boolean"
+        "syncMethod": {
+          "$ref": "#/definitions/modules.roqad.RoqadSyncMethod",
+          "default": "mapper",
+          "description": "How the ROQAD Cookie Sync is performed. Use `pixel` for single page applications."
         },
         "zdid": {
           "description": "The ROQAD / zeotap data source id. Sent as `zdid` parameter.",
@@ -8454,14 +8455,13 @@
         "enabled",
         "mappingDefinitions",
         "publisherName",
-        "spaMode",
         "zdid"
       ],
       "type": "object"
     },
     "modules.roqad.RoqadParameterMapping": {
       "$ref": "#/definitions/modules.roqad.RoqadStringParameterMapping",
-      "description": "A rule that turns one page key-value into one ROQAD Mapper URL parameter.\n\nDiscriminated by `roqadValueType`. Currently only  {@link  RoqadStringParameterMapping }  exists."
+      "description": "A rule that turns one page key-value into one ROQAD Cookie Sync URL parameter.\n\nDiscriminated by `roqadValueType`. Currently only  {@link  RoqadStringParameterMapping }  exists."
     },
     "modules.roqad.RoqadStringParameterMapping": {
       "additionalProperties": false,
@@ -8491,6 +8491,14 @@
         "parameter"
       ],
       "type": "object"
+    },
+    "modules.roqad.RoqadSyncMethod": {
+      "description": "How the ROQAD Cookie Sync is performed.\n\n- `mapper` - loads ROQAD's `mapper.js` as a script tag. The script reads the TCF consent from   the CMP itself. Every sync leaves a script tag and a `<div>` in the page.\n- `pixel` - loads the sync URL directly in a hidden iframe and passes the TCF consent as URL   parameters. The previous iframe is removed on every sync. Recommended for single page   applications.",
+      "enum": [
+        "mapper",
+        "pixel"
+      ],
+      "type": "string"
     },
     "modules.skin.AllFormatFilter": {
       "additionalProperties": false,
