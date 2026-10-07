@@ -660,8 +660,8 @@ const RoqadModule: React.FC<{ config: modules.roqad.RoqadModuleConfig }> = ({ co
     <Row label="Publisher name">
       <Tag>{config.publisherName}</Tag>
     </Row>
-    <Row label="SPA mode">
-      <BoolTag value={config.spaMode} />
+    <Row label="Sync method">
+      <Tag>{config.syncMethod ?? 'mapper'}</Tag>
     </Row>
     <Row label="Parameter mappings">
       <ListTags

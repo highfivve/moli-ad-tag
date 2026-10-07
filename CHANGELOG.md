@@ -7,6 +7,11 @@
 - GD-10451: Add the ROQAD Mapper module (`modules.roqad`). Loads ROQAD's `mapper.js` once per page
   load after consent (vendors 4 + 301, purpose 1) with fixed parameters and key-value based
   parameter mappings. Part of the `all` and `highfivve` bundles.
+- GD-10474: Add `syncMethod` (`mapper` | `pixel`) to the ROQAD module. `pixel` loads the ROQAD
+  sync URL with TCF consent parameters in a hidden iframe (`#h5v-roqad-sync`) instead of
+  `mapper.js` and replaces the previous iframe on every sync. The ROQAD Cookie Sync now runs once
+  per `requestAds()` cycle, so single page applications re-sync on every virtual page view.
+  **Breaking**: `spaMode` was removed from the ROQAD module config.
 - Add `audience.hem.sha256BasicNormalized`: SHA-256 of the trimmed and lower-cased email address,
   without Gmail-specific normalisation.
 

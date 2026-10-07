@@ -206,14 +206,27 @@ every later cycle first pushes `['destroy']` to tear down the previous run's pla
 re-applying the mode - see `docs/inline/init.md`. The InlineAI script itself still loads only
 once, regardless of how many cycles run.
 
-### ROQAD Mapper
-ROQAD's cookie-sync / audience script (`mapper.js`), integrated as its own [Module]
-(`configKey: roqad`). Page data reaches ROQAD only as query parameters on the script URL.
+### ROQAD Cookie Sync
+The call that sets or reads the ROQAD cookie and fires ROQAD's partner sync pixels, integrated
+as its own [Module] (`configKey: roqad`). Page data reaches ROQAD only as query parameters on
+the call URL. Performed by one of two sync methods: the [ROQAD Mapper] or the
+[ROQAD Sync Pixel].
 _Avoid_: zeotap — ROQAD belongs to the zeotap family (shared parameter names like `z_e_sha2_l`,
 `ctry`) but is a separate integration and is never configured through the zeotap module.
 
+### ROQAD Mapper
+The `mapper.js` sync method of the [ROQAD Cookie Sync]: a ROQAD-hosted script that reads TCF
+consent from the CMP itself. The default sync method.
+_Avoid_: js mode.
+
+### ROQAD Sync Pixel
+The pixel sync method of the [ROQAD Cookie Sync]: the sync URL loaded directly in a hidden
+iframe, without `mapper.js`. moli must pass the TCF consent (`gdpr`, `gdpr_consent`) itself on
+every call.
+_Avoid_: direct mode, direct call.
+
 ### ROQAD Parameter Mapping
-A rule that turns one page key-value into one [ROQAD Mapper] URL parameter (`key` → `parameter`),
+A rule that turns one page key-value into one [ROQAD Cookie Sync] URL parameter (`key` → `parameter`),
 with an optional default. All ROQAD parameters are strings; multi-valued key-values become a
 comma-separated string. Fixed parameters (`zdid`, `env`, `eventType`, `publisher_name`,
 `partner_dom`, `z_e_sha2_l`) are not mappings.
