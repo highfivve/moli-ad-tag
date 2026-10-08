@@ -186,11 +186,7 @@ export const createIntentIq = (): IModule => {
         context.window__.pbjs.mergeConfig({
           userSync: { userIds: [mkUserIdProvider(config, intentIqConfigObject)] }
         });
-        // prebid's userId module initializes as soon as `setConfig` (prebid.ts) delivers the
-        // userIds, and that runs in a separate que command. With consent already resolved, init can
-        // run before this merge and never picks up intentIqId. The refresh initializes just
-        // intentIqId in that case, and is a no-op if userId init hasn't run yet.
-        // Prebid fixed this race in 11.40.0, so the portal only sets the flag for older versions.
+        // closes the userId init race of Prebid.js < 11.40.0 - see `IntentIqModuleConfig.refreshUserIds`
         if (config.refreshUserIds) {
           context.window__.pbjs
             .refreshUserIds({ submoduleNames: ['intentIqId'] })
