@@ -37,10 +37,13 @@
  * prebid configuration with `pbjs.mergeConfig`, and the only writer of the `iiqAnalytics` adapter,
  * which it enables with `pbjs.enableAnalytics`. Neither is authored in `MoliConfig`.
  *
- * Right after the merge the module calls `pbjs.refreshUserIds({ submoduleNames: ['intentIqId'] })`.
- * Prebid's userId module may already have initialized between the core `setConfig` and this
- * `mergeConfig` (they are separate `pbjs.que` commands), in which case `intentIqId` would never be
- * initialized for the page view. The refresh closes that gap and is a no-op if init hasn't run yet.
+ * With `refreshUserIds: true` the module calls `pbjs.refreshUserIds({ submoduleNames: ['intentIqId'] })`
+ * right after the merge. In Prebid.js < 11.40.0 the userId module may already have initialized
+ * between the core `setConfig` and this `mergeConfig` (they are separate `pbjs.que` commands), in
+ * which case `intentIqId` would never be initialized for the page view. The refresh closes that gap
+ * and is a no-op if init hasn't run yet. Prebid.js 11.40.0 fixed this race itself
+ * (https://github.com/prebid/Prebid.js/pull/15691). highfivve-portal sets the flag based on the
+ * Prebid.js version; the module only follows it.
  *
  * @module
  */
@@ -183,13 +186,14 @@ export const createIntentIq = (): IModule => {
         context.window__.pbjs.mergeConfig({
           userSync: { userIds: [mkUserIdProvider(config, intentIqConfigObject)] }
         });
-        // prebid's userId module initializes as soon as `setConfig` (prebid.ts) delivers the
-        // userIds, and that runs in a separate que command. With consent already resolved, init can
-        // run before this merge and never picks up intentIqId. The refresh initializes just
-        // intentIqId in that case, and is a no-op if userId init hasn't run yet.
-        context.window__.pbjs
-          .refreshUserIds({ submoduleNames: ['intentIqId'] })
-          .catch(error => context.logger__.error('IntentIQ', 'failed to refresh user ids', error));
+        // closes the userId init race of Prebid.js < 11.40.0 - see `IntentIqModuleConfig.refreshUserIds`
+        if (config.refreshUserIds) {
+          context.window__.pbjs
+            .refreshUserIds({ submoduleNames: ['intentIqId'] })
+            .catch(error =>
+              context.logger__.error('IntentIQ', 'failed to refresh user ids', error)
+            );
+        }
       }
 
       if (!analyticsEnabled) {
