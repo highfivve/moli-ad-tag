@@ -65,10 +65,15 @@ after the merge. If userId init hasn't run yet the refresh is a no-op and normal
 `intentIqId`; if it has, the refresh initializes just `intentIqId`, and `auctionDelay` still waits
 for it. The promise is not awaited; a rejection is only logged.
 
-## Amendment (2026-10-03): refresh only for Prebid.js < 11.40.0
+## Amendment (2026-10-08): refresh behind a portal-controlled flag
 
 Prebid.js fixed the race upstream in 11.40.0 (https://github.com/prebid/Prebid.js/pull/15691):
-userIds added via `mergeConfig` after userId init are now picked up by prebid itself. The configure
-step parses `pbjs.version` and skips `refreshUserIds` from 11.40.0 on (pre-release suffixes like
-`-pre` are ignored). An unparseable version keeps the refresh, so the workaround fails safe. Drop
-the refresh entirely once every bundle ships Prebid.js >= 11.40.0.
+userIds added via `mergeConfig` after userId init are now picked up by prebid itself, so the
+refresh is only needed for older versions.
+
+The ad tag does not know about Prebid.js versions. highfivve-portal knows which Prebid.js version a
+distribution ships and decides: it sets `refreshUserIds: true` on the `intentiq` module config for
+Prebid.js < 11.40.0. The configure step only follows the flag; it calls `refreshUserIds` for
+`intentIqId` right after its own merge when the flag is `true`. Absent or `false` means no refresh.
+The flag is temporary and will be removed, together with the refresh, once every distribution
+ships Prebid.js >= 11.40.0.

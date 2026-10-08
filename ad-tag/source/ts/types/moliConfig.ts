@@ -3073,6 +3073,23 @@ export namespace modules {
       readonly scriptUrl?: string;
 
       /**
+       * If `true`, the module calls `pbjs.refreshUserIds({ submoduleNames: ['intentIqId'] })` right
+       * after it merged the `intentIqId` userId provider into the prebid config. Absent or `false`
+       * means no refresh.
+       *
+       * The refresh covers **only** `intentIqId` and only runs after the module's own merge. It works
+       * around a race in Prebid.js < 11.40.0, where the userId module could initialize before the
+       * merge and never pick up `intentIqId`. Prebid.js 11.40.0 fixed this upstream
+       * (https://github.com/prebid/Prebid.js/pull/15691).
+       *
+       * Set by highfivve-portal based on the Prebid.js version of the distribution. The ad tag does
+       * not check the Prebid.js version itself.
+       *
+       * Temporary: will be removed once all distributions are on Prebid.js >= 11.40.0.
+       */
+      readonly refreshUserIds?: boolean;
+
+      /**
        * Storage settings for the userId provider. `type` and `name` are always `html5` /
        * `intentIqId` and cannot be configured.
        */
