@@ -34,6 +34,11 @@ describe('IntentIQ Module', () => {
     partner: 12345
   };
 
+  const intentIqConfigWithRefresh: modules.intentiq.IntentIqModuleConfig = {
+    ...intentIqConfig,
+    refreshUserIds: true
+  };
+
   const prebidConfig: MoliConfig = {
     ...emptyConfig,
     prebid: moliPrebidTestConfig
@@ -296,10 +301,10 @@ describe('IntentIQ Module', () => {
       expect(mergeConfigSpy).to.have.been.calledTwice;
     });
 
-    it('should refresh the intentIqId user id right after the merge', async () => {
+    it('should refresh the intentIqId user id right after the merge if refreshUserIds is true', async () => {
       const mergeConfigSpy = sandbox.spy(jsDomWindow.pbjs, 'mergeConfig');
       const refreshUserIdsSpy = sandbox.spy(jsDomWindow.pbjs, 'refreshUserIds');
-      const module = createModule();
+      const module = createModule(intentIqConfigWithRefresh);
       await module.configureSteps__()[0](adPipelineContext(), []);
 
       expect(refreshUserIdsSpy).to.have.been.calledOnce;
@@ -309,12 +314,24 @@ describe('IntentIQ Module', () => {
       expect(refreshUserIdsSpy).to.have.been.calledImmediatelyAfter(mergeConfigSpy);
     });
 
+    [undefined, false].forEach(refreshUserIds =>
+      it(`should not refresh user ids if refreshUserIds is ${refreshUserIds}`, async () => {
+        const mergeConfigSpy = sandbox.spy(jsDomWindow.pbjs, 'mergeConfig');
+        const refreshUserIdsSpy = sandbox.spy(jsDomWindow.pbjs, 'refreshUserIds');
+        const module = createModule({ ...intentIqConfig, refreshUserIds });
+        await module.configureSteps__()[0](adPipelineContext(), []);
+
+        expect(mergeConfigSpy).to.have.been.calledOnce;
+        expect(refreshUserIdsSpy).to.have.not.been.called;
+      })
+    );
+
     it('should not refresh user ids if an intentIqId provider is already configured', async () => {
       sandbox.stub(jsDomWindow.pbjs, 'getConfig').returns({
         userSync: { userIds: [{ name: 'intentIqId', params: { partner: 999 } }] }
       });
       const refreshUserIdsSpy = sandbox.spy(jsDomWindow.pbjs, 'refreshUserIds');
-      const module = createModule();
+      const module = createModule(intentIqConfigWithRefresh);
       await module.configureSteps__()[0](adPipelineContext(), []);
 
       expect(refreshUserIdsSpy).to.have.not.been.called;
@@ -330,7 +347,7 @@ describe('IntentIQ Module', () => {
         userIds = [...userIds, ...(config.userSync?.userIds ?? [])];
       });
       const refreshUserIdsSpy = sandbox.spy(jsDomWindow.pbjs, 'refreshUserIds');
-      const module = createModule();
+      const module = createModule(intentIqConfigWithRefresh);
       const configureStep = module.configureSteps__()[0];
       const context = adPipelineContext();
 
@@ -345,7 +362,7 @@ describe('IntentIQ Module', () => {
       sandbox.stub(jsDomWindow.pbjs, 'refreshUserIds').rejects(error);
       const logger = newNoopLogger();
       const errorSpy = sandbox.spy(logger, 'error');
-      const module = createModule();
+      const module = createModule(intentIqConfigWithRefresh);
       await module.configureSteps__()[0]({ ...adPipelineContext(), logger__: logger }, []);
       // let the rejection handler run
       await Promise.resolve();
@@ -361,7 +378,7 @@ describe('IntentIQ Module', () => {
       const mergeConfigSpy = sandbox.spy(jsDomWindow.pbjs, 'mergeConfig');
       const refreshUserIdsSpy = sandbox.spy(jsDomWindow.pbjs, 'refreshUserIds');
       const enableAnalyticsSpy = sandbox.spy(jsDomWindow.pbjs, 'enableAnalytics');
-      const module = createModule();
+      const module = createModule(intentIqConfigWithRefresh);
       await module.configureSteps__()[0](
         adPipelineContext(fullConsent({ 1323: true }), emptyConfig),
         []
@@ -375,7 +392,7 @@ describe('IntentIQ Module', () => {
     it('should do nothing in the test environment', async () => {
       const mergeConfigSpy = sandbox.spy(jsDomWindow.pbjs, 'mergeConfig');
       const enableAnalyticsSpy = sandbox.spy(jsDomWindow.pbjs, 'enableAnalytics');
-      const module = createModule();
+      const module = createModule(intentIqConfigWithRefresh);
       await module.configureSteps__()[0]({ ...adPipelineContext(), env__: 'test' }, []);
 
       expect(mergeConfigSpy).to.have.not.been.called;

@@ -2742,6 +2742,10 @@
           "description": "Partner ID assigned by IntentIQ.",
           "type": "number"
         },
+        "refreshUserIds": {
+          "description": "If `true`, the module calls `pbjs.refreshUserIds({ submoduleNames: ['intentIqId'] })` right after it merged the `intentIqId` userId provider into the prebid config. Absent or `false` means no refresh.\n\nThe refresh covers **only** `intentIqId` and only runs after the module's own merge. It works around a race in Prebid.js < 11.40.0, where the userId module could initialize before the merge and never pick up `intentIqId`. Prebid.js 11.40.0 fixed this upstream (https://github.com/prebid/Prebid.js/pull/15691).\n\nSet by highfivve-portal based on the Prebid.js version of the distribution. The ad tag does not check the Prebid.js version itself.\n\nTemporary: will be removed once all distributions are on Prebid.js >= 11.40.0.",
+          "type": "boolean"
+        },
         "scriptUrl": {
           "description": "Optional URL of IntentIQ's alternative raw CDN tag script. If set, the module loads this script in an init step. This is not a prebid configuration field.",
           "type": "string"
@@ -8121,6 +8125,10 @@
         "partner": {
           "description": "Partner ID assigned by IntentIQ.",
           "type": "number"
+        },
+        "refreshUserIds": {
+          "description": "If `true`, the module calls `pbjs.refreshUserIds({ submoduleNames: ['intentIqId'] })` right after it merged the `intentIqId` userId provider into the prebid config. Absent or `false` means no refresh.\n\nThe refresh covers **only** `intentIqId` and only runs after the module's own merge. It works around a race in Prebid.js < 11.40.0, where the userId module could initialize before the merge and never pick up `intentIqId`. Prebid.js 11.40.0 fixed this upstream (https://github.com/prebid/Prebid.js/pull/15691).\n\nSet by highfivve-portal based on the Prebid.js version of the distribution. The ad tag does not check the Prebid.js version itself.\n\nTemporary: will be removed once all distributions are on Prebid.js >= 11.40.0.",
+          "type": "boolean"
         },
         "scriptUrl": {
           "description": "Optional URL of IntentIQ's alternative raw CDN tag script. If set, the module loads this script in an init step. This is not a prebid configuration field.",
