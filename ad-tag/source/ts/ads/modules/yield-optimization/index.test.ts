@@ -8,10 +8,17 @@ import {
   createYieldOptimizationService,
   YieldOptimizationService
 } from './yieldOptimizationService';
-import { AdSlot, modules, MoliConfig } from 'ad-tag/types/moliConfig';
-import { emptyConfig, newAdPipelineContext, noopLogger } from 'ad-tag/stubs/moliStubs';
+import { AdSlot, behaviour, modules, MoliConfig } from 'ad-tag/types/moliConfig';
+import {
+  emptyConfig,
+  newAdPipelineContext,
+  newNoopLogger,
+  noopLogger
+} from 'ad-tag/stubs/moliStubs';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
+import { googletag } from 'ad-tag/types/googletag';
+import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 
 // setup sinon-chai
 use(sinonChai);
@@ -48,6 +55,30 @@ describe('Yield Optimization module', () => {
     };
   };
 
+  const uprReset: modules.yield_optimization.UprResetConfig = {
+    excludeAdSlotDomIds: []
+  };
+
+  const yieldConfigWithUprReset = (
+    uprResetConfig: modules.yield_optimization.UprResetConfig
+  ): modules.yield_optimization.StaticYieldOptimizationConfig => ({
+    ...yieldConfig,
+    uprReset: uprResetConfig
+  });
+
+  const testAdSlotDomId = 'domId';
+
+  const testMoliConfig = (loaded: behaviour.ISlotLoading['loaded'] = 'eager') =>
+    ({
+      ...emptyConfig,
+      slots: [{ ...adUnit(`/123/${adUnitId}`, []), domId: testAdSlotDomId, behaviour: { loaded } }]
+    }) as MoliConfig;
+
+  const testRenderEndedEvent = (
+    googleSlot: googletag.IAdSlot,
+    isEmpty: boolean
+  ): ISlotRenderEndedEvent => ({ slot: googleSlot, isEmpty }) as ISlotRenderEndedEvent;
+
   const labelServiceMock = (): any => {
     return {
       getDeviceLabel(): 'mobile' | 'desktop' {
@@ -76,6 +107,11 @@ describe('Yield Optimization module', () => {
   afterEach(() => {
     jsDomWindow = createDomAndWindow().jsDomWindow;
     jsDomWindow.googletag = createGoogletagStub();
+    jsDomWindow.moli = {
+      refreshAdSlot(): Promise<'queued' | 'refreshed'> {
+        return Promise.resolve('refreshed');
+      }
+    } as unknown as MoliRuntime.MoliTag;
     sandbox.reset();
   });
 
@@ -255,7 +291,8 @@ describe('Yield Optimization module', () => {
         'gam',
         Sinon.match.any, // logger
         yieldConfig,
-        Sinon.match.any // auction context
+        Sinon.match.any, // auction context
+        Sinon.match.any // upr reset state
       );
     });
 
@@ -279,6 +316,137 @@ describe('Yield Optimization module', () => {
       expect(setConfigSpy).to.have.been.calledOnceWithExactly({
         targeting: { upr_browser: 'Chrome' }
       });
+    });
+  });
+
+  describe('configure step: UPR Reset Empty Refresh', () => {
+    beforeEach(() => {
+      jsDomWindow.moli = {
+        refreshAdSlot(): Promise<'queued' | 'refreshed'> {
+          return Promise.resolve('refreshed');
+        }
+      } as unknown as MoliRuntime.MoliTag;
+    });
+
+    it('should not register a configure step when uprReset is not configured', () => {
+      const { module } = createConfiguredModule(yieldConfig);
+      expect(module.configureSteps__()).to.have.length(0);
+    });
+
+    it('should register exactly one configure step when uprReset is configured', () => {
+      const { module } = createConfiguredModule(yieldConfigWithUprReset(uprReset));
+      const configureSteps = module.configureSteps__();
+      expect(configureSteps).to.have.length(1);
+      expect(configureSteps.map(step => step.name)).to.include(
+        'yield-optimization-upr-reset-empty-refresh'
+      );
+    });
+
+    it('should register the slotRenderEnded listener only once', async () => {
+      const { module } = createConfiguredModule(yieldConfigWithUprReset(uprReset));
+      const configureStep = module.configureSteps__()[0];
+      const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
+
+      await configureStep(newAdPipelineContext(jsDomWindow, 'production', testMoliConfig()), []);
+      // requestId__/requestAdsCalls__ !== 1 -> guarded, listener not registered again
+      await configureStep(
+        { ...newAdPipelineContext(jsDomWindow, 'production', testMoliConfig()), requestId__: 2 },
+        []
+      );
+
+      expect(listenerSpy).to.have.been.calledOnce;
+      expect(listenerSpy).to.have.been.calledWithMatch('slotRenderEnded');
+    });
+
+    it('should strip the floor and refresh the slot once on a genuinely empty render', async () => {
+      const { module } = createConfiguredModule(yieldConfigWithUprReset(uprReset));
+      const configureStep = module.configureSteps__()[0];
+      // dedicated logger instance - the shared `noopLogger` singleton is spied on by other
+      // test files without ever being restored, so spying it here would collide with them
+      const debugLogger = newNoopLogger();
+      const debugSpy = sandbox.spy(debugLogger, 'debug');
+      const refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
+      const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
+
+      await configureStep(
+        {
+          ...newAdPipelineContext(jsDomWindow, 'production', testMoliConfig()),
+          logger__: debugLogger
+        },
+        []
+      );
+      const slotRenderedCallback = (listenerSpy.args as any[]).find(
+        args => args[0] === 'slotRenderEnded'
+      )?.[1];
+
+      const adSlot = googleAdSlotStub(`/123/${adUnitId}`, testAdSlotDomId);
+      slotRenderedCallback(testRenderEndedEvent(adSlot, true));
+
+      expect(refreshAdSlotSpy).to.have.been.calledOnceWithExactly(testAdSlotDomId, {
+        loaded: 'eager',
+        force: true
+      });
+      expect(debugSpy).to.have.been.called;
+
+      // a second empty render for the same ad unit path must not trigger another refresh
+      slotRenderedCallback(testRenderEndedEvent(adSlot, true));
+      expect(refreshAdSlotSpy).to.have.been.calledOnce;
+    });
+
+    it('should not refresh a slot that is excluded by dom id', async () => {
+      const { module } = createConfiguredModule(
+        yieldConfigWithUprReset({ excludeAdSlotDomIds: [testAdSlotDomId] })
+      );
+      const configureStep = module.configureSteps__()[0];
+      const refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
+      const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
+
+      await configureStep(newAdPipelineContext(jsDomWindow, 'production', testMoliConfig()), []);
+      const slotRenderedCallback = (listenerSpy.args as any[]).find(
+        args => args[0] === 'slotRenderEnded'
+      )?.[1];
+
+      const adSlot = googleAdSlotStub(`/123/${adUnitId}`, testAdSlotDomId);
+      slotRenderedCallback(testRenderEndedEvent(adSlot, true));
+
+      expect(refreshAdSlotSpy).to.not.have.been.called;
+    });
+
+    it('should not refresh a slot that is not empty', async () => {
+      const { module } = createConfiguredModule(yieldConfigWithUprReset(uprReset));
+      const configureStep = module.configureSteps__()[0];
+      const refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
+      const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
+
+      await configureStep(newAdPipelineContext(jsDomWindow, 'production', testMoliConfig()), []);
+      const slotRenderedCallback = (listenerSpy.args as any[]).find(
+        args => args[0] === 'slotRenderEnded'
+      )?.[1];
+
+      const adSlot = googleAdSlotStub(`/123/${adUnitId}`, testAdSlotDomId);
+      slotRenderedCallback(testRenderEndedEvent(adSlot, false));
+
+      expect(refreshAdSlotSpy).to.not.have.been.called;
+    });
+
+    it('should not refresh an infinite slot', async () => {
+      const { module } = createConfiguredModule(yieldConfigWithUprReset(uprReset));
+      const configureStep = module.configureSteps__()[0];
+      const refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
+      const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
+
+      await configureStep(
+        newAdPipelineContext(jsDomWindow, 'production', testMoliConfig('infinite')),
+        []
+      );
+      const slotRenderedCallback = (listenerSpy.args as any[]).find(
+        args => args[0] === 'slotRenderEnded'
+      )?.[1];
+
+      const adSlot = googleAdSlotStub(`/123/${adUnitId}`, testAdSlotDomId);
+      slotRenderedCallback(testRenderEndedEvent(adSlot, true));
+
+      expect(refreshAdSlotSpy).to.not.have.been.called;
     });
   });
 });

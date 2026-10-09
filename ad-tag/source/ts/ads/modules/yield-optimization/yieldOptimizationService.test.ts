@@ -6,6 +6,7 @@ import {
   createYieldOptimizationService,
   YieldOptimizationService
 } from './yieldOptimizationService';
+import { createUprResetState } from './uprResetState';
 import { auction, Device, modules } from 'ad-tag/types/moliConfig';
 import { noopLogger } from 'ad-tag/stubs/moliStubs';
 import { googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
@@ -496,6 +497,111 @@ describe('YieldOptimizationService', () => {
 
           expect(setTargetingSpy).has.been.calledWith('upr_id', '3');
         });
+      });
+    });
+
+    describe('UPR Reset (setTargeting)', () => {
+      const uprResetConfig: StaticYieldOptimizationConfig = {
+        enabled: true,
+        provider: 'static',
+        config: {
+          rules: {
+            [adUnitPath1]: {
+              priceRuleId: 3,
+              floorprice: 0.2,
+              main: true
+            }
+          }
+        }
+      };
+
+      beforeEach(() => {
+        fetchStub.resolves({
+          ok: true,
+          json: (): Promise<any> => Promise.resolve(publisherYieldConfiguration)
+        } as any);
+      });
+
+      it('should send the computed price rule as upr_id when the ad unit path is not reset', async () => {
+        const uprResetState = createUprResetState();
+        const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
+        const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
+
+        const service = createYieldOptimizationService(uprResetConfig);
+        await service.init('mobile', {}, [adUnitPath1], jsDomWindow.fetch, noopLogger);
+        await service.setTargeting(
+          adSlot,
+          'gam',
+          noopLogger,
+          uprResetConfig,
+          undefined,
+          uprResetState
+        );
+
+        expect(setTargetingSpy).to.have.been.calledWith('upr_id', '3');
+      });
+
+      it('should omit upr_id once the ad unit path is reset and no fallback is configured', async () => {
+        const uprResetState = createUprResetState();
+        uprResetState.markReset(adUnitPath1);
+
+        const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
+        const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
+        const setConfigSpy = sandbox.spy(adSlot, 'setConfig');
+
+        const service = createYieldOptimizationService(uprResetConfig);
+        await service.init('mobile', {}, [adUnitPath1], jsDomWindow.fetch, noopLogger);
+        await service.setTargeting(
+          adSlot,
+          'gam',
+          noopLogger,
+          uprResetConfig,
+          undefined,
+          uprResetState
+        );
+
+        expect(setTargetingSpy).to.not.have.been.calledWith('upr_id', Sinon.match.any);
+        expect(setConfigSpy).to.have.been.calledWith({ targeting: { upr_id: null } });
+        expect(setConfigSpy).to.have.been.calledWith({ targeting: { upr_main: null } });
+      });
+
+      it('should send the fallback price rule id once the ad unit path is reset', async () => {
+        const configWithFallback: StaticYieldOptimizationConfig = {
+          ...uprResetConfig,
+          uprReset: { excludeAdSlotDomIds: [], fallbackPriceRuleId: 99 }
+        };
+        const uprResetState = createUprResetState();
+        uprResetState.markReset(adUnitPath1);
+
+        const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
+        const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
+        const setConfigSpy = sandbox.spy(adSlot, 'setConfig');
+
+        const service = createYieldOptimizationService(configWithFallback);
+        await service.init('mobile', {}, [adUnitPath1], jsDomWindow.fetch, noopLogger);
+        await service.setTargeting(
+          adSlot,
+          'gam',
+          noopLogger,
+          configWithFallback,
+          undefined,
+          uprResetState
+        );
+
+        expect(setTargetingSpy).to.have.been.calledWith('upr_id', '99');
+        expect(setTargetingSpy).to.not.have.been.calledWith('upr_main', Sinon.match.any);
+        expect(setConfigSpy).to.have.been.calledOnceWithExactly({ targeting: { upr_main: null } });
+      });
+
+      it('should keep sending the computed price rule once reset state is not provided', async () => {
+        const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
+        const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
+
+        const service = createYieldOptimizationService(uprResetConfig);
+        await service.init('mobile', {}, [adUnitPath1], jsDomWindow.fetch, noopLogger);
+        await service.setTargeting(adSlot, 'gam', noopLogger, uprResetConfig);
+
+        expect(setTargetingSpy).to.have.been.calledWith('upr_id', '3');
       });
     });
 
