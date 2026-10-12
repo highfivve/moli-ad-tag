@@ -220,21 +220,15 @@ export const gptDestroyAdSlots = (): ConfigureStep => {
         return destroySelectedSlots(gptSlots);
       case 'excluded':
         if (isNextRequestAdsCall) {
-          // destroy all slots that are not in the provided slot array. As above, out-of-page
-          // slots never carry the moli domId as their GPT element id, so an excluded slot that
-          // is currently served out-of-page (e.g. a GAM anchor) is kept alive by also matching
-          // its resolved adUnitPath.
-          const excludedAdUnitPaths = context.config__.slots
-            .filter(moliSlot => cleanup.slotIds.includes(moliSlot.domId))
-            .map(moliSlot => resolveAdUnitPath(moliSlot.adUnitPath, context.adUnitPathVariables__));
+          // destroy all slots that are not in the provided slot array. Matched by domId only:
+          // GAM out-of-page slots (interstitial/anchor served by GAM) never carry the moli domId
+          // as their GPT element id, so they're always destroyed and re-defined with the current
+          // waterfall channel in the next cycle. Keeping them alive would leave a stale GAM slot
+          // (GD-10323) and make the next definition of the same format fail (GD-10485).
           const destroyableSlots = context.window__.googletag
             .pubads()
             .getSlots()
-            .filter(
-              slot =>
-                !cleanup.slotIds.includes(slot.getSlotElementId()) &&
-                !excludedAdUnitPaths.includes(slot.getAdUnitPath())
-            );
+            .filter(slot => !cleanup.slotIds.includes(slot.getSlotElementId()));
           return destroySelectedSlots(destroyableSlots);
         }
         return Promise.resolve();
@@ -601,9 +595,11 @@ export const gptDefineSlots =
             context.logger__.warn('GAM', `${moliSlot.position} is not supported`);
             return Promise.resolve(null);
           } else {
-            const error = `Slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath} is already defined. You may have called requestAds() multiple times`;
+            // GPT refused to define the slot. Drop only this slot instead of rejecting, so a single
+            // slot can't prevent the auction for all other slots.
+            const error = `Slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath} could not be defined. It may already be defined, e.g. if requestAds() was called multiple times`;
             context.logger__.error('GAM', error);
-            return Promise.reject(new Error(error));
+            return Promise.resolve(null);
           }
         case 'test':
           return Promise.resolve<MoliRuntime.SlotDefinition>({

@@ -339,9 +339,10 @@ describe('google ad manager', () => {
         expect(destroySlotsSpy).callCount(2);
       });
 
-      it('should keep a stale excluded out-of-page slot (e.g. GAM anchor) alive when matched by adUnitPath', async () => {
-        // the excluded slot is currently served out-of-page, so its element id does not match
-        // domId1 - only its adUnitPath (resolved from the moli slot config) identifies it
+      it('should destroy a GAM out-of-page slot (e.g. GAM anchor) of an excluded slot', async () => {
+        // the excluded slot is currently served out-of-page by GAM, so its element id does not
+        // match domId1. It must be destroyed, so it's re-defined with the current waterfall
+        // channel and a second slot of the same out-of-page format is never defined.
         const domId2 = 'slot-2';
         const staleExcludedOutOfPageSlot = googleAdSlotStub(
           `/123/${domId1}/mobile`,
@@ -368,7 +369,7 @@ describe('google ad manager', () => {
           createdAdSlot(domId2)
         ]);
         expect(destroySlotsSpy).to.have.been.calledOnce;
-        expect(destroySlotsSpy).to.have.been.calledWith([googleSlot2]);
+        expect(destroySlotsSpy).to.have.been.calledWith([staleExcludedOutOfPageSlot, googleSlot2]);
       });
     });
   });
@@ -1081,6 +1082,27 @@ describe('google ad manager', () => {
 
         await step(adPipelineContext(), [adSlot]);
         expect(displaySpy).to.have.not.been.called;
+      });
+
+      it('should still define the other slots if one slot cannot be defined', async () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const interstitialAdSlot: AdSlot = {
+          ...createdAdSlot('interstitial-dom-id'),
+          position: 'interstitial'
+        };
+        const context = adPipelineContext();
+        sandbox.stub(context.auction__, 'interstitialChannel').returns('gam');
+
+        // GPT refuses to define a second slot of the same out-of-page format
+        sandbox.stub(dom.window.googletag, 'defineOutOfPageSlot').returns(null);
+        const adSlotStub = googleAdSlotStub('/123/dom-id/mobile', adSlot.domId);
+        sandbox.stub(dom.window.googletag, 'defineSlot').returns(adSlotStub);
+
+        const slotDefinitions = await step(context, [interstitialAdSlot, adSlot]);
+        expect(slotDefinitions).to.have.length(1);
+        expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
       });
     });
 
