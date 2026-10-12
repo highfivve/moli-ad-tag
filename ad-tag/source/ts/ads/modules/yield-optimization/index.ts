@@ -47,6 +47,24 @@
  * }, window));
  * ```
  *
+ * ### Header bidding floors
+ *
+ * By default only the `static` and `fixed` price models hand their price to the prebid floors
+ * module. A price rule with any other model still sets the `upr_model` / `upr_id` key-values for
+ * Google Ad Manager, it just does not produce a header bidding floor. Use `floorModels` to widen
+ * that set, for example to let Google-priced (`g`) ad units set a prebid floor as well.
+ *
+ * A price of `0` never produces a floor, regardless of `floorModels`. A9 / Amazon TAM is not
+ * affected by this setting.
+ *
+ * ```javascript
+ * moli.registerModule(new YieldOptimization({
+ *   provider: 'dynamic',
+ *   configEndpoint: 'https://yield.h5v.eu/config/gutefrage',
+ *   floorModels: ['static', 'fixed', 'g']
+ * }, window));
+ * ```
+ *
  * ### None
  *
  * If you want to turn off the optimization you can also provide `none`
@@ -75,6 +93,7 @@ import {
   PrepareRequestAdsStep
 } from 'ad-tag/ads/adPipeline';
 import { uniquePrimitiveFilter } from 'ad-tag/util/arrayUtils';
+import { resolvePrebidFloorPrice } from 'ad-tag/ads/modules/yield-optimization/floorModels';
 
 /**
  * == Yield Optimization ==
@@ -155,7 +174,22 @@ export const YieldOptimization = (
               yieldModuleConfig,
               context.auction__
             )
-            .then(priceRule => (slot.priceRule = priceRule));
+            .then(priceRule => {
+              slot.priceRule = priceRule;
+              // only some models may hand their price to the prebid floors module. this module
+              // owns that decision, so `prebid.ts` stays ignorant of `upr_model` entirely.
+              slot.prebidFloorPrice = priceRule
+                ? resolvePrebidFloorPrice(priceRule, yieldModuleConfig)
+                : undefined;
+
+              if (priceRule && slot.prebidFloorPrice === undefined) {
+                context.logger__.debug(
+                  'YieldOptimizationService',
+                  context.requestId__,
+                  `no prebid floor for ${slot.moliSlot.domId}: model '${priceRule.model ?? 'static'}' with price ${priceRule.floorprice}`
+                );
+              }
+            });
         });
         return Promise.all(slotsWithPriceRule)
           .then(() => yieldOptimizationService.getBrowser())

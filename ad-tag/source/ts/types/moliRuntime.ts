@@ -1021,6 +1021,18 @@ export namespace MoliRuntime {
      * This may be added by some step in the prepareRequestAds phase.
      */
     priceRule?: yield_optimization.PriceRule;
+
+    /**
+     * The floor price in EUR that may be handed to the prebid floors module, if any.
+     *
+     * This is deliberately separate from `priceRule.floorprice`: not every price rule is allowed
+     * to produce a header bidding floor. The yield optimization module decides, based on its
+     * `floorModels` config and the delivered `upr_model`, and sets this alongside `priceRule`.
+     * `undefined` means "no floor for prebid", which is not the same as a floor of `0`.
+     *
+     * A9 / Amazon TAM deliberately ignores this and keeps using `priceRule.floorprice`.
+     */
+    prebidFloorPrice?: number;
   }
 
   /**
@@ -1197,6 +1209,25 @@ export namespace MoliRuntime {
    * @see yield optimization module
    */
   export namespace yield_optimization {
+    /**
+     * The *delivery* alphabet for the `upr_model` key-value.
+     *
+     * These are the values the yield optimization config endpoint actually sends and that the ad
+     * tag forwards verbatim to Google Ad Manager. The ad tag is a dumb pipe: it does not know what
+     * each value means in GAM, only which of them a publisher bundle allows to produce a header
+     * bidding floor (see `floorModels` in the yield optimization module config).
+     *
+     * - `static`: price rule cohorts in an A/B test
+     * - `fixed`: 100% of the traffic gets this fixed price rule
+     * - `g`: Google decides the price per query (Target CPM or Google Optimized Floors)
+     * - `disabled`: pricing is deliberately switched off for this ad unit
+     *
+     * Note that the backend distinguishes more states than this (its *domain* alphabet splits `g`
+     * into Target CPM and Google Optimized). That distinction is deliberately invisible here,
+     * because the GAM custom dimension budget is tight.
+     */
+    export type UprModel = 'static' | 'fixed' | 'g' | 'disabled';
+
     export interface PriceRule {
       /**
        * Unique identifier for a pricing rule. This will be sent as a key_value `upr_id` per ad unit
@@ -1209,15 +1240,13 @@ export namespace MoliRuntime {
       readonly priceRuleId: number;
 
       /**
-       * The model used to determine the price rule
+       * The delivered model used to determine the price rule.
        *
-       * - `static`: price rules cohorts in A/B test
-       * - `ml`: super clever machine learning
-       * - `fixed`: 100% of the traffic gets this fixed price rule
+       * If none is provided `static` is used as a fallback.
        *
-       * If none is provided `static` is used as a fallback
+       * @see UprModel for the meaning of each value
        */
-      readonly model?: 'static' | 'ml' | 'fixed';
+      readonly model?: UprModel;
 
       /**
        * The floor price CPM in EUR if available.

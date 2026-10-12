@@ -177,7 +177,7 @@ describe('YieldOptimizationService', () => {
         [adUnitPath2]: {
           priceRuleId: 4,
           floorprice: 0.3,
-          model: 'ml',
+          model: 'g',
           main: false
         }
       }
@@ -384,7 +384,7 @@ describe('YieldOptimizationService', () => {
           );
           await service.setTargeting(adSlot, 'gam', noopLogger, config);
 
-          expect(setTargetingSpy).has.been.calledWith('upr_model', 'ml');
+          expect(setTargetingSpy).has.been.calledWith('upr_model', 'g');
         });
 
         it('should overwrite the standard price rule with the dynamic floor price based on the last bid cpms if yield config is dynamic and strategy is available', async () => {

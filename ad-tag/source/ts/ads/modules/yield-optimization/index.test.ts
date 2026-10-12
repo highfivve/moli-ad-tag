@@ -259,6 +259,92 @@ describe('Yield Optimization module', () => {
       );
     });
 
+    describe('prebidFloorPrice', () => {
+      /**
+       * Runs the prepare request ads step for a single slot whose price rule is the given one and
+       * returns the floor price the module allowed through to prebid.
+       */
+      const prebidFloorPriceFor = async (
+        priceRule: MoliRuntime.yield_optimization.PriceRule,
+        floorModels?: ReadonlyArray<MoliRuntime.yield_optimization.UprModel>
+      ): Promise<number | undefined> => {
+        const config: modules.yield_optimization.YieldOptimizationConfig = {
+          ...yieldConfig,
+          ...(floorModels ? { floorModels } : {})
+        };
+        const yieldOptimizationService = createYieldOptimizationService(config);
+        const { prepareRequestAdsStep } = createConfiguredModule(config, yieldOptimizationService);
+        const slot: MoliRuntime.SlotDefinition = {
+          moliSlot: { domId: adUnitId } as any,
+          adSlot: googleAdSlotStub(`/123/${adUnitId}`, adUnitId),
+          filterSupportedSizes: givenSizes => givenSizes
+        };
+        sandbox.stub(yieldOptimizationService, 'setTargeting').resolves(priceRule);
+
+        await prepareRequestAdsStep(newAdPipelineContext(jsDomWindow), [slot]);
+        return slot.prebidFloorPrice;
+      };
+
+      const rule = (
+        model: MoliRuntime.yield_optimization.UprModel | undefined,
+        floorprice: number
+      ): MoliRuntime.yield_optimization.PriceRule => ({
+        priceRuleId: 1,
+        floorprice,
+        main: true,
+        model
+      });
+
+      it('should pass a static price through by default', async () => {
+        expect(await prebidFloorPriceFor(rule('static', 0.2))).to.equal(0.2);
+      });
+
+      it('should pass a fixed price through by default', async () => {
+        expect(await prebidFloorPriceFor(rule('fixed', 0.2))).to.equal(0.2);
+      });
+
+      it('should treat a rule without a model as static', async () => {
+        expect(await prebidFloorPriceFor(rule(undefined, 0.2))).to.equal(0.2);
+      });
+
+      it('should withhold a google priced rule by default', async () => {
+        expect(await prebidFloorPriceFor(rule('g', 1.5))).to.be.undefined;
+      });
+
+      it('should withhold a disabled rule by default', async () => {
+        expect(await prebidFloorPriceFor(rule('disabled', 0.01))).to.be.undefined;
+      });
+
+      it('should pass a google priced rule through if g is allow-listed', async () => {
+        expect(await prebidFloorPriceFor(rule('g', 1.5), ['static', 'fixed', 'g'])).to.equal(1.5);
+      });
+
+      it('should withhold a zero price even if the model is allow-listed', async () => {
+        expect(await prebidFloorPriceFor(rule('g', 0), ['static', 'fixed', 'g'])).to.be.undefined;
+      });
+
+      it('should withhold a zero priced static rule', async () => {
+        expect(await prebidFloorPriceFor(rule('static', 0))).to.be.undefined;
+      });
+
+      it('should leave prebidFloorPrice undefined if there is no price rule at all', async () => {
+        const yieldOptimizationService = createYieldOptimizationService(yieldConfig);
+        const { prepareRequestAdsStep } = createConfiguredModule(
+          yieldConfig,
+          yieldOptimizationService
+        );
+        const slot: MoliRuntime.SlotDefinition = {
+          moliSlot: { domId: adUnitId } as any,
+          adSlot: googleAdSlotStub(`/123/${adUnitId}`, adUnitId),
+          filterSupportedSizes: givenSizes => givenSizes
+        };
+        sandbox.stub(yieldOptimizationService, 'setTargeting').resolves(undefined);
+
+        await prepareRequestAdsStep(newAdPipelineContext(jsDomWindow), [slot]);
+        expect(slot.prebidFloorPrice).to.be.undefined;
+      });
+    });
+
     it('sets the browser returned by getBrowser', async () => {
       const yieldOptimizationService = createYieldOptimizationService(yieldConfig);
       const { prepareRequestAdsStep } = createConfiguredModule(
