@@ -82,7 +82,7 @@ const isAdUnitDefined = (
  * 1. slots without a `prebid` property are filtered out
  * 2. the `prebid` property is evaluated and the result is flattened. This allows to define multiple ad units for a
  *    single slot, which prebid calls "twin ad units"
- * 3. static floor prices are added if available
+ * 3. floor prices are added for slots that carry a `prebidFloorPrice`
  * 4. add pubstack meta fields
  * 5. adUnitPath is resolved
  * 6. resolve stored request id and added to the ortb2Imp object
@@ -102,21 +102,24 @@ const createdAdUnits = (
 ): prebidjs.IAdUnit[] => {
   const prebidAdUnits = slots
     .filter(isPrebidSlotDefinition)
-    .map(({ moliSlot, priceRule, filterSupportedSizes }) => {
-      const floors: Pick<prebidjs.IAdUnit, 'floors'> | null = priceRule
-        ? {
-            floors: {
-              currency: prebidConfig.config.currency?.adServerCurrency ?? 'EUR',
-              schema: {
-                delimiter: '|',
-                fields: ['mediaType']
-              },
-              values: {
-                '*': priceRule.floorprice
+    .map(({ moliSlot, priceRule, prebidFloorPrice, filterSupportedSizes }) => {
+      // `prebidFloorPrice` is set by the yield optimization module, which decides whether a price
+      // rule may produce a header bidding floor at all. `undefined` means no floor.
+      const floors: Pick<prebidjs.IAdUnit, 'floors'> | null =
+        prebidFloorPrice === undefined
+          ? null
+          : {
+              floors: {
+                currency: prebidConfig.config.currency?.adServerCurrency ?? 'EUR',
+                schema: {
+                  delimiter: '|',
+                  fields: ['mediaType']
+                },
+                values: {
+                  '*': prebidFloorPrice
+                }
               }
-            }
-          }
-        : null;
+            };
       context.logger__.debug(
         'Prebid',
         context.requestId__,

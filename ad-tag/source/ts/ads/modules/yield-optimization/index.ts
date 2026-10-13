@@ -47,6 +47,20 @@
  * }, window));
  * ```
  *
+ * ### Header bidding floors
+ *
+ * The yield optimization backend decides which price rules produce a header bidding floor and
+ * sends the answer; there is nothing to configure here. A price rule carries
+ *
+ * - `floorprice` — the price ladder rung, present for our own `static` and `fixed` models and
+ *   absent for Google-priced ones, and
+ * - `pbFloor` — the header bidding floor authored for the rule, if any.
+ *
+ * The module hands prebid `pbFloor ?? floorprice`. A rule carrying neither produces no floors
+ * block at all, which is not the same as a floor of `0`.
+ *
+ * A9 / Amazon TAM reads `floorprice` directly, so a Google-priced ad unit sends it no floor.
+ *
  * ### None
  *
  * If you want to turn off the optimization you can also provide `none`
@@ -155,7 +169,28 @@ export const YieldOptimization = (
               yieldModuleConfig,
               context.auction__
             )
-            .then(priceRule => (slot.priceRule = priceRule));
+            .then(priceRule => {
+              slot.priceRule = priceRule;
+              // the backend owns the header bidding floor decision and sends it as `pbFloor`.
+              // `??`, not `||`: a `pbFloor` of 0 is a server bug we want to see rather than a
+              // silent fall-through to the price ladder rung. resolving it here keeps
+              // `prebid.ts` ignorant of the response schema, and reads the price *after*
+              // `dynamicFloorPrice` has had its say.
+              //
+              // NOTE: `dynamicFloorPrice` rewrites `floorprice` only, and only for `static` and
+              // `fixed`, which per ADR 0014 never carry a `pbFloor`. Should the backend ever
+              // send one on those models, the authored `pbFloor` would win here and the
+              // dynamically rewritten price would not reach prebid.
+              slot.prebidFloorPrice = priceRule?.pbFloor ?? priceRule?.floorprice;
+
+              if (priceRule && slot.prebidFloorPrice === undefined) {
+                context.logger__.debug(
+                  'YieldOptimizationService',
+                  context.requestId__,
+                  `no prebid floor for ${slot.moliSlot.domId}: model '${priceRule.model ?? 'static'}' carries neither floorprice nor pbFloor`
+                );
+              }
+            });
         });
         return Promise.all(slotsWithPriceRule)
           .then(() => yieldOptimizationService.getBrowser())

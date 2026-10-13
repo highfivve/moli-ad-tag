@@ -187,17 +187,28 @@ describe('prebid', () => {
     };
   };
 
+  /**
+   * @param floorprice the price rule's floor price, if a price rule is attached at all
+   * @param prebidFloorPrice what the yield optimization module resolved for prebid, i.e.
+   *        `pbFloor ?? floorprice`. Defaults to `floorprice`, which is what a rule without a
+   *        `pbFloor` produces. Pass `null` for a price rule carrying neither price.
+   */
   const createSlotDefinitions = (
     domId: string,
     provider: headerbidding.PrebidAdSlotConfigProvider,
-    floorprice?: number
+    floorprice?: number,
+    prebidFloorPrice: number | null = floorprice ?? null
   ): MoliRuntime.SlotDefinition => {
     const slot = prebidSlot(domId, provider);
     return {
       moliSlot: slot,
       adSlot: googleAdSlotStub(slot.adUnitPath, slot.domId),
       filterSupportedSizes: sizes => sizes,
-      priceRule: floorprice ? { priceRuleId: 1, floorprice: floorprice, main: true } : undefined
+      priceRule:
+        floorprice === undefined
+          ? undefined
+          : { priceRuleId: 1, floorprice: floorprice, main: true },
+      prebidFloorPrice: prebidFloorPrice ?? undefined
     };
   };
 
@@ -1138,6 +1149,44 @@ describe('prebid', () => {
           floors: floors(0.2)
         };
         expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
+      });
+
+      it('should not be filled if the yield optimization module withheld the floor', async () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
+
+        const domId = getDomId();
+        const adUnit = prebidAdUnit(domId, [
+          { bidder: 'appnexus', params: { placementId: '123' }, labelAny: ['mobile'] }
+        ]);
+        // a price rule is attached, but the module did not allow it through to prebid
+        const singleSlot = createSlotDefinitions(domId, { adUnit }, 1.5, null);
+
+        await step(adPipelineContext(), [singleSlot]);
+        const expectedAdUnit: prebidjs.IAdUnit = {
+          ...adUnit,
+          bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
+        };
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
+      });
+
+      it('should use prebidFloorPrice rather than the price rule floor price', async () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
+
+        const domId = getDomId();
+        const adUnit = prebidAdUnit(domId, [
+          { bidder: 'appnexus', params: { placementId: '123' }, labelAny: ['mobile'] }
+        ]);
+        const singleSlot = createSlotDefinitions(domId, { adUnit }, 1.5, 0.2);
+
+        await step(adPipelineContext(), [singleSlot]);
+        const expectedAdUnit: prebidjs.IAdUnit = {
+          ...adUnit,
+          bids: [{ bidder: 'appnexus', params: { placementId: '123' } }],
+          floors: floors(0.2)
+        };
         expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
       });
     });

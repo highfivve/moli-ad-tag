@@ -1021,6 +1021,19 @@ export namespace MoliRuntime {
      * This may be added by some step in the prepareRequestAds phase.
      */
     priceRule?: yield_optimization.PriceRule;
+
+    /**
+     * The floor price in EUR to hand to the prebid floors module, if any.
+     *
+     * This is deliberately separate from `priceRule.floorprice`: a price rule may carry a header
+     * bidding floor (`pbFloor`) that is not its price ladder rung, and it may carry no price at
+     * all. The yield optimization module resolves `pbFloor ?? floorprice` once and sets this
+     * alongside `priceRule`, so `prebid.ts` never has to learn the response schema.
+     * `undefined` means "no floor for prebid", which is not the same as a floor of `0`.
+     *
+     * A9 / Amazon TAM deliberately ignores this and keeps using `priceRule.floorprice`.
+     */
+    prebidFloorPrice?: number;
   }
 
   /**
@@ -1197,6 +1210,25 @@ export namespace MoliRuntime {
    * @see yield optimization module
    */
   export namespace yield_optimization {
+    /**
+     * The *delivery* alphabet for the `upr_model` key-value.
+     *
+     * These are the values the yield optimization config endpoint actually sends and that the ad
+     * tag forwards verbatim to Google Ad Manager. The ad tag is a dumb pipe: it does not know what
+     * each value means in GAM. Whether a rule produces a header bidding floor is decided by the
+     * backend and sent as `pbFloor`, not inferred from this value.
+     *
+     * - `static`: price rule cohorts in an A/B test
+     * - `fixed`: 100% of the traffic gets this fixed price rule
+     * - `g`: Google decides the price per query (Target CPM or Google Optimized Floors)
+     * - `disabled`: pricing is deliberately switched off for this ad unit
+     *
+     * Note that the backend distinguishes more states than this (its *domain* alphabet splits `g`
+     * into Target CPM and Google Optimized). That distinction is deliberately invisible here,
+     * because the GAM custom dimension budget is tight.
+     */
+    export type UprModel = 'static' | 'fixed' | 'g' | 'disabled';
+
     export interface PriceRule {
       /**
        * Unique identifier for a pricing rule. This will be sent as a key_value `upr_id` per ad unit
@@ -1209,20 +1241,37 @@ export namespace MoliRuntime {
       readonly priceRuleId: number;
 
       /**
-       * The model used to determine the price rule
+       * The delivered model used to determine the price rule.
        *
-       * - `static`: price rules cohorts in A/B test
-       * - `ml`: super clever machine learning
-       * - `fixed`: 100% of the traffic gets this fixed price rule
+       * If none is provided `static` is used as a fallback.
        *
-       * If none is provided `static` is used as a fallback
+       * @see UprModel for the meaning of each value
        */
-      readonly model?: 'static' | 'ml' | 'fixed';
+      readonly model?: UprModel;
 
       /**
-       * The floor price CPM in EUR if available.
+       * The price ladder rung this rule selected, as a CPM in EUR.
+       *
+       * Present for our own price models (`static`, `fixed`), where `upr_id` addresses a price
+       * ladder rule in Google Ad Manager. Absent for Google-priced rules, where the per-query
+       * price is Google's to decide and there is no rung of ours to report.
+       *
+       * This is what A9 / Amazon TAM reads. An absent `floorprice` therefore means Amazon TAM
+       * receives no floor for that ad unit, which is deliberate.
        */
-      readonly floorprice: number;
+      readonly floorprice?: number;
+
+      /**
+       * The header bidding floor CPM in EUR authored for this rule, if any.
+       *
+       * The yield optimization backend owns this decision and sends the number; the ad tag does
+       * not derive it from `model`. It takes precedence over `floorprice`, so a Google-priced
+       * rule can carry a prebid floor without that floor being a price ladder rung.
+       *
+       * Absent on every response from a server that predates it, which is why the chain falls
+       * back to `floorprice`.
+       */
+      readonly pbFloor?: number;
 
       /**
        * `true` if this is the main group, which shouldn't be selected for testing.
