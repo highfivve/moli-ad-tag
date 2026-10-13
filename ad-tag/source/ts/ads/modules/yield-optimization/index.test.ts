@@ -262,18 +262,16 @@ describe('Yield Optimization module', () => {
     describe('prebidFloorPrice', () => {
       /**
        * Runs the prepare request ads step for a single slot whose price rule is the given one and
-       * returns the floor price the module allowed through to prebid.
+       * returns the floor price the module handed to prebid.
        */
       const prebidFloorPriceFor = async (
-        priceRule: MoliRuntime.yield_optimization.PriceRule,
-        floorModels?: ReadonlyArray<MoliRuntime.yield_optimization.UprModel>
+        priceRule: MoliRuntime.yield_optimization.PriceRule
       ): Promise<number | undefined> => {
-        const config: modules.yield_optimization.YieldOptimizationConfig = {
-          ...yieldConfig,
-          ...(floorModels ? { floorModels } : {})
-        };
-        const yieldOptimizationService = createYieldOptimizationService(config);
-        const { prepareRequestAdsStep } = createConfiguredModule(config, yieldOptimizationService);
+        const yieldOptimizationService = createYieldOptimizationService(yieldConfig);
+        const { prepareRequestAdsStep } = createConfiguredModule(
+          yieldConfig,
+          yieldOptimizationService
+        );
         const slot: MoliRuntime.SlotDefinition = {
           moliSlot: { domId: adUnitId } as any,
           adSlot: googleAdSlotStub(`/123/${adUnitId}`, adUnitId),
@@ -287,44 +285,52 @@ describe('Yield Optimization module', () => {
 
       const rule = (
         model: MoliRuntime.yield_optimization.UprModel | undefined,
-        floorprice: number
+        prices: Partial<
+          Pick<MoliRuntime.yield_optimization.PriceRule, 'floorprice' | 'pbFloor'>
+        > = {}
       ): MoliRuntime.yield_optimization.PriceRule => ({
         priceRuleId: 1,
-        floorprice,
         main: true,
-        model
+        model,
+        ...prices
       });
 
-      it('should pass a static price through by default', async () => {
-        expect(await prebidFloorPriceFor(rule('static', 0.2))).to.equal(0.2);
+      it('should fall back to the price rule floor price when no pbFloor arrives', async () => {
+        expect(await prebidFloorPriceFor(rule('static', { floorprice: 0.2 }))).to.equal(0.2);
       });
 
-      it('should pass a fixed price through by default', async () => {
-        expect(await prebidFloorPriceFor(rule('fixed', 0.2))).to.equal(0.2);
+      it('should fall back to the floor price of a fixed rule as well', async () => {
+        expect(await prebidFloorPriceFor(rule('fixed', { floorprice: 0.35 }))).to.equal(0.35);
       });
 
-      it('should treat a rule without a model as static', async () => {
-        expect(await prebidFloorPriceFor(rule(undefined, 0.2))).to.equal(0.2);
+      it('should fall back to the floor price of a rule without a model', async () => {
+        expect(await prebidFloorPriceFor(rule(undefined, { floorprice: 0.2 }))).to.equal(0.2);
       });
 
-      it('should withhold a google priced rule by default', async () => {
-        expect(await prebidFloorPriceFor(rule('g', 1.5))).to.be.undefined;
+      it('should not withhold the floor price of a google priced rule', async () => {
+        // the ad tag no longer decides which models may set a floor. if the server sends a price
+        // for a `g` rule, it meant to.
+        expect(await prebidFloorPriceFor(rule('g', { floorprice: 1.5 }))).to.equal(1.5);
       });
 
-      it('should withhold a disabled rule by default', async () => {
-        expect(await prebidFloorPriceFor(rule('disabled', 0.01))).to.be.undefined;
+      it('should prefer pbFloor over the price rule floor price', async () => {
+        expect(await prebidFloorPriceFor(rule('g', { floorprice: 0.2, pbFloor: 1.5 }))).to.equal(
+          1.5
+        );
       });
 
-      it('should pass a google priced rule through if g is allow-listed', async () => {
-        expect(await prebidFloorPriceFor(rule('g', 1.5), ['static', 'fixed', 'g'])).to.equal(1.5);
+      it('should use pbFloor when the rule carries no floor price of its own', async () => {
+        expect(await prebidFloorPriceFor(rule('g', { pbFloor: 0.9 }))).to.equal(0.9);
       });
 
-      it('should withhold a zero price even if the model is allow-listed', async () => {
-        expect(await prebidFloorPriceFor(rule('g', 0), ['static', 'fixed', 'g'])).to.be.undefined;
+      it('should surface a pbFloor of zero rather than swallowing it', async () => {
+        // `??`, not `||`: a zero header bidding floor is a server bug we want to see, not a
+        // silent fall-through to the price rule.
+        expect(await prebidFloorPriceFor(rule('g', { floorprice: 0.2, pbFloor: 0 }))).to.equal(0);
       });
 
-      it('should withhold a zero priced static rule', async () => {
-        expect(await prebidFloorPriceFor(rule('static', 0))).to.be.undefined;
+      it('should hand prebid no floor at all for a rule carrying neither price', async () => {
+        expect(await prebidFloorPriceFor(rule('g'))).to.be.undefined;
       });
 
       it('should leave prebidFloorPrice undefined if there is no price rule at all', async () => {

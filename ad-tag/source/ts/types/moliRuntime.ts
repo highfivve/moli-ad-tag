@@ -1023,11 +1023,12 @@ export namespace MoliRuntime {
     priceRule?: yield_optimization.PriceRule;
 
     /**
-     * The floor price in EUR that may be handed to the prebid floors module, if any.
+     * The floor price in EUR to hand to the prebid floors module, if any.
      *
-     * This is deliberately separate from `priceRule.floorprice`: not every price rule is allowed
-     * to produce a header bidding floor. The yield optimization module decides, based on its
-     * `floorModels` config and the delivered `upr_model`, and sets this alongside `priceRule`.
+     * This is deliberately separate from `priceRule.floorprice`: a price rule may carry a header
+     * bidding floor (`pbFloor`) that is not its price ladder rung, and it may carry no price at
+     * all. The yield optimization module resolves `pbFloor ?? floorprice` once and sets this
+     * alongside `priceRule`, so `prebid.ts` never has to learn the response schema.
      * `undefined` means "no floor for prebid", which is not the same as a floor of `0`.
      *
      * A9 / Amazon TAM deliberately ignores this and keeps using `priceRule.floorprice`.
@@ -1214,8 +1215,8 @@ export namespace MoliRuntime {
      *
      * These are the values the yield optimization config endpoint actually sends and that the ad
      * tag forwards verbatim to Google Ad Manager. The ad tag is a dumb pipe: it does not know what
-     * each value means in GAM, only which of them a publisher bundle allows to produce a header
-     * bidding floor (see `floorModels` in the yield optimization module config).
+     * each value means in GAM. Whether a rule produces a header bidding floor is decided by the
+     * backend and sent as `pbFloor`, not inferred from this value.
      *
      * - `static`: price rule cohorts in an A/B test
      * - `fixed`: 100% of the traffic gets this fixed price rule
@@ -1249,9 +1250,28 @@ export namespace MoliRuntime {
       readonly model?: UprModel;
 
       /**
-       * The floor price CPM in EUR if available.
+       * The price ladder rung this rule selected, as a CPM in EUR.
+       *
+       * Present for our own price models (`static`, `fixed`), where `upr_id` addresses a price
+       * ladder rule in Google Ad Manager. Absent for Google-priced rules, where the per-query
+       * price is Google's to decide and there is no rung of ours to report.
+       *
+       * This is what A9 / Amazon TAM reads. An absent `floorprice` therefore means Amazon TAM
+       * receives no floor for that ad unit, which is deliberate.
        */
-      readonly floorprice: number;
+      readonly floorprice?: number;
+
+      /**
+       * The header bidding floor CPM in EUR authored for this rule, if any.
+       *
+       * The yield optimization backend owns this decision and sends the number; the ad tag does
+       * not derive it from `model`. It takes precedence over `floorprice`, so a Google-priced
+       * rule can carry a prebid floor without that floor being a price ladder rung.
+       *
+       * Absent on every response from a server that predates it, which is why the chain falls
+       * back to `floorprice`.
+       */
+      readonly pbFloor?: number;
 
       /**
        * `true` if this is the main group, which shouldn't be selected for testing.

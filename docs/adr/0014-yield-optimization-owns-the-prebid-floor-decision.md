@@ -4,7 +4,11 @@ Date: 2026-10-12
 
 ## Status
 
-Accepted
+Accepted, amended — see [Amendment](#amendment-the-decision-moved-server-side) below. The
+decision in this ADR still holds: the yield optimization module owns the prebid floor and
+`prebid.ts` reads a number. Its *reasoning* no longer does — there is no module config left to
+resolve, because `floorModels` is gone from the publisher config and the floor is chosen by the
+server. Read the Amendment before acting on the Decision.
 
 ## Context
 
@@ -83,3 +87,44 @@ module-specific branches.
   logs that at debug level rather than failing.
 - A module that wants to influence prebid ad units now has a precedent for doing it through a
   `SlotDefinition` field rather than through core reading its config.
+
+## Amendment: the decision moved server-side
+
+The yield-optimization backend now decides the prebid floor and sends it. See ADR 0003 in
+`gd/yield-optimization`, *The header bidding floor is a price on the change, not a flag in the ad
+tag*.
+
+What changed:
+
+- **`floorModels` is no longer publisher config.** It was policy, and policy moved to the backend,
+  where it is an authored price on the Yield Config Change. Leaving a per-publisher list in the
+  bundle meant the bundle could silently veto a floor the yield engine had just authored, and that
+  flipping a publisher's mind required a rebuild and a deploy.
+- **`floorModels` is still sent, as a capability list** in the config request: the delivery values
+  this bundle understands, a constant rather than a setting. Its presence tells the server the
+  bundle tolerates an absent `floorprice`; a request without it gets the old wire shape.
+- **`PriceRule.floorprice` is optional and `PriceRule.pbFloor` is new.** `floorprice` carries the
+  price ladder rung for `static` and `fixed` and is absent for Google-priced rules; `pbFloor`
+  carries the floor authored for a Google-priced rule. The module sets
+  `slot.prebidFloorPrice = rule.pbFloor ?? rule.floorprice` — `??`, not `||`, so a `0` would
+  surface as a bug rather than vanish.
+- **`floorModels.ts` and `resolvePrebidFloorPrice` are deleted**, and with them the
+  `price > 0` guard. A rule that must not floor prebid now simply arrives with neither field.
+- **`validateRules` must accept an absent `floorprice`.** It validates with `every`, so one rule
+  missing the field rejects the entire response and the publisher loses `upr_id` targeting on every
+  ad unit. This is why the server keeps the old shape for requests without `floorModels`.
+- **A9 is no longer unaffected, and that is the point.** It reads `floorprice`, which is now absent
+  for Google-priced rules, so a target CPM stops reaching Amazon TAM as a hard floor. The "known,
+  accepted gap" in the Context above is closed. `a9.ts` must gate on `floorprice !== undefined`
+  rather than on the presence of a `priceRule`, or `undefined` reaches `Math.ceil` and ships `NaN`.
+- **`dynamicFloorPrice` is restricted to `static` and `fixed`.** It rewrites `priceRuleId` into a
+  price ladder rule id, which is only what `upr_id` means for those two models; on a Google-priced
+  rule it would overwrite a target CPM or the Google Optimized `0` with a value matching no pricing
+  rule at all. Within `static` and `fixed` nothing else is needed: those rules carry `floorprice`
+  and no `pbFloor`, so the rewritten price reaches prebid through the same chain.
+
+What did **not** change: `SlotDefinition.prebidFloorPrice` stays, `prebid.ts` still emits a floors
+block iff it is defined and still never sees `upr_model`, and the yield module still sets it. The
+module remains the single place that knows how a price rule becomes a prebid floor — now because
+`prebid.ts` should not learn the response schema, and because `dynamicFloorPrice` rewrites
+`floorprice` in the module and the chain has to be read after that.

@@ -3118,34 +3118,6 @@ export namespace modules {
 
     export type IYieldOptimizationConfig = IModuleConfig & {
       readonly provider: YieldOptimizationConfigProvider;
-
-      /**
-       * Delivered `upr_model` values that are allowed to hand their price to the prebid floors
-       * module. A price rule whose model is not listed here still sets its `upr_model` / `upr_id`
-       * key-values for Google Ad Manager, it just does not produce a header bidding floor.
-       *
-       * Defaults to `['static', 'fixed']` when absent, which is what every bundle built before
-       * this option existed effectively did.
-       *
-       * Note that a price of `0` never produces a floor, regardless of this list.
-       *
-       * This is expressed in the *delivery* alphabet, not in the backend's domain alphabet, so a
-       * publisher can be given header bidding floors on Google-priced inventory without the ad tag
-       * learning anything about Google Ad Manager.
-       *
-       * A9 / Amazon TAM is deliberately not affected by this setting.
-       *
-       * @example only let our own price ladders set a prebid floor (the default)
-       * ```json
-       * { "floorModels": ["static", "fixed"] }
-       * ```
-       *
-       * @example additionally let Google-priced ad units set a prebid floor
-       * ```json
-       * { "floorModels": ["static", "fixed", "g"] }
-       * ```
-       */
-      readonly floorModels?: ReadonlyArray<MoliRuntime.yield_optimization.UprModel>;
     };
 
     /**

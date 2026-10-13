@@ -49,21 +49,17 @@
  *
  * ### Header bidding floors
  *
- * By default only the `static` and `fixed` price models hand their price to the prebid floors
- * module. A price rule with any other model still sets the `upr_model` / `upr_id` key-values for
- * Google Ad Manager, it just does not produce a header bidding floor. Use `floorModels` to widen
- * that set, for example to let Google-priced (`g`) ad units set a prebid floor as well.
+ * The yield optimization backend decides which price rules produce a header bidding floor and
+ * sends the answer; there is nothing to configure here. A price rule carries
  *
- * A price of `0` never produces a floor, regardless of `floorModels`. A9 / Amazon TAM is not
- * affected by this setting.
+ * - `floorprice` — the price ladder rung, present for our own `static` and `fixed` models and
+ *   absent for Google-priced ones, and
+ * - `pbFloor` — the header bidding floor authored for the rule, if any.
  *
- * ```javascript
- * moli.registerModule(new YieldOptimization({
- *   provider: 'dynamic',
- *   configEndpoint: 'https://yield.h5v.eu/config/gutefrage',
- *   floorModels: ['static', 'fixed', 'g']
- * }, window));
- * ```
+ * The module hands prebid `pbFloor ?? floorprice`. A rule carrying neither produces no floors
+ * block at all, which is not the same as a floor of `0`.
+ *
+ * A9 / Amazon TAM reads `floorprice` directly, so a Google-priced ad unit sends it no floor.
  *
  * ### None
  *
@@ -93,7 +89,6 @@ import {
   PrepareRequestAdsStep
 } from 'ad-tag/ads/adPipeline';
 import { uniquePrimitiveFilter } from 'ad-tag/util/arrayUtils';
-import { resolvePrebidFloorPrice } from 'ad-tag/ads/modules/yield-optimization/floorModels';
 
 /**
  * == Yield Optimization ==
@@ -176,17 +171,23 @@ export const YieldOptimization = (
             )
             .then(priceRule => {
               slot.priceRule = priceRule;
-              // only some models may hand their price to the prebid floors module. this module
-              // owns that decision, so `prebid.ts` stays ignorant of `upr_model` entirely.
-              slot.prebidFloorPrice = priceRule
-                ? resolvePrebidFloorPrice(priceRule, yieldModuleConfig)
-                : undefined;
+              // the backend owns the header bidding floor decision and sends it as `pbFloor`.
+              // `??`, not `||`: a `pbFloor` of 0 is a server bug we want to see rather than a
+              // silent fall-through to the price ladder rung. resolving it here keeps
+              // `prebid.ts` ignorant of the response schema, and reads the price *after*
+              // `dynamicFloorPrice` has had its say.
+              //
+              // NOTE: `dynamicFloorPrice` rewrites `floorprice` only, and only for `static` and
+              // `fixed`, which per ADR 0014 never carry a `pbFloor`. Should the backend ever
+              // send one on those models, the authored `pbFloor` would win here and the
+              // dynamically rewritten price would not reach prebid.
+              slot.prebidFloorPrice = priceRule?.pbFloor ?? priceRule?.floorprice;
 
               if (priceRule && slot.prebidFloorPrice === undefined) {
                 context.logger__.debug(
                   'YieldOptimizationService',
                   context.requestId__,
-                  `no prebid floor for ${slot.moliSlot.domId}: model '${priceRule.model ?? 'static'}' with price ${priceRule.floorprice}`
+                  `no prebid floor for ${slot.moliSlot.domId}: model '${priceRule.model ?? 'static'}' carries neither floorprice nor pbFloor`
                 );
               }
             });

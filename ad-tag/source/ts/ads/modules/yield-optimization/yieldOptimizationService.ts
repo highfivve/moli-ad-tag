@@ -19,6 +19,63 @@ type PriceRule = MoliRuntime.yield_optimization.PriceRule & {
   readonly main?: boolean;
 };
 
+/**
+ * Every member of the delivery alphabet, as a map so that adding a value to `UprModel` without
+ * announcing it to the backend is a compile error rather than silent drift.
+ *
+ * @see MoliRuntime.yield_optimization.UprModel
+ */
+const ALL_UPR_MODELS: Record<MoliRuntime.yield_optimization.UprModel, true> = {
+  static: true,
+  fixed: true,
+  g: true,
+  disabled: true
+};
+
+/**
+ * The delivered `upr_model` values this bundle understands, sent on every config request as
+ * `floorModels`.
+ *
+ * This is a capability list, not a setting: it tells the yield optimization backend what this
+ * bundle can be handed, so the backend can decide the header bidding floor itself and send it as
+ * `pbFloor`. Its presence is also what tells the backend that this bundle tolerates a price rule
+ * without a `floorprice`; a request without it gets the pre-GD-10493 wire shape, where every rule
+ * carries a numeric price and none carries a `pbFloor`.
+ *
+ * It is deliberately not publisher config. Whether a given ad unit gets a header bidding floor is
+ * policy, and policy lives in the yield engine — a per-publisher list in the bundle could veto a
+ * floor the engine had just authored, and changing it would mean a rebuild and a deploy.
+ */
+export const SUPPORTED_UPR_MODELS = Object.keys(
+  ALL_UPR_MODELS
+) as ReadonlyArray<MoliRuntime.yield_optimization.UprModel>;
+
+/**
+ * The delivered `upr_model` values whose `upr_id` is a price ladder rule id, and which
+ * `dynamicFloorPrice` may therefore rewrite.
+ *
+ * For a Google-priced (`g`) rule `upr_id` is the target CPM in euro cents, or `0` for Google
+ * Optimized; for `disabled` it is the €0.01 marker. Rewriting either into a ladder rule id would
+ * produce a value matching no pricing rule at all.
+ */
+const DYNAMIC_FLOOR_PRICE_MODELS: ReadonlyArray<MoliRuntime.yield_optimization.UprModel> = [
+  'static',
+  'fixed'
+];
+
+/** The model a price rule is treated as when the config endpoint sends none. */
+const FALLBACK_MODEL: MoliRuntime.yield_optimization.UprModel = 'static';
+
+/**
+ * The delivered model of a price rule, with the fallback applied.
+ *
+ * `||`, not `??`: `model` is not validated at runtime, so an endpoint could deliver an empty
+ * string. Treating that as `static` is what the `upr_model` key-value has always done.
+ */
+const modelOf = (
+  rule: MoliRuntime.yield_optimization.PriceRule
+): MoliRuntime.yield_optimization.UprModel => rule.model || FALLBACK_MODEL;
+
 export interface YieldOptimizationService {
   init(
     device: Device,
@@ -144,7 +201,7 @@ export const createYieldOptimizationService = (
       const rule = config.rules[adUnitPath];
       if (adServer === 'gam') {
         if (rule) {
-          adSlot.setTargeting('upr_model', rule.model || 'static');
+          adSlot.setTargeting('upr_model', modelOf(rule));
           if (rule.main) {
             adSlot.setTargeting('upr_main', 'true');
             const lastBidCpmsOnPosition: number[] | undefined =
@@ -152,6 +209,7 @@ export const createYieldOptimizationService = (
             if (
               lastBidCpmsOnPosition &&
               lastBidCpmsOnPosition?.length > 0 &&
+              DYNAMIC_FLOOR_PRICE_MODELS.includes(modelOf(rule)) &&
               isYieldConfigDynamic(yieldOptimizationConfig) &&
               yieldOptimizationConfig.dynamicFloorPrices
             ) {
@@ -177,7 +235,7 @@ export const createYieldOptimizationService = (
           } else {
             logger.debug(
               'YieldOptimizationService',
-              `set price rule id ${rule.priceRuleId} for ${adUnitPath}. Main traffic share ${rule.main}. cpm is ${rule.floorprice}`
+              `set price rule id ${rule.priceRuleId} for ${adUnitPath}. Main traffic share ${rule.main}. cpm is ${rule.floorprice ?? 'not set'}`
             );
             adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
           }
@@ -210,7 +268,8 @@ export const createYieldOptimizationService = (
       body: JSON.stringify({
         device: device,
         key: 'adUnitPath',
-        adUnitPaths: adUnitPaths
+        adUnitPaths: adUnitPaths,
+        floorModels: SUPPORTED_UPR_MODELS
       })
     })
       .then(response => {
@@ -251,6 +310,14 @@ export const createYieldOptimizationService = (
     return typeof obj === 'object' && obj !== null;
   };
 
+  /**
+   * `undefined` or a number. Both prices on a price rule are optional, and this validation runs
+   * with `every`: rejecting one rule rejects the entire response, which would cost the publisher
+   * `upr_id` targeting on every ad unit rather than just a floor on one.
+   */
+  const isOptionalNumber = (value: unknown): value is number | undefined =>
+    value === undefined || typeof value === 'number';
+
   const validateRules = (rules: unknown): rules is modules.yield_optimization.PriceRules => {
     if (!isPriceRules(rules)) {
       return false;
@@ -262,7 +329,8 @@ export const createYieldOptimizationService = (
         typeof rule === 'object' &&
         rule !== null &&
         typeof rule.main === 'boolean' &&
-        typeof rule.floorprice === 'number' &&
+        isOptionalNumber(rule.floorprice) &&
+        isOptionalNumber(rule.pbFloor) &&
         typeof rule.priceRuleId === 'number'
       );
     });

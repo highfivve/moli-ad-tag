@@ -536,6 +536,57 @@ describe('a9', () => {
       );
     });
 
+    it('should send no floor for a price rule that carries no floorprice', async () => {
+      // a Google-priced rule has no price ladder rung of ours, so Amazon TAM gets no floor.
+      // gating on the rule rather than the price would put `Math.ceil(undefined)` - `NaN` - on
+      // the wire.
+      const fetchBidsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
+      const step = a9RequestBids({ ...a9ConfigStub, enableFloorPrices: true });
+
+      const domId = getDomId();
+      const singleSlot = createSlotDefinitions(domId, {});
+      singleSlot.priceRule = { main: false, priceRuleId: 0, model: 'g', pbFloor: 1.2 };
+
+      await step(contextWithConsent, [singleSlot]);
+      expect(fetchBidsSpy).to.have.been.calledOnceWithExactly(
+        {
+          slots: [
+            {
+              slotID: domId,
+              slotName: singleSlot.adSlot.getAdUnitPath(),
+              sizes: mediumRec
+            }
+          ]
+        },
+        Sinon.match.func
+      );
+    });
+
+    it('should send a floor of zero rather than omitting it', async () => {
+      // `0` is a price the server chose; it is not the same as sending no floor.
+      const fetchBidsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
+      const step = a9RequestBids({ ...a9ConfigStub, enableFloorPrices: true });
+
+      const domId = getDomId();
+      const singleSlot = createSlotDefinitions(domId, {});
+      singleSlot.priceRule = { floorprice: 0, main: false, priceRuleId: 0 };
+
+      await step(contextWithConsent, [singleSlot]);
+      expect(fetchBidsSpy).to.have.been.calledOnceWithExactly(
+        {
+          slots: [
+            {
+              slotID: domId,
+              slotName: singleSlot.adSlot.getAdUnitPath(),
+              sizes: mediumRec,
+              floor: { value: 0, currency: 'USD' }
+            }
+          ]
+        },
+        Sinon.match.func
+      );
+    });
+
     it('should use the prebid convertCurrency function if available', async () => {
       dom.window.pbjs = pbjsStub;
 

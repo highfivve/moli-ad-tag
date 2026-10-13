@@ -189,9 +189,9 @@ describe('prebid', () => {
 
   /**
    * @param floorprice the price rule's floor price, if a price rule is attached at all
-   * @param prebidFloorPrice what the yield optimization module allowed through to prebid.
-   *        Defaults to `floorprice`, which is what the default `floorModels` produce. Pass `null`
-   *        for a price rule whose floor the module withheld from prebid.
+   * @param prebidFloorPrice what the yield optimization module resolved for prebid, i.e.
+   *        `pbFloor ?? floorprice`. Defaults to `floorprice`, which is what a rule without a
+   *        `pbFloor` produces. Pass `null` for a price rule carrying neither price.
    */
   const createSlotDefinitions = (
     domId: string,

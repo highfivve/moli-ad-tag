@@ -4,6 +4,7 @@ import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 import {
   createYieldOptimizationService,
+  SUPPORTED_UPR_MODELS,
   YieldOptimizationService
 } from './yieldOptimizationService';
 import { auction, Device, modules } from 'ad-tag/types/moliConfig';
@@ -226,6 +227,110 @@ describe('YieldOptimizationService', () => {
         expect(fetchStub).to.have.been.called;
       });
 
+      it('should keep a response whose google priced rule carries no floorprice', async () => {
+        // `validateRules` runs with `every`, so rejecting a rule without a price would throw the
+        // whole response away and cost the publisher `upr_id` targeting on every ad unit.
+        fetchStub.resolves({
+          ok: true,
+          json: (): Promise<any> =>
+            Promise.resolve({
+              rules: {
+                [adUnitPath1]: { priceRuleId: 3, floorprice: 0.2, main: true },
+                [adUnitPath2]: { priceRuleId: 0, model: 'g', main: true, pbFloor: 1.2 }
+              }
+            })
+        } as any);
+        const service = createYieldOptimizationService(config);
+        await service.init('mobile', {}, [adUnitPath1, adUnitPath2], jsDomWindow.fetch, noopLogger);
+
+        const googlePricedRule = await service.getPriceRule(adUnitPath2);
+        expect(googlePricedRule).not.to.be.undefined;
+        expect(googlePricedRule!.floorprice).to.be.undefined;
+        expect(googlePricedRule!.pbFloor).to.be.eq(1.2);
+
+        // the sibling rule survives too, which is the point
+        const ladderRule = await service.getPriceRule(adUnitPath1);
+        expect(ladderRule).not.to.be.undefined;
+        expect(ladderRule!.priceRuleId).to.be.eq(3);
+      });
+
+      it('should keep a response whose rule carries neither price', async () => {
+        fetchStub.resolves({
+          ok: true,
+          json: (): Promise<any> =>
+            Promise.resolve({
+              rules: {
+                [adUnitPath1]: { priceRuleId: 0, model: 'g', main: true },
+                [adUnitPath2]: { priceRuleId: 3, floorprice: 0.2, main: true }
+              }
+            })
+        } as any);
+        const service = createYieldOptimizationService(config);
+        await service.init('mobile', {}, [adUnitPath1, adUnitPath2], jsDomWindow.fetch, noopLogger);
+
+        const googleOptimisedRule = await service.getPriceRule(adUnitPath1);
+        expect(googleOptimisedRule).not.to.be.undefined;
+        expect(googleOptimisedRule!.floorprice).to.be.undefined;
+        expect(googleOptimisedRule!.pbFloor).to.be.undefined;
+
+        // the sibling keeps its `upr_id` targeting, which is what `every` would have cost it
+        expect((await service.getPriceRule(adUnitPath2))!.priceRuleId).to.be.eq(3);
+      });
+
+      it('should accept a legacy response that carries no pbFloor on any rule', async () => {
+        // the current server keeps the pre-GD-10493 wire shape for requests without
+        // `floorModels`: a numeric price on every rule, including `g` and `disabled`, and no
+        // `pbFloor` anywhere. Such a response must come through untouched.
+        fetchStub.resolves({
+          ok: true,
+          json: (): Promise<any> =>
+            Promise.resolve({
+              rules: {
+                [adUnitPath1]: { priceRuleId: 3, floorprice: 0.2, model: 'static', main: true },
+                [adUnitPath2]: { priceRuleId: 150, floorprice: 1.5, model: 'g', main: true }
+              }
+            })
+        } as any);
+        const service = createYieldOptimizationService(config);
+        await service.init('mobile', {}, [adUnitPath1, adUnitPath2], jsDomWindow.fetch, noopLogger);
+
+        const staticRule = await service.getPriceRule(adUnitPath1);
+        expect(staticRule!.floorprice).to.be.eq(0.2);
+        expect(staticRule!.pbFloor).to.be.undefined;
+
+        const googlePricedRule = await service.getPriceRule(adUnitPath2);
+        expect(googlePricedRule!.floorprice).to.be.eq(1.5);
+        expect(googlePricedRule!.pbFloor).to.be.undefined;
+      });
+
+      it('should still reject a response whose rule has a non numeric floorprice', async () => {
+        fetchStub.resolves({
+          ok: true,
+          json: (): Promise<any> =>
+            Promise.resolve({
+              rules: { [adUnitPath1]: { priceRuleId: 3, floorprice: 'free', main: true } }
+            })
+        } as any);
+        const service = createYieldOptimizationService(config);
+        await service.init('mobile', {}, [adUnitPath1], jsDomWindow.fetch, noopLogger);
+
+        expect(await service.getPriceRule(adUnitPath1)).to.be.undefined;
+      });
+
+      it('should still reject a response whose rule has a non numeric pbFloor', async () => {
+        fetchStub.resolves({
+          ok: true,
+          json: (): Promise<any> =>
+            Promise.resolve({
+              rules: { [adUnitPath1]: { priceRuleId: 3, main: true, pbFloor: 'free' } }
+            })
+        } as any);
+        const service = createYieldOptimizationService(config);
+        await service.init('mobile', {}, [adUnitPath1], jsDomWindow.fetch, noopLogger);
+
+        expect(await service.getPriceRule(adUnitPath1)).to.be.undefined;
+      });
+
       it('should always return undefined if the config json has the wrong format', async () => {
         fetchStub.resolves({
           ok: true,
@@ -262,7 +367,7 @@ describe('YieldOptimizationService', () => {
 
         expect(fetchStub).to.have.been.calledOnce;
         expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {
-          body: `{"device":"mobile","key":"adUnitPath","adUnitPaths":["${adUnitPath1}","${adUnitPath2}"]}`,
+          body: `{"device":"mobile","key":"adUnitPath","adUnitPaths":["${adUnitPath1}","${adUnitPath2}"],"floorModels":${JSON.stringify(SUPPORTED_UPR_MODELS)}}`,
           headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
           method: 'POST',
           mode: 'cors'
@@ -282,7 +387,7 @@ describe('YieldOptimizationService', () => {
 
         expect(fetchStub).to.have.been.calledOnce;
         expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {
-          body: '{"device":"mobile","key":"adUnitPath","adUnitPaths":["/123/publisher/p_content_2"]}',
+          body: `{"device":"mobile","key":"adUnitPath","adUnitPaths":["/123/publisher/p_content_2"],"floorModels":${JSON.stringify(SUPPORTED_UPR_MODELS)}}`,
           headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
           method: 'POST',
           mode: 'cors'
@@ -305,7 +410,7 @@ describe('YieldOptimizationService', () => {
 
         expect(fetchStub).to.have.been.calledOnce;
         expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {
-          body: '{"device":"mobile","key":"adUnitPath","adUnitPaths":["/123/pub/ad_content_1/mobile"]}',
+          body: '{"device":"mobile","key":"adUnitPath","adUnitPaths":["/123/pub/ad_content_1/mobile"],"floorModels":["static","fixed","g","disabled"]}',
           headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
           method: 'POST',
           mode: 'cors'
@@ -333,6 +438,19 @@ describe('YieldOptimizationService', () => {
       describe('setTargeting', async () => {
         let globalAuctionContext: GlobalAuctionContext;
         let getLastBidCpmsOfAdUnitStub: Sinon.SinonStub;
+
+        const configWithDynamicFloorStrategy: DynamicYieldOptimizationConfig = {
+          enabled: true,
+          provider: 'dynamic',
+          configEndpoint: '//localhost',
+          excludedAdUnitPaths: [],
+          dynamicFloorPrices: {
+            strategy: 'max',
+            roundingStepsInCents: 5,
+            maxPriceRuleInCents: 500,
+            minPriceRuleInCents: 5
+          }
+        };
 
         beforeEach(() => {
           // stub global auction context with getLastBidCpms method
@@ -388,19 +506,6 @@ describe('YieldOptimizationService', () => {
         });
 
         it('should overwrite the standard price rule with the dynamic floor price based on the last bid cpms if yield config is dynamic and strategy is available', async () => {
-          const configWithDynamicFloorStrategy: DynamicYieldOptimizationConfig = {
-            enabled: true,
-            provider: 'dynamic',
-            configEndpoint: '//localhost',
-            excludedAdUnitPaths: [],
-            dynamicFloorPrices: {
-              strategy: 'max',
-              roundingStepsInCents: 5,
-              maxPriceRuleInCents: 500,
-              minPriceRuleInCents: 5
-            }
-          };
-
           getLastBidCpmsOfAdUnitStub.withArgs('p_content_1').returns([1.5, 5.0]);
 
           const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
@@ -419,6 +524,102 @@ describe('YieldOptimizationService', () => {
           expect(setTargetingSpy).has.been.calledWith('upr_model', 'static');
           expect(setTargetingSpy).has.been.calledWith('upr_main', 'true');
           expect(setTargetingSpy).has.been.calledWith('upr_id', '500');
+        });
+
+        it('should NOT overwrite a google priced rule even if a strategy is available', async () => {
+          // `dynamicFloorPrice` rewrites `priceRuleId` into a price ladder rule id, which is only
+          // what `upr_id` means for `static` and `fixed`. On a `g` rule it would overwrite the
+          // target CPM - or Google Optimized's `0` - with a value matching no pricing rule.
+          fetchStub.resolves({
+            ok: true,
+            json: (): Promise<any> =>
+              Promise.resolve({
+                rules: {
+                  [adUnitPath1]: { priceRuleId: 250, model: 'g', main: true, pbFloor: 1.0 }
+                }
+              })
+          } as any);
+          getLastBidCpmsOfAdUnitStub.withArgs('p_content_1').returns([1.5, 5.0]);
+
+          const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
+          const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
+
+          const service = createYieldOptimizationService(configWithDynamicFloorStrategy);
+          await service.init('mobile', {}, [adUnitPath1], fetchStub, noopLogger);
+          const rule = await service.setTargeting(
+            adSlot,
+            'gam',
+            noopLogger,
+            configWithDynamicFloorStrategy,
+            globalAuctionContext
+          );
+
+          expect(setTargetingSpy).has.been.calledWith('upr_id', '250');
+          expect(rule!.pbFloor).to.be.eq(1.0);
+        });
+
+        it('should NOT overwrite a disabled rule even if a strategy is available', async () => {
+          fetchStub.resolves({
+            ok: true,
+            json: (): Promise<any> =>
+              Promise.resolve({
+                rules: {
+                  [adUnitPath1]: {
+                    priceRuleId: 1,
+                    floorprice: 0.01,
+                    model: 'disabled',
+                    main: true
+                  }
+                }
+              })
+          } as any);
+          getLastBidCpmsOfAdUnitStub.withArgs('p_content_1').returns([1.5, 5.0]);
+
+          const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
+          const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
+
+          const service = createYieldOptimizationService(configWithDynamicFloorStrategy);
+          await service.init('mobile', {}, [adUnitPath1], fetchStub, noopLogger);
+          await service.setTargeting(
+            adSlot,
+            'gam',
+            noopLogger,
+            configWithDynamicFloorStrategy,
+            globalAuctionContext
+          );
+
+          expect(setTargetingSpy).has.been.calledWith('upr_id', '1');
+        });
+
+        it('should overwrite a fixed rule and hand the rewritten price on to prebid', async () => {
+          fetchStub.resolves({
+            ok: true,
+            json: (): Promise<any> =>
+              Promise.resolve({
+                rules: {
+                  [adUnitPath1]: { priceRuleId: 20, floorprice: 0.2, model: 'fixed', main: true }
+                }
+              })
+          } as any);
+          getLastBidCpmsOfAdUnitStub.withArgs('p_content_1').returns([1.5, 3.0]);
+
+          const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
+          const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
+
+          const service = createYieldOptimizationService(configWithDynamicFloorStrategy);
+          await service.init('mobile', {}, [adUnitPath1], fetchStub, noopLogger);
+          const rule = await service.setTargeting(
+            adSlot,
+            'gam',
+            noopLogger,
+            configWithDynamicFloorStrategy,
+            globalAuctionContext
+          );
+
+          expect(setTargetingSpy).has.been.calledWith('upr_id', '300');
+          // the rewritten price is what the module then hands to prebid
+          expect(rule!.floorprice).to.be.eq(3);
+          expect(rule!.pbFloor).to.be.undefined;
         });
 
         it('should NOT overwrite the standard price rule if yield config is dynamic and strategy is not available', async () => {
@@ -509,6 +710,17 @@ describe('YieldOptimizationService', () => {
         } as any);
       });
 
+      it('should announce the delivery values this bundle understands on every request', async () => {
+        const service = createYieldOptimizationService(config);
+        await service.init('mobile', {}, [adUnitPath1], jsDomWindow.fetch, noopLogger);
+        await service.getPriceRule(adUnitPath1);
+
+        // a constant capability list, not a setting: its presence tells the server this bundle
+        // tolerates a rule without a `floorprice`.
+        const body = JSON.parse(fetchStub.firstCall.args[1]!.body as string);
+        expect(body.floorModels).to.deep.equal(['static', 'fixed', 'g', 'disabled']);
+      });
+
       // input parameters
       ['mobile' as const, 'desktop' as const].forEach(device => {
         it(`should use ${device} in body`, async () => {
@@ -521,7 +733,7 @@ describe('YieldOptimizationService', () => {
 
           expect(fetchStub).to.have.been.calledOnce;
           expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {
-            body: `{"device":"${device}","key":"adUnitPath","adUnitPaths":[]}`,
+            body: `{"device":"${device}","key":"adUnitPath","adUnitPaths":[],"floorModels":${JSON.stringify(SUPPORTED_UPR_MODELS)}}`,
             headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
             method: 'POST',
             mode: 'cors'

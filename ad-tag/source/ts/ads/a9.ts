@@ -271,7 +271,10 @@ export const a9RequestBids = (config: headerbidding.A9Config): RequestBidsStep =
                 slotID: moliSlot.domId,
                 slotName: adUnitPath,
                 sizes: filterSupportedSizes(enabledSizes).filter(SizeConfigService.isFixedSize),
-                ...(config.enableFloorPrices && priceRule
+                // gate on the price, not on the rule: a Google-priced rule carries no
+                // `floorprice`, and `Math.ceil(undefined)` would ship `NaN` to Amazon TAM.
+                // Such an ad unit deliberately gets no floor at all.
+                ...(config.enableFloorPrices && priceRule?.floorprice !== undefined
                   ? // During the beta phase we need to be able to activate and deactivate floor prices
                     // We also need to do a currency conversion from EUR to USD (x1.19 , 08.03.2021)
                     // THe floor price is sent in EUR, amazon requires Cents

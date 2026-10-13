@@ -453,7 +453,7 @@
       "additionalProperties": false,
       "properties": {
         "floorprice": {
-          "description": "The floor price CPM in EUR if available.",
+          "description": "The price ladder rung this rule selected, as a CPM in EUR.\n\nPresent for our own price models (`static`, `fixed`), where `upr_id` addresses a price ladder rule in Google Ad Manager. Absent for Google-priced rules, where the per-query price is Google's to decide and there is no rung of ours to report.\n\nThis is what A9 / Amazon TAM reads. An absent `floorprice` therefore means Amazon TAM receives no floor for that ad unit, which is deliberate.",
           "type": "number"
         },
         "main": {
@@ -464,6 +464,10 @@
           "$ref": "#/definitions/MoliRuntime.yield_optimization.UprModel",
           "description": "The delivered model used to determine the price rule.\n\nIf none is provided `static` is used as a fallback."
         },
+        "pbFloor": {
+          "description": "The header bidding floor CPM in EUR authored for this rule, if any.\n\nThe yield optimization backend owns this decision and sends the number; the ad tag does not derive it from `model`. It takes precedence over `floorprice`, so a Google-priced rule can carry a prebid floor without that floor being a price ladder rung.\n\nAbsent on every response from a server that predates it, which is why the chain falls back to `floorprice`.",
+          "type": "number"
+        },
         "priceRuleId": {
           "description": "Unique identifier for a pricing rule. This will be sent as a key_value `upr_id` per ad unit and will trigger the matching unified pricing rule in Google Ad Manager.\n\nThe `upr_id` can be a unique id that is associated with a specific cpm or the cpm itself in cents. The cpm in cents is used when \"previous bid cpms\" is enabled in the global auction context. The cpm is then calculated based on previous bids on the position. In order to avoid a mapping of the calculated cpm and the corresponding unique id, the calculated cpm in cents is directly set as `upr_id`.",
           "type": "number"
@@ -471,13 +475,12 @@
       },
       "required": [
         "priceRuleId",
-        "floorprice",
         "main"
       ],
       "type": "object"
     },
     "MoliRuntime.yield_optimization.UprModel": {
-      "description": "The *delivery* alphabet for the `upr_model` key-value.\n\nThese are the values the yield optimization config endpoint actually sends and that the ad tag forwards verbatim to Google Ad Manager. The ad tag is a dumb pipe: it does not know what each value means in GAM, only which of them a publisher bundle allows to produce a header bidding floor (see `floorModels` in the yield optimization module config).\n\n- `static`: price rule cohorts in an A/B test\n- `fixed`: 100% of the traffic gets this fixed price rule\n- `g`: Google decides the price per query (Target CPM or Google Optimized Floors)\n- `disabled`: pricing is deliberately switched off for this ad unit\n\nNote that the backend distinguishes more states than this (its *domain* alphabet splits `g` into Target CPM and Google Optimized). That distinction is deliberately invisible here, because the GAM custom dimension budget is tight.",
+      "description": "The *delivery* alphabet for the `upr_model` key-value.\n\nThese are the values the yield optimization config endpoint actually sends and that the ad tag forwards verbatim to Google Ad Manager. The ad tag is a dumb pipe: it does not know what each value means in GAM. Whether a rule produces a header bidding floor is decided by the backend and sent as `pbFloor`, not inferred from this value.\n\n- `static`: price rule cohorts in an A/B test\n- `fixed`: 100% of the traffic gets this fixed price rule\n- `g`: Google decides the price per query (Target CPM or Google Optimized Floors)\n- `disabled`: pricing is deliberately switched off for this ad unit\n\nNote that the backend distinguishes more states than this (its *domain* alphabet splits `g` into Target CPM and Google Optimized). That distinction is deliberately invisible here, because the GAM custom dimension budget is tight.",
       "enum": [
         "static",
         "fixed",
@@ -4000,13 +4003,6 @@
               "description": "If set to true the module will be enabled.",
               "type": "boolean"
             },
-            "floorModels": {
-              "description": "Delivered `upr_model` values that are allowed to hand their price to the prebid floors module. A price rule whose model is not listed here still sets its `upr_model` / `upr_id` key-values for Google Ad Manager, it just does not produce a header bidding floor.\n\nDefaults to `['static', 'fixed']` when absent, which is what every bundle built before this option existed effectively did.\n\nNote that a price of `0` never produces a floor, regardless of this list.\n\nThis is expressed in the *delivery* alphabet, not in the backend's domain alphabet, so a publisher can be given header bidding floors on Google-priced inventory without the ad tag learning anything about Google Ad Manager.\n\nA9 / Amazon TAM is deliberately not affected by this setting.",
-              "items": {
-                "$ref": "#/definitions/MoliRuntime.yield_optimization.UprModel"
-              },
-              "type": "array"
-            },
             "labelCondition": {
               "$ref": "#/definitions/LabelCondition",
               "description": "Optional configuration to activate the module only if the specific label conditions are met."
@@ -4095,13 +4091,6 @@
             "enabled": {
               "description": "If set to true the module will be enabled.",
               "type": "boolean"
-            },
-            "floorModels": {
-              "description": "Delivered `upr_model` values that are allowed to hand their price to the prebid floors module. A price rule whose model is not listed here still sets its `upr_model` / `upr_id` key-values for Google Ad Manager, it just does not produce a header bidding floor.\n\nDefaults to `['static', 'fixed']` when absent, which is what every bundle built before this option existed effectively did.\n\nNote that a price of `0` never produces a floor, regardless of this list.\n\nThis is expressed in the *delivery* alphabet, not in the backend's domain alphabet, so a publisher can be given header bidding floors on Google-priced inventory without the ad tag learning anything about Google Ad Manager.\n\nA9 / Amazon TAM is deliberately not affected by this setting.",
-              "items": {
-                "$ref": "#/definitions/MoliRuntime.yield_optimization.UprModel"
-              },
-              "type": "array"
             },
             "labelCondition": {
               "$ref": "#/definitions/LabelCondition",
@@ -4202,13 +4191,6 @@
               "description": "AdUnitPaths that don't need the yield optimization. Add all adUnits that are not configured in the server.",
               "items": {
                 "type": "string"
-              },
-              "type": "array"
-            },
-            "floorModels": {
-              "description": "Delivered `upr_model` values that are allowed to hand their price to the prebid floors module. A price rule whose model is not listed here still sets its `upr_model` / `upr_id` key-values for Google Ad Manager, it just does not produce a header bidding floor.\n\nDefaults to `['static', 'fixed']` when absent, which is what every bundle built before this option existed effectively did.\n\nNote that a price of `0` never produces a floor, regardless of this list.\n\nThis is expressed in the *delivery* alphabet, not in the backend's domain alphabet, so a publisher can be given header bidding floors on Google-priced inventory without the ad tag learning anything about Google Ad Manager.\n\nA9 / Amazon TAM is deliberately not affected by this setting.",
-              "items": {
-                "$ref": "#/definitions/MoliRuntime.yield_optimization.UprModel"
               },
               "type": "array"
             },
@@ -9223,13 +9205,6 @@
           },
           "type": "array"
         },
-        "floorModels": {
-          "description": "Delivered `upr_model` values that are allowed to hand their price to the prebid floors module. A price rule whose model is not listed here still sets its `upr_model` / `upr_id` key-values for Google Ad Manager, it just does not produce a header bidding floor.\n\nDefaults to `['static', 'fixed']` when absent, which is what every bundle built before this option existed effectively did.\n\nNote that a price of `0` never produces a floor, regardless of this list.\n\nThis is expressed in the *delivery* alphabet, not in the backend's domain alphabet, so a publisher can be given header bidding floors on Google-priced inventory without the ad tag learning anything about Google Ad Manager.\n\nA9 / Amazon TAM is deliberately not affected by this setting.",
-          "items": {
-            "$ref": "#/definitions/MoliRuntime.yield_optimization.UprModel"
-          },
-          "type": "array"
-        },
         "labelCondition": {
           "$ref": "#/definitions/LabelCondition",
           "description": "Optional configuration to activate the module only if the specific label conditions are met."
@@ -9253,13 +9228,6 @@
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
-        },
-        "floorModels": {
-          "description": "Delivered `upr_model` values that are allowed to hand their price to the prebid floors module. A price rule whose model is not listed here still sets its `upr_model` / `upr_id` key-values for Google Ad Manager, it just does not produce a header bidding floor.\n\nDefaults to `['static', 'fixed']` when absent, which is what every bundle built before this option existed effectively did.\n\nNote that a price of `0` never produces a floor, regardless of this list.\n\nThis is expressed in the *delivery* alphabet, not in the backend's domain alphabet, so a publisher can be given header bidding floors on Google-priced inventory without the ad tag learning anything about Google Ad Manager.\n\nA9 / Amazon TAM is deliberately not affected by this setting.",
-          "items": {
-            "$ref": "#/definitions/MoliRuntime.yield_optimization.UprModel"
-          },
-          "type": "array"
         },
         "labelCondition": {
           "$ref": "#/definitions/LabelCondition",
@@ -9292,13 +9260,6 @@
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
-        },
-        "floorModels": {
-          "description": "Delivered `upr_model` values that are allowed to hand their price to the prebid floors module. A price rule whose model is not listed here still sets its `upr_model` / `upr_id` key-values for Google Ad Manager, it just does not produce a header bidding floor.\n\nDefaults to `['static', 'fixed']` when absent, which is what every bundle built before this option existed effectively did.\n\nNote that a price of `0` never produces a floor, regardless of this list.\n\nThis is expressed in the *delivery* alphabet, not in the backend's domain alphabet, so a publisher can be given header bidding floors on Google-priced inventory without the ad tag learning anything about Google Ad Manager.\n\nA9 / Amazon TAM is deliberately not affected by this setting.",
-          "items": {
-            "$ref": "#/definitions/MoliRuntime.yield_optimization.UprModel"
-          },
-          "type": "array"
         },
         "labelCondition": {
           "$ref": "#/definitions/LabelCondition",
