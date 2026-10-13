@@ -2,16 +2,13 @@ import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
-import {
-  createYieldOptimizationService,
-  SUPPORTED_UPR_MODELS,
-  YieldOptimizationService
-} from './yieldOptimizationService';
+import { createYieldOptimizationService } from './yieldOptimizationService';
 import { auction, Device, modules } from 'ad-tag/types/moliConfig';
 import { noopLogger } from 'ad-tag/stubs/moliStubs';
 import { googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
 import { createGlobalAuctionContext, GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import { createEventService } from 'ad-tag/ads/eventService';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import StaticYieldOptimizationConfig = modules.yield_optimization.StaticYieldOptimizationConfig;
 import NoYieldOptimizationConfig = modules.yield_optimization.NoYieldOptimizationConfig;
 import DynamicYieldOptimizationConfig = modules.yield_optimization.DynamicYieldOptimizationConfig;
@@ -19,6 +16,14 @@ import AdunitPriceRulesResponse = modules.yield_optimization.AdunitPriceRulesRes
 
 // setup sinon-chai
 use(sinonChai);
+
+/** the `floorModels` capability list the service sends on every config request */
+const supportedModels: ReadonlyArray<MoliRuntime.yield_optimization.UprModel> = [
+  'static',
+  'fixed',
+  'g',
+  'disabled'
+];
 
 describe('YieldOptimizationService', () => {
   const { jsDomWindow } = createDomAndWindow();
@@ -367,7 +372,7 @@ describe('YieldOptimizationService', () => {
 
         expect(fetchStub).to.have.been.calledOnce;
         expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {
-          body: `{"device":"mobile","key":"adUnitPath","adUnitPaths":["${adUnitPath1}","${adUnitPath2}"],"floorModels":${JSON.stringify(SUPPORTED_UPR_MODELS)}}`,
+          body: `{"device":"mobile","key":"adUnitPath","adUnitPaths":["${adUnitPath1}","${adUnitPath2}"],"floorModels":${JSON.stringify(supportedModels)}}`,
           headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
           method: 'POST',
           mode: 'cors'
@@ -387,7 +392,7 @@ describe('YieldOptimizationService', () => {
 
         expect(fetchStub).to.have.been.calledOnce;
         expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {
-          body: `{"device":"mobile","key":"adUnitPath","adUnitPaths":["/123/publisher/p_content_2"],"floorModels":${JSON.stringify(SUPPORTED_UPR_MODELS)}}`,
+          body: `{"device":"mobile","key":"adUnitPath","adUnitPaths":["/123/publisher/p_content_2"],"floorModels":${JSON.stringify(supportedModels)}}`,
           headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
           method: 'POST',
           mode: 'cors'
@@ -733,7 +738,7 @@ describe('YieldOptimizationService', () => {
 
           expect(fetchStub).to.have.been.calledOnce;
           expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {
-            body: `{"device":"${device}","key":"adUnitPath","adUnitPaths":[],"floorModels":${JSON.stringify(SUPPORTED_UPR_MODELS)}}`,
+            body: `{"device":"${device}","key":"adUnitPath","adUnitPaths":[],"floorModels":${JSON.stringify(supportedModels)}}`,
             headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
             method: 'POST',
             mode: 'cors'
