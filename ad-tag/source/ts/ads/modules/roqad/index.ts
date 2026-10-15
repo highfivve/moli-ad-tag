@@ -49,7 +49,7 @@
  * | Parameter        | Value                                                                       |
  * | ---------------- | --------------------------------------------------------------------------- |
  * | `zdid`           | `zdid` from the module config                                               |
- * | `env`            | `mWeb` if the `mobile` label is active, `desktop` otherwise                 |
+ * | `env`            | always `mWeb` - ROQAD only supports `mWeb` for website calls                |
  * | `eventType`      | always `pageview`                                                           |
  * | `publisher_name` | `publisherName` from the module config                                      |
  * | `partner_dom`    | `window.location.hostname`                                                  |
@@ -151,7 +151,6 @@ const buildPageParameters = (
 ): ReadonlyArray<UrlParameter> => {
   const hem = context.runtimeConfig__.audience?.hem;
   const hashedEmail = hem?.sha256BasicNormalized ?? hem?.sha256;
-  const isMobile = context.labelConfigService__.getSupportedLabels().includes('mobile');
 
   const keyValues: googleAdManager.KeyValueMap = {
     ...context.config__.targeting?.keyValues,
@@ -160,7 +159,9 @@ const buildPageParameters = (
 
   const fixedParameters: ReadonlyArray<UrlParameter> = [
     ['zdid', config.zdid],
-    ['env', isMobile ? 'mWeb' : 'desktop'],
+    // ROQAD only supports mWeb for website calls. Calls with env=desktop are not processed and
+    // the sync pixels do not fire, so this is not derived from the device label.
+    ['env', 'mWeb'],
     ['eventType', 'pageview'],
     ['publisher_name', config.publisherName],
     ['partner_dom', context.window__.location.hostname],

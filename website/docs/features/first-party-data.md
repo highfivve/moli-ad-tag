@@ -116,7 +116,7 @@ These parameters are always set by the module and are not configurable as mappin
 | Parameter        | Value                                                                                                   |
 | ---------------- | ------------------------------------------------------------------------------------------------------- |
 | `zdid`           | `zdid` from the module config                                                                           |
-| `env`            | `mWeb` if the `mobile` [label](./labels.md) is active, `desktop` otherwise                              |
+| `env`            | always `mWeb`. ROQAD only supports `mWeb` for website calls and does not process `desktop`.            |
 | `eventType`      | always `pageview`                                                                                       |
 | `publisher_name` | `publisherName` from the module config                                                                  |
 | `partner_dom`    | `window.location.hostname`                                                                              |

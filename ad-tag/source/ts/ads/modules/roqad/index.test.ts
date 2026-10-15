@@ -184,7 +184,7 @@ describe('ROQAD Cookie Sync module', () => {
       await runSyncStep(createModule(), mkContext());
       const params = getLoadedUrl().searchParams;
       expect(params.get('zdid')).to.eq('1234');
-      expect(params.get('env')).to.eq('desktop');
+      expect(params.get('env')).to.eq('mWeb');
       expect(params.get('eventType')).to.eq('pageview');
       expect(params.get('publisher_name')).to.eq('example pub');
       expect(params.get('partner_dom')).to.eq(jsDomWindow.location.hostname);
@@ -195,14 +195,9 @@ describe('ROQAD Cookie Sync module', () => {
       expect(getLoadedUrl().searchParams.has('ctry')).to.be.false;
     });
 
-    it('sets env to mWeb if the mobile label is active', async () => {
-      await runSyncStep(createModule(), mkContext({ labels: ['mobile'] }));
-      expect(getLoadedUrl().searchParams.get('env')).to.eq('mWeb');
-    });
-
-    it('sets env to desktop if the mobile label is not active', async () => {
+    it('sets env to mWeb even if the desktop label is active', async () => {
       await runSyncStep(createModule(), mkContext({ labels: ['desktop'] }));
-      expect(getLoadedUrl().searchParams.get('env')).to.eq('desktop');
+      expect(getLoadedUrl().searchParams.get('env')).to.eq('mWeb');
     });
   });
 
