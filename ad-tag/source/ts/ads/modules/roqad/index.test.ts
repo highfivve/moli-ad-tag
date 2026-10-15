@@ -8,7 +8,7 @@ import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
 import { newEmptyConfig, newEmptyRuntimeConfig, newNoopLogger } from 'ad-tag/stubs/moliStubs';
 import { createLabelConfigService } from 'ad-tag/ads/labelConfigService';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
-import { modules } from 'ad-tag/types/moliConfig';
+import { googleAdManager, modules } from 'ad-tag/types/moliConfig';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { tcfapi } from 'ad-tag/types/tcfapi';
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
@@ -37,22 +37,40 @@ describe('ROQAD Cookie Sync module', () => {
     return module;
   };
 
+  /**
+   * The browser timezone is stubbed in every test so that the detected country is deterministic,
+   * independent of the timezone the test process runs in.
+   */
+  const intlSandbox = Sinon.createSandbox();
+
+  const stubTimezone = (timeZone: string | undefined): void => {
+    const intl = (jsDomWindow as unknown as { Intl: typeof Intl }).Intl;
+    intlSandbox.restore();
+    intlSandbox.stub(intl, 'DateTimeFormat').returns({
+      resolvedOptions: () => ({ timeZone })
+    } as any);
+  };
+
   const mkContext = (
     overrides: Partial<AdPipelineContext> & {
       labels?: string[];
       keyValues?: Record<string, string | string[]>;
       runtimeKeyValues?: Record<string, string | string[]>;
       hem?: MoliRuntime.AudienceTargeting['hem'];
+      geo?: googleAdManager.GeoConfig;
     } = {}
   ): AdPipelineContext => {
-    const { labels, keyValues, runtimeKeyValues, hem, ...contextOverrides } = overrides;
+    const { labels, keyValues, runtimeKeyValues, hem, geo, ...contextOverrides } = overrides;
     const config = newEmptyConfig();
     const runtimeConfig = newEmptyRuntimeConfig();
     return adPipelineContext(jsDomWindow, {
       tcData__: fullRoqadConsent(),
       assetLoaderService__: assetLoaderService,
       labelConfigService__: createLabelConfigService([], labels ?? [], jsDomWindow),
-      config__: { ...config, targeting: { keyValues: keyValues ?? {} } },
+      config__: {
+        ...config,
+        targeting: { keyValues: keyValues ?? {}, ...(geo ? { geo } : {}) }
+      },
       runtimeConfig__: {
         ...runtimeConfig,
         keyValues: runtimeKeyValues ?? {},
@@ -80,10 +98,12 @@ describe('ROQAD Cookie Sync module', () => {
 
   beforeEach(() => {
     loadScriptStub.resolves();
+    stubTimezone('Europe/Berlin');
   });
 
   afterEach(() => {
     sandbox.reset();
+    intlSandbox.restore();
     jsDomWindow.document.querySelectorAll('iframe').forEach(iframe => iframe.remove());
   });
 
@@ -180,9 +200,10 @@ describe('ROQAD Cookie Sync module', () => {
   });
 
   describe('fixed parameters', () => {
-    it('adds zdid, env, eventType, publisher_name and partner_dom', async () => {
-      await runSyncStep(createModule(), mkContext());
+    it('adds zdid, env, eventType, publisher_name, partner_dom and ctry', async () => {
+      await runSyncStep(createModule(), mkContext({ geo: { country: 'DE' } }));
       const params = getLoadedUrl().searchParams;
+      expect(params.get('ctry')).to.eq('DE');
       expect(params.get('zdid')).to.eq('1234');
       expect(params.get('env')).to.eq('mWeb');
       expect(params.get('eventType')).to.eq('pageview');
@@ -190,14 +211,75 @@ describe('ROQAD Cookie Sync module', () => {
       expect(params.get('partner_dom')).to.eq(jsDomWindow.location.hostname);
     });
 
-    it('never adds a ctry parameter', async () => {
-      await runSyncStep(createModule(), mkContext());
-      expect(getLoadedUrl().searchParams.has('ctry')).to.be.false;
-    });
-
     it('sets env to mWeb even if the desktop label is active', async () => {
       await runSyncStep(createModule(), mkContext({ labels: ['desktop'] }));
       expect(getLoadedUrl().searchParams.get('env')).to.eq('mWeb');
+    });
+  });
+
+  describe('country (ctry)', () => {
+    it('uses the configured country', async () => {
+      await runSyncStep(createModule(), mkContext({ geo: { country: 'AT' } }));
+      expect(getLoadedUrl().searchParams.get('ctry')).to.eq('AT');
+    });
+
+    it('uppercases the configured country', async () => {
+      await runSyncStep(createModule(), mkContext({ geo: { country: 'at' } }));
+      expect(getLoadedUrl().searchParams.get('ctry')).to.eq('AT');
+    });
+
+    it('prefers the configured country over the detected country', async () => {
+      stubTimezone('Europe/Vienna');
+      await runSyncStep(createModule(), mkContext({ geo: { country: 'FR' } }));
+      expect(getLoadedUrl().searchParams.get('ctry')).to.eq('FR');
+    });
+
+    it('falls back to the detected country if no geo is configured', async () => {
+      stubTimezone('Europe/Vienna');
+      await runSyncStep(createModule(), mkContext());
+      expect(getLoadedUrl().searchParams.get('ctry')).to.eq('AT');
+    });
+
+    it('falls back per field if the geo config only sets the continent', async () => {
+      stubTimezone('Europe/Vienna');
+      await runSyncStep(createModule(), mkContext({ geo: { continent: 'europe' } }));
+      expect(getLoadedUrl().searchParams.get('ctry')).to.eq('AT');
+    });
+
+    it('falls back to the detected country if the configured country is blank', async () => {
+      stubTimezone('Europe/Vienna');
+      await runSyncStep(createModule(), mkContext({ geo: { country: '  ' } }));
+      expect(getLoadedUrl().searchParams.get('ctry')).to.eq('AT');
+    });
+
+    it('trims a configured country before validating it', async () => {
+      await runSyncStep(createModule(), mkContext({ geo: { country: ' de ' } }));
+      expect(getLoadedUrl().searchParams.get('ctry')).to.eq('DE');
+    });
+
+    ['Germany', 'DEU', 'D'].forEach(country => {
+      it(`omits ctry and warns for the non alpha-2 country '${country}'`, async () => {
+        const logger = newNoopLogger();
+        const warnSpy = sandbox.spy(logger, 'warn');
+        await runSyncStep(createModule(), mkContext({ geo: { country }, logger__: logger }));
+        expect(getLoadedUrl().searchParams.has('ctry')).to.be.false;
+        expect(warnSpy).to.have.been.calledOnce;
+      });
+    });
+
+    it('omits ctry without a warning if the timezone yields no country', async () => {
+      stubTimezone('Asia/Tokyo');
+      const logger = newNoopLogger();
+      const warnSpy = sandbox.spy(logger, 'warn');
+      await runSyncStep(createModule(), mkContext({ logger__: logger }));
+      expect(getLoadedUrl().searchParams.has('ctry')).to.be.false;
+      expect(warnSpy).to.not.have.been.called;
+    });
+
+    it('omits ctry if the timezone cannot be resolved', async () => {
+      stubTimezone(undefined);
+      await runSyncStep(createModule(), mkContext());
+      expect(getLoadedUrl().searchParams.has('ctry')).to.be.false;
     });
   });
 
@@ -311,9 +393,172 @@ describe('ROQAD Cookie Sync module', () => {
         'eventType',
         'publisher_name',
         'partner_dom',
+        'ctry',
         'category',
         'age_group'
       ]);
+    });
+  });
+
+  describe('empty parameters', () => {
+    const mapping = (
+      key: string,
+      parameter: string,
+      defaultValue?: string
+    ): modules.roqad.RoqadParameterMapping => ({
+      roqadValueType: 'string',
+      key,
+      parameter,
+      ...(defaultValue !== undefined ? { defaultValue } : {})
+    });
+
+    it('omits a fixed parameter with a whitespace only value', async () => {
+      await runSyncStep(createModule(), mkContext({ hem: { sha256: '   ' } }));
+      expect(getLoadedUrl().searchParams.has('z_e_sha2_l')).to.be.false;
+    });
+
+    it('uses the default value for a whitespace only string', async () => {
+      await runSyncStep(
+        createModule({ mappingDefinitions: [mapping('channel', 'category', 'none')] }),
+        mkContext({ keyValues: { channel: '   ' } })
+      );
+      expect(getLoadedUrl().searchParams.get('category')).to.eq('none');
+    });
+
+    it('omits the parameter if the default value is blank', async () => {
+      await runSyncStep(
+        createModule({ mappingDefinitions: [mapping('channel', 'category', '   ')] }),
+        mkContext()
+      );
+      expect(getLoadedUrl().searchParams.has('category')).to.be.false;
+    });
+
+    it('omits the parameter if the value and the default value are blank', async () => {
+      await runSyncStep(
+        createModule({ mappingDefinitions: [mapping('channel', 'category', '')] }),
+        mkContext({ keyValues: { channel: '' } })
+      );
+      expect(getLoadedUrl().searchParams.has('category')).to.be.false;
+    });
+
+    it('drops empty elements before joining an array', async () => {
+      await runSyncStep(
+        createModule({ mappingDefinitions: [mapping('tags', 'interests')] }),
+        mkContext({ keyValues: { tags: ['news', '', '  ', 'sport'] } })
+      );
+      expect(getRawQuery()).to.contain('interests=news,sport');
+    });
+
+    it('uses the default value if every array element is empty', async () => {
+      await runSyncStep(
+        createModule({ mappingDefinitions: [mapping('tags', 'interests', 'none')] }),
+        mkContext({ keyValues: { tags: ['', '  '] } })
+      );
+      expect(getLoadedUrl().searchParams.get('interests')).to.eq('none');
+    });
+
+    it('omits the parameter if every array element is empty and no default is set', async () => {
+      await runSyncStep(
+        createModule({ mappingDefinitions: [mapping('tags', 'interests')] }),
+        mkContext({ keyValues: { tags: ['', '  '] } })
+      );
+      expect(getLoadedUrl().searchParams.has('interests')).to.be.false;
+    });
+
+    it('does not trim values that are sent', async () => {
+      await runSyncStep(
+        createModule({ mappingDefinitions: [mapping('channel', 'category')] }),
+        mkContext({ keyValues: { channel: ' sports ' } })
+      );
+      expect(getRawQuery()).to.contain('category=%20sports%20');
+    });
+
+    it('does not trim array elements that are sent', async () => {
+      await runSyncStep(
+        createModule({ mappingDefinitions: [mapping('tags', 'interests')] }),
+        mkContext({ keyValues: { tags: [' news ', 'sport'] } })
+      );
+      expect(getRawQuery()).to.contain('interests=%20news%20,sport');
+    });
+
+    it('omits a parameter whose runtime key-value is null', async () => {
+      await runSyncStep(
+        createModule({ mappingDefinitions: [mapping('channel', 'category')] }),
+        // publisher javascript is untrusted, null is not part of KeyValueMap
+        mkContext({ runtimeKeyValues: { channel: null as any } })
+      );
+      expect(getLoadedUrl().searchParams.has('category')).to.be.false;
+    });
+
+    it('omits gdpr_consent if the tcString is whitespace only', async () => {
+      await runSyncStep(
+        createModule({ syncMethod: 'pixel' }),
+        mkContext({ tcData__: { ...fullRoqadConsent(), tcString: '   ' } })
+      );
+      const iframe = jsDomWindow.document.querySelector<HTMLIFrameElement>('#h5v-roqad-sync');
+      expect(iframe).to.be.ok;
+      expect(new URL(iframe!.src).searchParams.has('gdpr_consent')).to.be.false;
+    });
+  });
+
+  describe('invalid configuration', () => {
+    const blankValues = ['', '   '];
+
+    const expectDeactivated = async (
+      config: Partial<modules.roqad.RoqadModuleConfig>
+    ): Promise<void> => {
+      const logger = newNoopLogger();
+      const errorSpy = sandbox.spy(logger, 'error');
+      const module = createModule(config);
+      expect(module.config__()).to.be.null;
+      const context = mkContext({ logger__: logger });
+      await Promise.all(module.configureSteps__().map(step => step(context, [])));
+      expect(loadScriptStub).to.not.have.been.called;
+      expect(jsDomWindow.document.querySelectorAll('#h5v-roqad-sync')).to.have.length(0);
+      expect(errorSpy).to.have.been.calledOnce;
+    };
+
+    blankValues.forEach(value => {
+      it(`does not activate the module if zdid is '${value}'`, async () => {
+        await expectDeactivated({ zdid: value });
+      });
+
+      it(`does not activate the module if publisherName is '${value}'`, async () => {
+        await expectDeactivated({ publisherName: value });
+      });
+    });
+
+    it('deactivates a previously activated module if the new config is blank', async () => {
+      const module = createRoqad();
+      module.configure__({ roqad: defaultConfig });
+      module.configure__({ roqad: { ...defaultConfig, zdid: '' } });
+      expect(module.config__()).to.be.null;
+
+      await Promise.all(module.configureSteps__().map(step => step(mkContext(), [])));
+      expect(loadScriptStub).to.not.have.been.called;
+    });
+
+    it('activates the module again if a valid config follows a blank one', async () => {
+      const module = createRoqad();
+      module.configure__({ roqad: { ...defaultConfig, publisherName: '  ' } });
+      module.configure__({ roqad: defaultConfig });
+      expect(module.config__()).to.deep.eq(defaultConfig);
+
+      const logger = newNoopLogger();
+      const errorSpy = sandbox.spy(logger, 'error');
+      await runSyncStep(module, mkContext({ logger__: logger }));
+      expect(loadScriptStub).to.have.been.calledOnce;
+      expect(errorSpy).to.not.have.been.called;
+    });
+
+    it('logs the configuration error only once', async () => {
+      const logger = newNoopLogger();
+      const errorSpy = sandbox.spy(logger, 'error');
+      const module = createModule({ zdid: '' });
+      const step = module.configureSteps__()[0];
+      await step(mkContext({ logger__: logger, requestAdsCalls__: 1 }), []);
+      await step(mkContext({ logger__: logger, requestAdsCalls__: 2 }), []);
+      expect(errorSpy).to.have.been.calledOnce;
     });
   });
 
@@ -416,6 +661,7 @@ describe('ROQAD Cookie Sync module', () => {
         'eventType',
         'publisher_name',
         'partner_dom',
+        'ctry',
         'category',
         'cmp',
         'gdpr',
@@ -424,6 +670,7 @@ describe('ROQAD Cookie Sync module', () => {
       ]);
       expect(url.searchParams.get('zdid')).to.eq('1234');
       expect(url.searchParams.get('env')).to.eq('mWeb');
+      expect(url.searchParams.get('ctry')).to.eq('DE');
       expect(url.searchParams.get('category')).to.eq('sports');
       expect(url.searchParams.get('cmp')).to.eq('1');
       expect(url.searchParams.get('uc')).to.eq('1_2');

@@ -53,6 +53,16 @@ targeting. `web`/`pwa` are the default — no override, so no label needed.
 _Avoid_: os (the emetriq `os` field is *derived* from Client Type, not the same thing); device
 (device is `mobile`/`desktop`, an orthogonal axis).
 
+### Geo
+Where the user is, as moli resolves it, with two fields and two sources. The fields are
+**country** — an ISO 3166-1 alpha-2 code, uppercase (`DE`, `AT`) — and **continent** — a
+lowercase label derived from the timezone prefix (`europe`, `america`), not an ISO code. The
+sources are the publisher's `targeting.geo` config and, as fallback, detection from the browser
+timezone. Precedence between the two is per consumer, not global (see ADR 0015). Geo is emitted
+as [Label]s (`DE`, `europe`) and sent to partners (ROQAD's `ctry`).
+_Avoid_: geo-IP — moli never resolves an IP address; a partner deriving the country from the
+request IP is exactly what moli omits a parameter for when it has no usable country.
+
 ### Module
 
 A pluggable feature (`IModule`) with two distinct, independent identity strings — do not
@@ -228,8 +238,9 @@ _Avoid_: direct mode, direct call.
 ### ROQAD Parameter Mapping
 A rule that turns one page key-value into one [ROQAD Cookie Sync] URL parameter (`key` → `parameter`),
 with an optional default. All ROQAD parameters are strings; multi-valued key-values become a
-comma-separated string. Fixed parameters (`zdid`, `env`, `eventType`, `publisher_name`,
-`partner_dom`, `z_e_sha2_l`) are not mappings.
+comma-separated string. Empty values - unset, blank or an array of blanks - fall back to the
+default, or drop the parameter from the URL. Fixed parameters (`zdid`, `env`, `eventType`,
+`publisher_name`, `partner_dom`, `ctry`, `z_e_sha2_l`) are not mappings.
 _Avoid_: adex mapping definition — adex mappings target structured JSON attributes, ROQAD
 mappings target flat URL parameters.
 

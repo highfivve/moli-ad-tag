@@ -422,7 +422,7 @@ export namespace googleAdManager {
 
   export interface GeoConfig {
     /**
-     * ISO 2-letter country code (e.g. `"DE"`, `"US"`).
+     * ISO 3166-1 alpha-2 country code (e.g. `"DE"`, `"US"`).
      * If omitted, the country is detected from the browser timezone.
      */
     readonly country?: string;
@@ -451,8 +451,14 @@ export namespace googleAdManager {
     readonly adUnitPathVariables?: AdUnitPathVariables;
 
     /**
-     * Optional geo configuration. Country and continent are added as labels for targeting.
-     * If not set, both values are detected automatically from the browser timezone.
+     * Optional geo configuration. Country and continent are added as labels for targeting, and
+     * the country is sent to partners that ask for it (the `roqad` module's `ctry` parameter).
+     *
+     * If not set, both values are detected from the browser timezone. How a partially set
+     * config falls back to detection is up to the consumer: label resolution falls back as a
+     * whole object, the `roqad` module falls back per field.
+     *
+     * @see docs/adr/0015-roqad-resolves-geo-locally-with-per-field-precedence.md
      */
     readonly geo?: GeoConfig;
 
@@ -3365,7 +3371,10 @@ export namespace modules {
      * A ROQAD Parameter Mapping that reads one key-value and writes it as a string URL parameter.
      *
      * Multi-valued key-values (arrays) are sent as a comma-separated list, with every element
-     * URL-encoded individually.
+     * URL-encoded individually. Empty elements are dropped before joining.
+     *
+     * Empty values never reach the sync URL - the parameter is omitted entirely instead of being
+     * sent empty. Values that are sent are not trimmed.
      *
      * @example
      * ```json
@@ -3390,8 +3399,10 @@ export namespace modules {
       readonly parameter: string;
 
       /**
-       * Value used if the key-value is missing, an empty string or an empty array.
-       * If not set, the parameter is omitted in that case.
+       * Value used if the key-value is empty - not set, `null`, a blank string, an empty array
+       * or an array whose elements are all blank.
+       *
+       * If not set, or blank itself, the parameter is omitted in that case.
        */
       readonly defaultValue?: string;
     }
@@ -3417,6 +3428,10 @@ export namespace modules {
     /**
      * ## ROQAD Cookie Sync module configuration
      *
+     * The country is sent as `ctry`: `targeting.geo.country` if set, otherwise the country
+     * detected from the browser timezone. It is only sent as an uppercase ISO 3166-1 alpha-2
+     * code; any other value is omitted so that ROQAD derives the country from the request IP.
+     *
      * @example
      * ```json
      * {
@@ -3433,11 +3448,16 @@ export namespace modules {
     export interface RoqadModuleConfig extends IModuleConfig {
       /**
        * The ROQAD / zeotap data source id. Sent as `zdid` parameter.
+       *
+       * Must not be blank. A blank value is a configuration error: the module is not activated
+       * and logs an error instead of firing a sync ROQAD cannot attribute.
        */
       readonly zdid: string;
 
       /**
        * The publisher name as agreed with ROQAD. Sent as `publisher_name` parameter.
+       *
+       * Must not be blank, like `zdid`.
        */
       readonly publisherName: string;
 

@@ -91,11 +91,24 @@ export const detectGeoFromTimezone = (timezone: string): GeoResult => {
   return { country, continent: continentFromTimezone(timezone) };
 };
 
-export const detectGeoFromBrowser = (): GeoResult => {
+/**
+ * The window geo is detected from. `Intl` is optional because the lib.dom `Window` type does not
+ * declare it - only `globalThis` does - so every `Window` satisfies this type without being
+ * widened. A window without `Intl` simply yields no geo.
+ */
+export type GeoWindow = Window & Partial<Pick<typeof globalThis, 'Intl'>>;
+
+const noGeo: GeoResult = { country: undefined, continent: undefined };
+
+/**
+ * Detects the geo from the timezone of the given window. Returns no geo if the timezone cannot
+ * be resolved.
+ */
+export const detectGeoFromBrowser = (window: GeoWindow): GeoResult => {
   try {
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    return detectGeoFromTimezone(timezone);
+    const timezone = window.Intl?.DateTimeFormat().resolvedOptions().timeZone;
+    return timezone ? detectGeoFromTimezone(timezone) : noGeo;
   } catch {
-    return { country: undefined, continent: undefined };
+    return noGeo;
   }
 };

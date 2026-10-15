@@ -54,6 +54,9 @@
  * | `eventType`      | always `pageview`                                                           |
  * | `publisher_name` | `publisherName` from the module config                                      |
  * | `partner_dom`    | `window.location.hostname`                                                  |
+ * | `ctry`           | the country as ISO 3166-1 alpha-2 code, uppercased. `targeting.geo.country` |
+ * |                  | if set, otherwise the country detected from the browser timezone. Omitted   |
+ * |                  | if it is no alpha-2 code, so ROQAD derives it from the request IP.          |
  * | `z_e_sha2_l`     | `audience.hem.sha256BasicNormalized`, falls back to `audience.hem.sha256`.  |
  * |                  | Omitted if neither is set.                                                  |
  *
@@ -70,8 +73,36 @@
  *
  * Each entry in `mappingDefinitions` reads one key-value and sends it as one URL parameter.
  * Targeting key-values from the config and runtime key-values (`moli.setTargeting`) are merged,
- * runtime key-values win. Array values are sent comma-separated. If the value is missing, an empty
- * string or an empty array, the `defaultValue` is used, or the parameter is omitted.
+ * runtime key-values win. Array values are sent comma-separated. If the value is empty, the
+ * `defaultValue` is used, or the parameter is omitted.
+ *
+ * ### Empty parameters
+ *
+ * A parameter whose value is `null`, `undefined`, an empty or whitespace-only string or an empty
+ * array is omitted from the sync URL entirely - there is no `param=` left behind. This applies to
+ * the fixed parameters, the parameter mappings and the consent parameters alike, and to a
+ * mapping's `defaultValue` itself: a blank default omits the parameter.
+ *
+ * Empty array elements are dropped before joining, so `['news', '', 'sport']` is sent as
+ * `news,sport`. An array without a single non-empty element falls back to the `defaultValue` or
+ * is omitted.
+ *
+ * Emptiness is tested on the trimmed value, but values that are sent go out untrimmed - moli does
+ * not rewrite publisher data.
+ *
+ * ### Configuration errors
+ *
+ * A blank `zdid` or `publisherName` is a configuration error: ROQAD cannot attribute such a sync,
+ * so the module is not activated and logs an error instead of firing a request. `enabled: true`
+ * therefore does not imply that the module runs.
+ *
+ * ### Geo
+ *
+ * The country is resolved per field: the configured `targeting.geo.country` wins, otherwise the
+ * country detected from the browser timezone is used. Label resolution in `moli.ts` falls back as
+ * a whole object instead.
+ *
+ * @see docs/adr/0015-roqad-resolves-geo-locally-with-per-field-precedence.md
  *
  * ### Consent
  *
@@ -96,10 +127,12 @@ import {
   AdPipelineContext,
   ConfigureStep,
   InitStep,
+  mkConfigureStep,
   mkConfigureStepOncePerRequestAdsCycle,
   PrepareRequestAdsStep
 } from 'ad-tag/ads/adPipeline';
 import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
+import { detectGeoFromBrowser } from 'ad-tag/util/detectGeoFromTimezone';
 
 const name = 'roqad';
 
@@ -115,9 +148,17 @@ const syncIframeId = 'h5v-roqad-sync';
 const requiredVendorIds = [4, 301] as const;
 
 /**
- * A URL parameter name and its already URL-encoded value. `undefined` omits the parameter.
+ * A URL parameter name and its raw, unencoded value.
+ *
+ * The value is kept raw so that emptiness filtering, array joining and URL encoding all happen
+ * in one place - {@link encodeParameterValue} - instead of each parameter source encoding its
+ * own value. `null` is not part of `googleAdManager.KeyValueMap`, but runtime key-values come
+ * from publisher javascript and are untrusted, so it is accepted here rather than widening
+ * `KeyValueMap`.
  */
-type UrlParameter = readonly [name: string, encodedValue: string | undefined];
+type UrlParameterValue = string | ReadonlyArray<string> | null | undefined;
+
+type UrlParameter = readonly [name: string, value: UrlParameterValue];
 
 const hasRequiredConsent = (tcData: tcfapi.responses.TCData): boolean =>
   !tcData.gdprApplies ||
@@ -125,26 +166,78 @@ const hasRequiredConsent = (tcData: tcfapi.responses.TCData): boolean =>
     !!tcData.purpose.consents[tcfapi.responses.TCPurpose.STORE_INFORMATION_ON_DEVICE]);
 
 /**
- * Returns the URL-encoded value for a mapping, or `undefined` if the parameter should be omitted.
+ * A value is empty if it is not set or blank. Emptiness is tested on the trimmed value, the
+ * value itself is never trimmed - moli does not rewrite publisher data.
  */
-const encodeMappedValue = (
-  keyValues: googleAdManager.KeyValueMap,
-  mapping: modules.roqad.RoqadParameterMapping
-): string | undefined => {
-  const value = keyValues[mapping.key];
-  if (Array.isArray(value)) {
-    if (value.length > 0) {
-      return value.map(encodeURIComponent).join(',');
-    }
-  } else if (value) {
-    return encodeURIComponent(value);
+const hasText = (value: string | null | undefined): value is string =>
+  value !== null && value !== undefined && value.trim().length > 0;
+
+// Array.isArray does not narrow a ReadonlyArray out of the union, so this guard does
+const isArrayValue = (value: UrlParameterValue): value is ReadonlyArray<string> =>
+  Array.isArray(value);
+
+const hasValue = (value: UrlParameterValue): boolean =>
+  isArrayValue(value) ? value.some(hasText) : hasText(value);
+
+/**
+ * Returns the URL-encoded value, or `undefined` if the parameter should be omitted entirely.
+ * Empty array elements are dropped before joining.
+ */
+const encodeParameterValue = (value: UrlParameterValue): string | undefined => {
+  if (isArrayValue(value)) {
+    const elements = value.filter(hasText);
+    return elements.length > 0 ? elements.map(encodeURIComponent).join(',') : undefined;
   }
-  return mapping.defaultValue !== undefined ? encodeURIComponent(mapping.defaultValue) : undefined;
+  return hasText(value) ? encodeURIComponent(value) : undefined;
 };
 
 /**
- * The fixed parameters and the parameter mappings, already URL-encoded. Shared by both sync
- * methods.
+ * Returns the raw value for a mapping. Falls back to the `defaultValue` if the key-value is
+ * empty. A blank `defaultValue` is empty as well and omits the parameter.
+ */
+const resolveMappedValue = (
+  keyValues: googleAdManager.KeyValueMap,
+  mapping: modules.roqad.RoqadParameterMapping
+): UrlParameterValue => {
+  const value = keyValues[mapping.key];
+  return hasValue(value) ? value : mapping.defaultValue;
+};
+
+/**
+ * The ISO 3166-1 alpha-2 country code sent as `ctry`, or `undefined` if there is none - ROQAD
+ * then derives the country from the request IP, which is better defined than a bogus value.
+ *
+ * Geo is resolved per field: the publisher-configured country wins, otherwise the country
+ * detected from the browser timezone is used, even if the geo config sets other fields.
+ */
+const resolveCountry = (context: AdPipelineContext): string | undefined => {
+  const configuredCountry = context.config__.targeting?.geo?.country;
+  const country = hasValue(configuredCountry)
+    ? configuredCountry
+    : detectGeoFromBrowser(context.window__).country;
+
+  if (country === undefined) {
+    return undefined;
+  }
+
+  // ctry is normalized anyway - it is uppercased - so surrounding whitespace is not a reason to
+  // discard an otherwise valid country code. This is not publisher data passed through, unlike
+  // the mapped parameter values.
+  const countryCode = country.trim().toUpperCase();
+  if (/^[A-Z]{2}$/.test(countryCode)) {
+    return countryCode;
+  }
+
+  context.logger__.warn(
+    name,
+    `ignoring country '${country}', expected an ISO 3166-1 alpha-2 country code`
+  );
+  return undefined;
+};
+
+/**
+ * The fixed parameters and the parameter mappings with their raw values. Shared by both sync
+ * methods. Encoding and emptiness filtering happen in {@link buildUrl}.
  */
 const buildPageParameters = (
   config: modules.roqad.RoqadModuleConfig,
@@ -166,17 +259,15 @@ const buildPageParameters = (
     ['eventType', 'pageview'],
     ['publisher_name', config.publisherName],
     ['partner_dom', context.window__.location.hostname],
+    ['ctry', resolveCountry(context)],
     ['z_e_sha2_l', hashedEmail]
   ];
 
   return [
-    ...fixedParameters.map(([parameter, value]): UrlParameter => [
-      parameter,
-      value !== undefined ? encodeURIComponent(value) : undefined
-    ]),
+    ...fixedParameters,
     ...config.mappingDefinitions.map((mapping): UrlParameter => [
       mapping.parameter,
-      encodeMappedValue(keyValues, mapping)
+      resolveMappedValue(keyValues, mapping)
     ])
   ];
 };
@@ -191,13 +282,17 @@ const buildConsentParameters = (tcData: tcfapi.responses.TCData): ReadonlyArray<
   return [
     ['cmp', '1'],
     ['gdpr', gdpr],
-    ['gdpr_consent', tcString ? encodeURIComponent(tcString) : undefined],
+    ['gdpr_consent', tcString],
     ['uc', '1_2']
   ];
 };
 
 const buildUrl = (baseUrl: string, parameters: ReadonlyArray<UrlParameter>): string => {
   const query = parameters
+    .map(([parameter, value]): readonly [string, string | undefined] => [
+      parameter,
+      encodeParameterValue(value)
+    ])
     .filter((entry): entry is readonly [string, string] => entry[1] !== undefined)
     .map(([parameter, value]) => `${encodeURIComponent(parameter)}=${value}`)
     .join('&');
@@ -212,6 +307,12 @@ const buildUrl = (baseUrl: string, parameters: ReadonlyArray<UrlParameter>): str
  */
 export const createRoqad = (): IModule => {
   let roqadConfig: modules.roqad.RoqadModuleConfig | null = null;
+
+  /**
+   * Set if the module was enabled with an unusable config. The module stays inactive, but the
+   * error needs the pipeline logger, which only a step has access to.
+   */
+  let configError: string | null = null;
 
   /**
    * The iframe of the last pixel sync. Removed before the next sync.
@@ -280,8 +381,22 @@ export const createRoqad = (): IModule => {
     config__: (): modules.roqad.RoqadModuleConfig | null => roqadConfig,
 
     configure__(moduleConfig?: modules.ModulesConfig): void {
-      if (moduleConfig?.roqad?.enabled) {
-        roqadConfig = moduleConfig.roqad;
+      // configure__ may run again, e.g. in a single page application. Reset both, so a later
+      // configuration never inherits the activation or the error of the previous one.
+      roqadConfig = null;
+      configError = null;
+
+      const config = moduleConfig?.roqad;
+      if (!config?.enabled) {
+        return;
+      }
+
+      // a sync without these cannot be attributed by ROQAD, so `enabled: true` alone does not
+      // activate the module
+      if (!hasText(config.zdid) || !hasText(config.publisherName)) {
+        configError = 'zdid and publisherName must not be empty. Module is not activated';
+      } else {
+        roqadConfig = config;
       }
     },
 
@@ -291,9 +406,27 @@ export const createRoqad = (): IModule => {
 
     configureSteps__(): ConfigureStep[] {
       const config = roqadConfig;
-      return config
-        ? [mkConfigureStepOncePerRequestAdsCycle(name, context => sync(config, context))]
-        : [];
+      if (config) {
+        return [mkConfigureStepOncePerRequestAdsCycle(name, context => sync(config, context))];
+      }
+
+      const error = configError;
+      if (!error) {
+        return [];
+      }
+
+      // the module is inactive and fires nothing - this step exists only to surface the error,
+      // because configure__ has no logger. It logs once, not once per requestAds cycle.
+      let logged = false;
+      return [
+        mkConfigureStep(`${name}-config-error`, context => {
+          if (!logged) {
+            logged = true;
+            context.logger__.error(name, error);
+          }
+          return Promise.resolve();
+        })
+      ];
     },
 
     prepareRequestAdsSteps__: (): PrepareRequestAdsStep[] => []
