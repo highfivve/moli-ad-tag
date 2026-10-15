@@ -423,6 +423,7 @@ describe('ROQAD Cookie Sync module', () => {
         'uc'
       ]);
       expect(url.searchParams.get('zdid')).to.eq('1234');
+      expect(url.searchParams.get('env')).to.eq('mWeb');
       expect(url.searchParams.get('category')).to.eq('sports');
       expect(url.searchParams.get('cmp')).to.eq('1');
       expect(url.searchParams.get('uc')).to.eq('1_2');

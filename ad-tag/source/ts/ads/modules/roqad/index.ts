@@ -49,7 +49,8 @@
  * | Parameter        | Value                                                                       |
  * | ---------------- | --------------------------------------------------------------------------- |
  * | `zdid`           | `zdid` from the module config                                               |
- * | `env`            | always `mWeb` - ROQAD only supports `mWeb` for website calls                |
+ * | `env`            | always `mWeb`. ROQAD only supports `mWeb` for website calls and does not    |
+ * |                  | process `desktop`.                                                          |
  * | `eventType`      | always `pageview`                                                           |
  * | `publisher_name` | `publisherName` from the module config                                      |
  * | `partner_dom`    | `window.location.hostname`                                                  |
