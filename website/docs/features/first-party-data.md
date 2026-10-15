@@ -17,6 +17,8 @@ All modules described here read the same moli data sources:
 - **Labels** — e.g. the `mobile` label from the size config or `addLabel()`
   (see [Labels](./labels.md)).
 - **Audience** — hashed emails set via `moli.setAudience(...)` or `moli.setConfig({ audience })`.
+- **Geo** — `targeting.geo` in the `MoliConfig`, with the browser timezone as fallback. Currently
+  only the `roqad` module sends it (as [`ctry`](#roqad-country)).
 
 Which data a module sends is configured per module in `modules.<configKey>`. The sections below
 describe, per module, which config fields map which moli data into which partner parameter.
@@ -25,7 +27,7 @@ describe, per module, which config fields map which moli data into which partner
 
 | Module    | Data sent                                                                                              | Mapping mechanism                                                                                              | Consent (if GDPR applies)                     |
 | --------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| `roqad`   | Sync URL query parameters: fixed parameters, `audience.hem` hashed email, mapped key-values            | `mappingDefinitions`: key-value `key` → URL `parameter`, optional `defaultValue`. Config + runtime key-values. | Vendors 4 (ROQAD) and 301 (zeotap), purpose 1 |
+| `roqad`   | Sync URL query parameters: fixed parameters, geo country, `audience.hem` hashed email, mapped key-values | `mappingDefinitions`: key-value `key` → URL `parameter`, optional `defaultValue`. Config + runtime key-values. | Vendors 4 (ROQAD) and 301 (zeotap), purpose 1 |
 | `zeotap`  | Script URL query parameters: mapped key-values, `countryCode`, `hashedEmailAddress` from module config | `dataKeyValues`: `keyValueKey` → `parameterKey`; `exclusionKeyValues` block loading. Config key-values only.   | Vendor 301, purposes 1, 3, 4, 5, 6, 7, 9, 10  |
 | `emetriq` | Web: `window._enqAdpParam`. App: tracking pixel parameters. Optional login event with hashed email.    | `customMappingDefinition`: key-value `key` → custom parameter `param` (`c_…`). Config + runtime key-values.    | Vendor 213                                    |
 
@@ -94,8 +96,8 @@ separate integration. Do not configure ROQAD through the `zeotap` module.
 
 | Field                | Description                                                                         |
 | -------------------- | ----------------------------------------------------------------------------------- |
-| `zdid`               | The ROQAD / zeotap data source id. Sent as `zdid`.                                  |
-| `publisherName`      | The publisher name as agreed with ROQAD. Sent as `publisher_name`.                  |
+| `zdid`               | The ROQAD / zeotap data source id. Sent as `zdid`. Must not be blank.               |
+| `publisherName`      | The publisher name as agreed with ROQAD. Sent as `publisher_name`. Must not be blank. |
 | `syncMethod`         | _optional_ `mapper` (default) or `pixel`. See [below](#roqad-sync-method).          |
 | `mappingDefinitions` | Mappings from key-values to additional URL parameters. See [below](#roqad-mapping). |
 
@@ -120,6 +122,7 @@ These parameters are always set by the module and are not configurable as mappin
 | `eventType`      | always `pageview`                                                                                       |
 | `publisher_name` | `publisherName` from the module config                                                                  |
 | `partner_dom`    | `window.location.hostname`                                                                              |
+| `ctry`           | The country as an uppercase ISO 3166-1 alpha-2 code. See [below](#roqad-country).                       |
 | `z_e_sha2_l`     | `audience.hem.sha256BasicNormalized`, falling back to `audience.hem.sha256`. Omitted if neither is set. |
 
 ROQAD hashes email addresses without Gmail-specific rules. Provide the SHA-256 hash of the
@@ -137,6 +140,48 @@ window.moli.que.push(function (moli) {
 If only `sha256` is set, that value is sent instead. For non-Gmail addresses (and Gmail addresses
 without `.` or `+suffix`) both hashes are identical.
 
+### Country {#roqad-country}
+
+`ctry` is the ISO 3166-1 alpha-2 country code of the user, for example `DE` or `AT`. ROQAD derives
+the country from the request IP address if the parameter is not sent.
+
+The value is resolved per field: the configured `targeting.geo.country` wins, otherwise the country
+detected from the browser timezone is used — a geo config that only sets `continent` still gets a
+detected country.
+
+```ts
+const config = {
+  targeting: {
+    keyValues: {},
+    // sends ctry=AT, regardless of the browser timezone
+    geo: { country: 'AT' }
+  }
+};
+```
+
+The value is trimmed and uppercased before it is sent. Anything that is not a two-letter code — `Germany`, a
+three-letter code like `DEU` — is omitted with a warning, so ROQAD falls back to the request IP
+instead of receiving a value it cannot use. A timezone that maps to no country omits the parameter
+as well.
+
+### Empty parameters {#roqad-empty-parameters}
+
+A parameter whose value is empty — `null`, `undefined`, an empty or whitespace-only string, or an
+empty array — is omitted from the sync URL entirely. There is no `param=` left behind. This applies
+to the fixed parameters, the mapped parameters and the consent parameters alike.
+
+- A blank `defaultValue` omits the parameter instead of sending an empty one.
+- Empty array elements are dropped before joining: `['news', '', 'sport']` is sent as `news,sport`.
+- An array without a single non-empty element falls back to the `defaultValue`, or is omitted.
+- Emptiness is tested on the trimmed value, but values that are sent go out **untrimmed** — moli
+  does not rewrite publisher data.
+
+### Configuration errors {#roqad-config-errors}
+
+A blank `zdid` or `publisherName` is a configuration error. ROQAD cannot attribute such a sync, so
+the module is **not activated**: it logs an error and fires no request. `"enabled": true` alone
+therefore does not guarantee that the sync runs.
+
 ### Parameter mapping {#roqad-mapping}
 
 Each entry in `mappingDefinitions` reads one key-value and sends it as one URL parameter.
@@ -146,7 +191,7 @@ Each entry in `mappingDefinitions` reads one key-value and sends it as one URL p
 | `roqadValueType` | Discriminator for the mapping type. Currently only `string` exists.                   |
 | `key`            | The key-value key to read.                                                            |
 | `parameter`      | The name of the URL parameter sent to ROQAD.                                          |
-| `defaultValue`   | _optional_ value used if the key-value is missing, an empty string or an empty array. |
+| `defaultValue`   | _optional_ value used if the key-value is empty. Omitted if blank itself.             |
 
 How a value is resolved:
 
@@ -155,8 +200,9 @@ How a value is resolved:
 - **Strings** are URL-encoded and sent as is.
 - **Arrays** are sent as a comma-separated list. Every element is URL-encoded individually, the
   `,` separator is not encoded.
-- **Missing values** — the key is not set, an empty string or an empty array — fall back to
-  `defaultValue`. Without a `defaultValue` the parameter is omitted entirely.
+- **Empty values** — the key is not set, `null`, a blank string, an empty array or an array whose
+  elements are all blank — fall back to `defaultValue`. Without a (non-blank) `defaultValue` the
+  parameter is omitted entirely. See [Empty parameters](#roqad-empty-parameters).
 
 With the config above and this page setup
 

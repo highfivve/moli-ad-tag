@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { detectGeoFromTimezone } from './detectGeoFromTimezone';
+import { detectGeoFromBrowser, detectGeoFromTimezone, GeoWindow } from './detectGeoFromTimezone';
 
 describe('detectGeoFromTimezone', () => {
   describe('known country timezones', () => {
@@ -142,6 +142,55 @@ describe('detectGeoFromTimezone', () => {
         country: undefined,
         continent: undefined
       });
+    });
+  });
+});
+
+describe('detectGeoFromBrowser', () => {
+  const windowWithTimezone = (timeZone: string | undefined): GeoWindow =>
+    ({
+      Intl: { DateTimeFormat: () => ({ resolvedOptions: () => ({ timeZone }) }) }
+    }) as unknown as GeoWindow;
+
+  it('should resolve the geo from the timezone of the given window', () => {
+    expect(detectGeoFromBrowser(windowWithTimezone('Europe/Berlin'))).to.deep.equal({
+      country: 'DE',
+      continent: 'europe'
+    });
+  });
+
+  it('should not read the global Intl if the window has none', () => {
+    expect(detectGeoFromBrowser({} as unknown as GeoWindow)).to.deep.equal({
+      country: undefined,
+      continent: undefined
+    });
+  });
+
+  it('should return no geo if the timezone cannot be resolved', () => {
+    expect(detectGeoFromBrowser(windowWithTimezone(undefined))).to.deep.equal({
+      country: undefined,
+      continent: undefined
+    });
+  });
+
+  it('should return no geo if resolving the timezone throws', () => {
+    const throwingWindow = {
+      Intl: {
+        DateTimeFormat: () => {
+          throw new Error('no Intl support');
+        }
+      }
+    } as unknown as GeoWindow;
+    expect(detectGeoFromBrowser(throwingWindow)).to.deep.equal({
+      country: undefined,
+      continent: undefined
+    });
+  });
+
+  it('should return only the continent for an unknown timezone', () => {
+    expect(detectGeoFromBrowser(windowWithTimezone('Asia/Tokyo'))).to.deep.equal({
+      country: undefined,
+      continent: 'asia'
     });
   });
 });

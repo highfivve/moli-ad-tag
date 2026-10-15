@@ -932,7 +932,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   }
 
   function addGeoLabels(geoFromConfig?: googleAdManager.GeoConfig): void {
-    const { country, continent } = geoFromConfig ?? detectGeoFromBrowser();
+    const { country, continent } = geoFromConfig ?? detectGeoFromBrowser(window);
     const labels = [country, continent].filter((label): label is string => !!label);
     if (labels.length > 0) {
       setConfig({ labels });
