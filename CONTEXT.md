@@ -22,6 +22,26 @@ _Avoid_: confusing with gutefrage's identically-named, identically-labeled (GD-1
 concept — that one is an admin-set, login-based control that also overrides an ad-free
 calculation; this one is page-level config with no user identity and no such override.
 
+### Page Content
+What the page is about, expressed as an OpenRTB 2.6 first-party-data object (`ortb2`) under
+`Targeting` — the headline (`site.content.title`), the producer of the content
+(`site.content.producer.name`, for user generated content the author), the content language, the
+IAB categories. Has two halves: a **static** half in the ad tag configuration and a **runtime**
+half set per page via `setConfig({ ortb2 })`; they are deep merged, arrays concatenated, the
+runtime half winning on scalars. The runtime half is page-scoped and reset on each single-page-app
+`requestAds()`, like key-values. Readable as a whole through `getPageTargeting().ortb2` and, by
+creatives, over the [Bridge]'s `h5.ortb2` message.
+_Avoid_: putting page content in `keyValues` — those are short GAM-shaped targeting signals, and
+`adManagerExcludes` gates only the Google Ad Manager path, not the adex, emetriq or roqad modules
+(see ADR 0016).
+
+### Bridge
+The `window.postMessage` channel between a creative inside an ad iframe and the page, gated by
+`bridge.enabled`. Creatives ask by posting a message to the top window; the page replies only to
+the window that asked, never by broadcast. There is no origin check on any bridge message.
+Messages: `h5.adunit.passback` and `h5.adunit.refresh` (a creative declaring it has no ad) and
+`h5.ortb2` (a creative asking for the [Page Content]).
+
 ### Label Condition
 A predicate over the active labels, expressed as exactly one of `labelAll` (every listed
 label active), `labelAny` (at least one active), or `labelNone` (none active).

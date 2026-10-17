@@ -110,6 +110,53 @@ const slot: Moli.AdSlot = {
 };
 ```
 
+## Page content belongs in ortb2, not in key-values
+
+Key-values are short, GAM-shaped targeting signals. Page *content* — an article headline, the
+author's name, the content language — belongs in `targeting.ortb2`, moli's OpenRTB 2.6 first
+party data field:
+
+```ts
+const moliConfig: Moli.MoliConfig = {
+  slots: [ /* ... */ ],
+  targeting: {
+    keyValues: { page_type: 'article' },
+    // highlight-start
+    ortb2: {
+      site: {
+        cat: ['IAB1'],
+        content: { language: 'de' }
+      }
+    }
+    // highlight-end
+  }
+};
+```
+
+Per-page values go in at runtime, and the two halves are deep merged:
+
+```ts
+window.moli.setConfig({
+  ortb2: {
+    site: {
+      content: {
+        title: 'How do I bake sourdough bread?',
+        producer: { name: 'baker42' }
+      }
+    }
+  }
+});
+```
+
+Each ORTB field has a standard name, so a partner receiving `site.content.title` knows what it is
+holding — a key-value named `qtitle` does not carry that meaning. Note also that
+`targeting.adManagerExcludes` only gates the Google Ad Manager path: the adex, emetriq and roqad
+modules merge key-values without honouring it, so it is not a way to keep content out of a
+partner's hands.
+
+See [`setConfig()`](./set-config.md) for the merge rules and the single-page-app reset, and
+[First Party Data](./first-party-data.md) for how the value reaches the prebid bidders.
+
 ## Common Targeting Keys
 
 ### Content Targeting

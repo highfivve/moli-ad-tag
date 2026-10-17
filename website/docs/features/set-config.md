@@ -29,6 +29,7 @@ window.moli.que.push(function (moli) {
 | `adVolume`            | `number`               | Full replace                                                    | Yes — integer, `1`-`10` |
 | `labels`              | `string[]`             | Append onto existing `runtimeConfig.labels`                    | No |
 | `targeting`           | `KeyValueMap`          | Merged per-key into `runtimeConfig.keyValues` (`Object.assign`) | No |
+| `ortb2`               | `PrebidFirstPartyData` | Deep merged into `runtimeConfig.ortb2`, arrays concatenated     | No |
 | `audience`            | `AudienceTargeting`    | Full replace                                                    | No |
 | `adUnitPathVariables` | `AdUnitPathVariables`  | Full replace                                                    | No |
 
@@ -70,6 +71,49 @@ window.moli.que.push(function (moli) {
 Merges per key into `keyValues`. Existing keys not present in the object are left untouched;
 keys that are present overwrite the previous value for that key — same as the deprecated
 `setTargeting(key, value)`, but for several keys in one call.
+
+### ortb2
+
+```ts
+window.moli.que.push(function (moli) {
+  moli.setConfig({
+    ortb2: {
+      site: {
+        content: {
+          title: 'How do I bake sourdough bread?',
+          producer: { name: 'baker42' }
+        }
+      }
+    }
+  });
+});
+```
+
+OpenRTB 2.6 first party data describing the current page and its content. This is where page
+*content* belongs — the article headline, the author, the content language — as opposed to
+`targeting`, which carries short GAM-shaped key-values.
+
+Deep merged into `runtimeConfig.ortb2`: nested objects are merged recursively, arrays are
+concatenated and scalars are overwritten by the later call. A branch not mentioned in the object
+is left untouched, so several calls compose.
+
+The runtime half is merged on top of the static `targeting.ortb2` from the ad tag configuration,
+with the runtime half winning on scalars. Read the result back with `getPageTargeting().ortb2`.
+
+```ts
+// config:  targeting: { ortb2: { site: { cat: ['IAB1'], content: { language: 'de' } } } }
+moli.setConfig({ ortb2: { site: { cat: ['IAB12'], content: { title: 'Headline' } } } });
+
+moli.getPageTargeting().ortb2;
+// { site: { cat: ['IAB1', 'IAB12'], content: { language: 'de', title: 'Headline' } } }
+```
+
+In a [single page application](./single-page-app.md) the runtime half is reset on each
+`requestAds()` call, exactly like `labels` and `targeting` — page content is only valid for the
+page it was set on. Set it again after every in-app navigation.
+
+See [First Party Data](./first-party-data.md) for how `targeting.ortb2` reaches the prebid
+bidders, and [Passback & Bridge](./passback.md) for how a creative reads it back over the bridge.
 
 ### Audience
 
@@ -129,6 +173,7 @@ code should call `setConfig()` directly.
 - [Ad Volume](./ad-volume.md)
 - [Labels](./labels.md)
 - [Targeting](./targeting.md)
+- [First Party Data](./first-party-data.md)
 - [Ad Unit Path Variables](./ad-unit-path-variables.md)
 - ADR 0011 — Generic `setConfig()` API for runtime overrides
 - [MoliTag API reference](/api/types/moliRuntime/namespaces/MoliRuntime/interfaces/MoliTag)
