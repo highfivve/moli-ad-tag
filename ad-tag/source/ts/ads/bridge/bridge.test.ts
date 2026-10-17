@@ -121,6 +121,136 @@ describe('bridge', () => {
     });
   });
 
+  describe('h5.ortb2', () => {
+    /**
+     * `jsDomWindow.postMessage()` produces an event without a `source`, so the reply target
+     * cannot be observed through it. Grab the listener the init step registered and hand it an
+     * event with a stand-in source window instead - that is the only way to assert that the
+     * reply reaches the asking window and nothing else.
+     */
+    const askForOrtb2 = async (
+      data: unknown,
+      config: MoliConfig = configWithBridge([])
+    ): Promise<Sinon.SinonSpy> => {
+      await step(adPipelineContext(jsDomWindow, { config__: config }));
+      const sourceWindow = { postMessage: sandbox.spy() };
+      if (addEventListenerSpy.called) {
+        const listener = addEventListenerSpy.firstCall.args[1] as (event: any) => void;
+        listener({ data, source: sourceWindow, origin: 'https://tpc.googlesyndication.com' });
+      }
+      return sourceWindow.postMessage;
+    };
+
+    it('should reply to the asking window with the merged ortb2', async () => {
+      moli.setConfig({ ortb2: { site: { content: { title: 'How do I bake bread?' } } } });
+
+      const reply = await askForOrtb2({ event: 'h5.ortb2' });
+
+      expect(reply).to.have.been.calledOnceWithExactly(
+        {
+          event: 'h5.ortb2.response',
+          ortb2: { site: { content: { title: 'How do I bake bread?' } } }
+        },
+        '*'
+      );
+    });
+
+    it('should accept the message as a json string', async () => {
+      moli.setConfig({ ortb2: { site: { content: { title: 'stringified' } } } });
+
+      const reply = await askForOrtb2(JSON.stringify({ event: 'h5.ortb2' }));
+
+      expect(reply).to.have.been.calledOnceWithExactly(
+        {
+          event: 'h5.ortb2.response',
+          ortb2: { site: { content: { title: 'stringified' } } }
+        },
+        '*'
+      );
+    });
+
+    it('should reply with ortb2 only, never with key-values or labels', async () => {
+      moli.setConfig({
+        targeting: { gf_a: ['segment-1'], gf_scoreLevel: '3' },
+        labels: ['premium'],
+        ortb2: { site: { content: { title: 'the question' } } }
+      });
+
+      const reply = await askForOrtb2({ event: 'h5.ortb2' });
+
+      expect(reply).to.have.been.calledOnce;
+      const payload = reply.firstCall.args[0];
+      expect(Object.keys(payload)).to.have.members(['event', 'ortb2']);
+      expect(JSON.stringify(payload)).to.not.contain('gf_a');
+      expect(JSON.stringify(payload)).to.not.contain('gf_scoreLevel');
+      expect(JSON.stringify(payload)).to.not.contain('premium');
+    });
+
+    it('should read the ortb2 live and not from the captured pipeline context', async () => {
+      // the bridge init step is memoised, so the context it closes over is the one from the
+      // first ad request. A listener reading it would answer with the previous page's content.
+      const firstPageContext = adPipelineContext(jsDomWindow, {
+        config__: {
+          ...configWithBridge([]),
+          targeting: { keyValues: {}, ortb2: { site: { content: { title: 'page 1' } } } }
+        }
+      });
+      await step(firstPageContext);
+
+      // the spa navigated: the moli tag now holds the second page's content
+      moli.setConfig({ ortb2: { site: { content: { title: 'page 2' } } } });
+
+      const sourceWindow = { postMessage: sandbox.spy() };
+      const listener = addEventListenerSpy.firstCall.args[1] as (event: any) => void;
+      listener({ data: { event: 'h5.ortb2' }, source: sourceWindow });
+
+      expect(sourceWindow.postMessage).to.have.been.calledOnceWithExactly(
+        { event: 'h5.ortb2.response', ortb2: { site: { content: { title: 'page 2' } } } },
+        '*'
+      );
+    });
+
+    it('should not reply when the bridge is disabled', async () => {
+      moli.setConfig({ ortb2: { site: { content: { title: 'secret' } } } });
+
+      const reply = await askForOrtb2({ event: 'h5.ortb2' }, {
+        ...emptyConfig,
+        bridge: { enabled: false }
+      } as MoliConfig);
+
+      expect(addEventListenerSpy).to.have.not.been.called;
+      expect(reply).to.have.not.been.called;
+    });
+
+    it('should ignore unrelated and malformed messages without throwing', async () => {
+      moli.setConfig({ ortb2: { site: { content: { title: 'the question' } } } });
+
+      for (const junk of [
+        'not json at all',
+        '{"event":',
+        { event: 'h5.ortb2.response' },
+        { event: 'some.other.event' },
+        { noEventAtAll: true },
+        null,
+        undefined,
+        42,
+        ['h5.ortb2']
+      ]) {
+        const reply = await askForOrtb2(junk);
+        expect(reply, `expected no reply for ${JSON.stringify(junk)}`).to.have.not.been.called;
+      }
+    });
+
+    it('should not broadcast the reply on the page window', async () => {
+      moli.setConfig({ ortb2: { site: { content: { title: 'the question' } } } });
+      const windowPostMessageSpy = sandbox.spy(jsDomWindow, 'postMessage');
+
+      await askForOrtb2({ event: 'h5.ortb2' });
+
+      expect(windowPostMessageSpy).to.have.not.been.called;
+    });
+  });
+
   describe('h5.adunit.passback', () => {
     const passbackMessage = (options: Partial<PassbackMessage>): PassbackMessage => ({
       event: 'h5.adunit.passback',

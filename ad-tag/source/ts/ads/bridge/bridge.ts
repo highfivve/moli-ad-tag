@@ -2,6 +2,7 @@ import { googletag } from 'ad-tag/types/googletag';
 import { AdPipelineContext, InitStep, mkInitStep } from 'ad-tag/ads/adPipeline';
 import { isPlainObject } from 'ad-tag/util/objectUtils';
 import { findGoogletagSlot } from 'ad-tag/ads/findGoogletagSlot';
+import { prebidjs } from 'ad-tag/types/prebidjs';
 
 export type PassbackMessage = {
   /**
@@ -36,7 +37,31 @@ export type RefreshAdUnitMessage = {
   domId: string;
 };
 
-export type BridgeProtocol = PassbackMessage | RefreshAdUnitMessage;
+/**
+ * Sent by a creative that wants the page's content - the headline it is rendered next to, the
+ * author of the post, the content language. The page answers with an `Ortb2ResponseMessage`.
+ *
+ * @see Ortb2ResponseMessage
+ */
+export type Ortb2Message = {
+  event: 'h5.ortb2';
+};
+
+/**
+ * The page's answer to an `Ortb2Message`, posted to the window that asked and to no other.
+ *
+ * Carries the OpenRTB 2.6 first party data of the **current** page - the static
+ * `targeting.ortb2` and the runtime half set via `moli.setConfig({ ortb2 })`, deep merged.
+ *
+ * It carries ortb2 and nothing else: no key-values, no labels. Audience segment ids and score
+ * level are page targeting a creative has no business reading.
+ */
+export type Ortb2ResponseMessage = {
+  event: 'h5.ortb2.response';
+  ortb2: prebidjs.firstpartydata.PrebidFirstPartyData;
+};
+
+export type BridgeProtocol = PassbackMessage | RefreshAdUnitMessage | Ortb2Message;
 
 const parseMessageData = (data: any): BridgeProtocol | null => {
   try {
@@ -47,6 +72,8 @@ const parseMessageData = (data: any): BridgeProtocol | null => {
       case 'h5.adunit.passback':
         return message.passbackOrigin && (message.domId || message.adUnitPath) ? message : null;
       case 'h5.adunit.refresh':
+        return message;
+      case 'h5.ortb2':
         return message;
       default:
         // if this is not a valid message we return null
@@ -132,6 +159,51 @@ const handlePassback = (message: PassbackMessage, context: AdPipelineContext): v
   }
 };
 
+/**
+ * Answers a creative that asked for the page's ortb2.
+ *
+ * ## Why the value is read from the window and not from the context
+ *
+ * The bridge init step is memoised, so the `AdPipelineContext` this listener closes over is the
+ * one from the *first* ad request and never changes. A single-page-app navigation builds a fresh
+ * runtime config, so reading the captured context would hand the creative the *previous* page's
+ * content. `window.moli.getPageTargeting()` is the only accessor that sees the current page.
+ *
+ * ## Why there is no origin check
+ *
+ * Consistent with `h5.adunit.passback` and `h5.adunit.refresh`, which have none either. A
+ * sandboxed SafeFrame has the origin `null`, so an allow-list would lock out exactly the
+ * creatives this exists for. What keeps the data contained instead is the reply target: it goes
+ * to the window that asked and is never broadcast, and it carries ortb2 and nothing else.
+ *
+ * The accepted cost is that the page answers any iframe that asks, including third party
+ * creatives in other slots - which is why `ortb2` is no place for anything that should not be
+ * readable by a creative.
+ *
+ * @param event the message event, whose `source` is the window to answer
+ * @param context
+ * @see docs/adr/0016-ortb2-is-the-page-content-channel.md
+ */
+const handleOrtb2 = (event: MessageEvent, context: AdPipelineContext): void => {
+  // `MessageEventSource` also covers MessagePort and ServiceWorker, whose postMessage has a
+  // different signature. A creative always posts from a window, so narrow to one.
+  const source = event.source as Window | null;
+  if (!source) {
+    context.logger__.debug('bridge', 'ortb2 request without a source window - ignoring');
+    return;
+  }
+  const response: Ortb2ResponseMessage = {
+    event: 'h5.ortb2.response',
+    // read live - see the note above
+    ortb2: context.window__.moli.getPageTargeting().ortb2 ?? {}
+  };
+  context.logger__.debug('bridge', 'answering ortb2 request');
+  // '*' rather than event.origin: a sandboxed SafeFrame's origin is the string 'null', which no
+  // postMessage target origin ever matches. The reply is contained by its target window, not by
+  // its target origin.
+  source.postMessage(response, '*');
+};
+
 export const bridgeInitStep = (): InitStep =>
   mkInitStep('bridge', (context: AdPipelineContext) => {
     if (context.config__.bridge?.enabled) {
@@ -145,6 +217,9 @@ export const bridgeInitStep = (): InitStep =>
               break;
             case 'h5.adunit.refresh':
               handleRefresh(message, context);
+              break;
+            case 'h5.ortb2':
+              handleOrtb2(event, context);
               break;
           }
         }
