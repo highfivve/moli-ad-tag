@@ -444,6 +444,38 @@ export namespace googleAdManager {
      */
     readonly adManagerExcludes?: string[];
 
+    /**
+     * Static OpenRTB 2.6 first party data describing the page and its content.
+     *
+     * This is moli's channel for page content - the article headline, the author, the content
+     * language. Each field has a standard, named home in the ORTB spec, so partners receive it
+     * labelled instead of as an anonymous key-value. Page content does **not** belong in
+     * `keyValues`: `adManagerExcludes` only gates the Google Ad Manager path, while the adex,
+     * emetriq and roqad modules merge key-values without honouring it.
+     *
+     * Publishers supply the per-page values at runtime via `moli.setConfig({ ortb2 })`. The
+     * static half here and the runtime half are deep merged - with arrays concatenated and the
+     * runtime half winning on scalars - and read back through `moli.getPageTargeting().ortb2`.
+     * The runtime half is reset on each single-page-app `requestAds()` call, exactly like
+     * `keyValues`.
+     *
+     * @example
+     * ```typescript
+     * targeting: {
+     *   keyValues: {},
+     *   ortb2: {
+     *     site: {
+     *       cat: ['IAB1'],
+     *       content: { language: 'de' }
+     *     }
+     *   }
+     * }
+     * ```
+     *
+     * @see docs/adr/0016-ortb2-is-the-page-content-channel.md
+     */
+    readonly ortb2?: prebidjs.firstpartydata.PrebidFirstPartyData;
+
     /** additional labels. Added in addition to the ones created by the sizeConfig. */
     readonly labels?: string[];
 

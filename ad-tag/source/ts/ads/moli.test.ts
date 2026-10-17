@@ -1249,6 +1249,165 @@ describe('moli', () => {
     });
   });
 
+  describe('ortb2', () => {
+    it('should return the static ortb2 from the config via getPageTargeting()', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+      await adTag.configure({
+        ...defaultConfig,
+        targeting: { keyValues: {}, ortb2: { site: { content: { title: 'static title' } } } }
+      });
+      expect(adTag.getPageTargeting().ortb2).to.be.deep.equal({
+        site: { content: { title: 'static title' } }
+      });
+    });
+
+    it('should return an empty object when neither half is set', () => {
+      const adTag = createMoliTag(jsDomWindow);
+      expect(adTag.getPageTargeting().ortb2).to.be.deep.equal({});
+    });
+
+    it('should deep merge ortb2 set via setConfig() into the runtime config', () => {
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setConfig({ ortb2: { site: { content: { title: 'first' } } } });
+      adTag.setConfig({ ortb2: { site: { content: { language: 'de' } } } });
+      expect(adTag.getRuntimeConfig().ortb2).to.be.deep.equal({
+        site: { content: { title: 'first', language: 'de' } }
+      });
+    });
+
+    it('should concatenate arrays across multiple setConfig() calls', () => {
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setConfig({ ortb2: { site: { cat: ['IAB1'] } } });
+      adTag.setConfig({ ortb2: { site: { cat: ['IAB2'] } } });
+      expect(adTag.getRuntimeConfig().ortb2).to.be.deep.equal({ site: { cat: ['IAB1', 'IAB2'] } });
+    });
+
+    it('should let runtime ortb2 win over the static half on scalars', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+      await adTag.configure({
+        ...defaultConfig,
+        targeting: {
+          keyValues: {},
+          ortb2: { site: { content: { title: 'static title', language: 'de' } } }
+        }
+      });
+      adTag.setConfig({ ortb2: { site: { content: { title: 'runtime title' } } } });
+      expect(adTag.getPageTargeting().ortb2).to.be.deep.equal({
+        site: { content: { title: 'runtime title', language: 'de' } }
+      });
+    });
+
+    it('should concatenate arrays of the static and the runtime half in getPageTargeting()', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+      await adTag.configure({
+        ...defaultConfig,
+        targeting: { keyValues: {}, ortb2: { site: { cat: ['IAB1'] } } }
+      });
+      adTag.setConfig({ ortb2: { site: { cat: ['IAB2'] } } });
+      expect(adTag.getPageTargeting().ortb2).to.be.deep.equal({ site: { cat: ['IAB1', 'IAB2'] } });
+    });
+
+    it('should not let getPageTargeting() mutate the static or the runtime half', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+      await adTag.configure({
+        ...defaultConfig,
+        targeting: { keyValues: {}, ortb2: { site: { cat: ['IAB1'] } } }
+      });
+      adTag.setConfig({ ortb2: { site: { cat: ['IAB2'] } } });
+      adTag.getPageTargeting();
+      expect(adTag.getPageTargeting().ortb2).to.be.deep.equal({ site: { cat: ['IAB1', 'IAB2'] } });
+      expect(adTag.getRuntimeConfig().ortb2).to.be.deep.equal({ site: { cat: ['IAB2'] } });
+    });
+
+    it('should not alias the static half when only it sets an array', async () => {
+      const staticOrtb2 = { site: { cat: ['IAB1'] } };
+      const adTag = createMoliTag(jsDomWindow);
+      await adTag.configure({
+        ...defaultConfig,
+        targeting: { keyValues: {}, ortb2: staticOrtb2 }
+      });
+
+      adTag.getPageTargeting().ortb2?.site?.cat?.push('IAB-injected');
+
+      expect(staticOrtb2.site.cat).to.be.deep.equal(['IAB1']);
+      expect(adTag.getPageTargeting().ortb2).to.be.deep.equal({ site: { cat: ['IAB1'] } });
+    });
+
+    it('should not alias the runtime half when only it sets an array', () => {
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setConfig({ ortb2: { site: { cat: ['IAB1'] } } });
+
+      adTag.getPageTargeting().ortb2?.site?.cat?.push('IAB-injected');
+
+      expect(adTag.getRuntimeConfig().ortb2).to.be.deep.equal({ site: { cat: ['IAB1'] } });
+    });
+
+    it('should not keep a reference to the array the caller passed to setConfig()', () => {
+      const callerOwned = { site: { cat: ['IAB1'] } };
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setConfig({ ortb2: callerOwned });
+
+      callerOwned.site.cat.push('IAB-added-later');
+
+      expect(adTag.getRuntimeConfig().ortb2).to.be.deep.equal({ site: { cat: ['IAB1'] } });
+    });
+
+    it('should reset the runtime ortb2 on each spa requestAds() call', async () => {
+      dom.reconfigure({ url: 'https://localhost/1' });
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setConfig({ ortb2: { site: { content: { title: 'page 1' } } } });
+      await adTag.configure({
+        slots: defaultSlots,
+        spa: { enabled: true, validateLocation: 'href' },
+        targeting: { keyValues: {} },
+        schain: { supplyChainStartNode: dummySupplyChainNode }
+      });
+      const state = await adTag.requestAds();
+      const spaState: ISinglePageApp = state as ISinglePageApp;
+      // kept via keepTargeting on the current cycle, reset for the next one
+      expect(spaState.runtimeConfig.ortb2).to.be.deep.equal({
+        site: { content: { title: 'page 1' } }
+      });
+      expect(spaState.nextRuntimeConfig.ortb2).to.be.deep.equal({});
+
+      dom.reconfigure({ url: 'https://localhost/2' });
+      adTag.setConfig({ ortb2: { site: { content: { title: 'page 2' } } } });
+      expect(spaState.nextRuntimeConfig.ortb2).to.be.deep.equal({
+        site: { content: { title: 'page 2' } }
+      });
+
+      const state2 = await adTag.requestAds();
+      const spaState2: ISinglePageApp = state2 as ISinglePageApp;
+      expect(spaState2.runtimeConfig.ortb2).to.be.deep.equal({
+        site: { content: { title: 'page 2' } }
+      });
+      expect(spaState2.nextRuntimeConfig.ortb2).to.be.deep.equal({});
+    });
+
+    it('should reflect the current page ortb2 in getPageTargeting() after a spa navigation', async () => {
+      dom.reconfigure({ url: 'https://localhost/1' });
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setConfig({ ortb2: { site: { content: { title: 'page 1' } } } });
+      await adTag.configure({
+        slots: defaultSlots,
+        spa: { enabled: true, validateLocation: 'href' },
+        targeting: { keyValues: {} },
+        schain: { supplyChainStartNode: dummySupplyChainNode }
+      });
+      await adTag.requestAds();
+      expect(adTag.getPageTargeting().ortb2).to.be.deep.equal({
+        site: { content: { title: 'page 1' } }
+      });
+
+      dom.reconfigure({ url: 'https://localhost/2' });
+      adTag.setConfig({ ortb2: { site: { content: { title: 'page 2' } } } });
+      await adTag.requestAds();
+      expect(adTag.getPageTargeting().ortb2).to.be.deep.equal({
+        site: { content: { title: 'page 2' } }
+      });
+    });
+  });
+
   describe('setAdUnitPathVariables', () => {
     it('should add adUnitPath variables to the config', () => {
       const adTag = createMoliTag(jsDomWindow);

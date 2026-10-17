@@ -2611,31 +2611,7 @@ export namespace prebidjs {
       /**
        * Details about the Content (Section 3.2.16) within the site.
        */
-      content?: {
-        title?: string;
-        url?: string;
-        prodq?: ContentQuality;
-
-        /**
-         * User rating of the content (e.g., number of stars, likes, etc.).
-         */
-        userrating?: number;
-
-        /**
-         * Comma separated list of keywords describing the content.
-         */
-        keywords?: string;
-
-        /**
-         * Content language using ISO-639-1-alpha-2.
-         */
-        language?: string;
-
-        /**
-         * Additional content data. Each object represents a different data source.
-         */
-        data?: OpenRtb2Data[];
-      };
+      content?: OpenRtb2Content;
 
       /**
        * Placeholder for exchange-specific extensions to OpenRTB
@@ -2658,6 +2634,98 @@ export namespace prebidjs {
               category?: string;
             };
           };
+    }
+
+    /**
+     * This object describes the content producer of the content within the site - the entity that
+     * created or published it, which is not necessarily the publisher serving the ad.
+     *
+     * OpenRTB 2.6, section 3.2.17.
+     *
+     * @see https://iabtechlab.com/wp-content/uploads/2022/04/OpenRTB-2-6_FINAL.pdf
+     */
+    export interface OpenRtb2Producer {
+      /**
+       * Content producer or originator ID. Useful if content is syndicated and may be posted on a
+       * site using embed tags.
+       */
+      id?: string;
+
+      /**
+       * Content producer or originator name (e.g., "Warner Bros", or - for user generated content -
+       * the name of the user who created it).
+       */
+      name?: string;
+
+      /**
+       * Array of IAB content categories that describe the content producer.
+       */
+      cat?: string[];
+
+      /**
+       * Highest level domain of the content producer (e.g., "producer.com").
+       */
+      domain?: string;
+
+      /**
+       * Placeholder for exchange-specific extensions to OpenRTB.
+       */
+      ext?: any;
+    }
+
+    /**
+     * Details about the content within the site - the article, video or, for user generated content,
+     * the post that the ad is shown next to.
+     *
+     * OpenRTB 2.6, section 3.2.16.
+     *
+     * @see https://iabtechlab.com/wp-content/uploads/2022/04/OpenRTB-2-6_FINAL.pdf
+     */
+    export interface OpenRtb2Content {
+      /**
+       * Content title (e.g., the headline of an article or the title of a question).
+       */
+      title?: string;
+
+      /**
+       * URL of the content, for buy-side contextualization or review.
+       */
+      url?: string;
+
+      /**
+       * Production quality of the content.
+       */
+      prodq?: ContentQuality;
+
+      /**
+       * User rating of the content (e.g., number of stars, likes, etc.).
+       */
+      userrating?: number;
+
+      /**
+       * Comma separated list of keywords describing the content.
+       */
+      keywords?: string;
+
+      /**
+       * Content language using ISO-639-1-alpha-2.
+       */
+      language?: string;
+
+      /**
+       * The producer of the content - for user generated content the author of the post.
+       */
+      producer?: OpenRtb2Producer;
+
+      /**
+       * Additional content data. Each object represents a different data source.
+       */
+      data?: OpenRtb2Data[];
+
+      /**
+       * Placeholder for exchange-specific extensions to OpenRTB.
+       */
+      ext?: any;
     }
 
     /**

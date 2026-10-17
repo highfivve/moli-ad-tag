@@ -19,6 +19,9 @@ All modules described here read the same moli data sources:
 - **Audience** — hashed emails set via `moli.setAudience(...)` or `moli.setConfig({ audience })`.
 - **Geo** — `targeting.geo` in the `MoliConfig`, with the browser timezone as fallback. Currently
   only the `roqad` module sends it (as [`ctry`](#roqad-country)).
+- **ortb2** — `targeting.ortb2` in the `MoliConfig`, with the per-page half set via
+  `moli.setConfig({ ortb2 })`. This is where page *content* lives; the
+  [`prebid-first-party-data`](#prebid-first-party-data) module forwards it to the prebid bidders.
 
 Which data a module sends is configured per module in `modules.<configKey>`. The sections below
 describe, per module, which config fields map which moli data into which partner parameter.
@@ -60,6 +63,80 @@ import { createRoqad } from '@highfivve/ad-tag/ads/modules/roqad';
 
 moli.registerModule(createRoqad());
 ```
+
+## prebid-first-party-data {#prebid-first-party-data}
+
+Unlike the three DMP modules below, this module does not talk to a partner of its own. It builds
+the OpenRTB 2.6 object that prebid hands to **every** bidder, via `pbjs.setConfig({ ortb2 })`.
+
+### Sources and precedence {#prebid-fpd-precedence}
+
+The object is merged from three layers, listed in **increasing** precedence — a later layer wins
+on a conflicting scalar, arrays are concatenated in this order:
+
+| # | Layer | Where it comes from |
+|---|-------|---------------------|
+| 1 | `targeting.ortb2` | the publisher's static page content in the `MoliConfig` |
+| 2 | `modules.prebidFirstPartyData.staticPrebidFirstPartyData` | this module's own config |
+| 3 | whatever prebid already holds | `pbjs.readConfig().ortb2` |
+
+The module's own config outranks `targeting.ortb2` because it is the more specific statement of
+intent for a publisher who sets both.
+
+On top of the merged object the module layers the IAB category mappings read from key-values
+(`gptTargetingMappings`), which is a separate mechanism and is unaffected by `targeting.ortb2`.
+
+Two consequences of that layering are worth knowing if you put categories or content data in
+`targeting.ortb2`:
+
+- `site.cat` / `site.pagecat` / `site.sectioncat` entries from `targeting.ortb2` participate in
+  the de-duplication, so a category you set in both places appears once.
+- `site.content.data` entries whose `name` equals the configured `iabDataProviderName` are
+  dropped, because the module clears that provider's rows before writing its own. Use a different
+  `name` for your own data rows.
+
+```ts
+const moliConfig: Moli.MoliConfig = {
+  slots: [ /* ... */ ],
+  targeting: {
+    keyValues: {},
+    // highlight-start
+    ortb2: {
+      site: {
+        content: {
+          title: 'How do I bake sourdough bread?',
+          producer: { name: 'baker42' },
+          language: 'de'
+        }
+      }
+    }
+    // highlight-end
+  },
+  modules: {
+    prebidFirstPartyData: {
+      enabled: true,
+      staticPrebidFirstPartyData: { site: { mobile: 1, privacypolicy: 1 } },
+      gptTargetingMappings: { iabV2: 'iab_v2' },
+      iabDataProviderName: 'example.com'
+    }
+  }
+};
+```
+
+A publisher who sets neither `targeting.ortb2` nor `staticPrebidFirstPartyData` sees exactly the
+behaviour they had before — the extra layer merges nothing.
+
+### Only the static half reaches the bidders
+
+`targeting.ortb2` from the configuration is forwarded. The runtime half set via
+`moli.setConfig({ ortb2 })` is **not** — it is readable through `moli.getPageTargeting().ortb2`
+and over the [bridge](./passback.md), but it does not reach the bidders. Wiring the runtime half
+into prebid changes what every bidder sees on every page and is a decision taken separately.
+
+:::caution
+Whatever goes into `targeting.ortb2` goes to every prebid bidder in every bid request. Treat it
+as page content, not as a place for anything user-identifying.
+:::
 
 ## ROQAD
 
@@ -515,6 +592,7 @@ See [Single Page Applications](./single-page-app.md).
 
 - [Targeting](./targeting.md)
 - [Labels](./labels.md)
+- [Prebid](./prebid.md)
 - [Consent (TCF2)](./consent.md)
 - [setConfig() API Reference](./set-config.md)
 - [Single Page Applications](./single-page-app.md)

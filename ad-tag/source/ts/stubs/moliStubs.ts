@@ -55,6 +55,7 @@ export const newEmptyRuntimeConfig = (): MoliRuntime.MoliRuntimeConfig => ({
   },
   labels: [],
   keyValues: {},
+  ortb2: {},
   logger: noopLogger,
   adUnitPathVariables: {},
   refreshSlots: [],
