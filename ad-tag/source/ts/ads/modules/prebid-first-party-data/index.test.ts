@@ -516,5 +516,165 @@ describe('Prebid First Party Data Module', () => {
         expect(site.cat).to.deep.equals(['IAB-1']);
       });
     });
+
+    describe('targeting.ortb2 as the merge base', () => {
+      let readConfigStub: Sinon.SinonStub<[], Partial<prebidjs.IPrebidJsConfig>>;
+
+      beforeEach(() => {
+        readConfigStub = sandbox.stub(jsDomWindow.pbjs, 'readConfig');
+        readConfigStub.returns({});
+      });
+
+      it('should pass a static targeting.ortb2 through to prebid', async () => {
+        const { configureStep } = createFpdModule({});
+
+        const moliConfig: MoliConfig = configWithTargeting({
+          keyValues: {},
+          ortb2: {
+            site: {
+              content: { title: 'How do I bake bread?', producer: { name: 'baker42' } }
+            }
+          }
+        });
+
+        await configureStep(adPipelineContext(moliConfig), []);
+
+        expect(setConfigSpy).to.have.been.calledOnceWithExactly({
+          ortb2: {
+            site: { content: { title: 'How do I bake bread?', producer: { name: 'baker42' } } }
+          }
+        });
+      });
+
+      it('should let the module static first party data win over targeting.ortb2 on scalars', async () => {
+        const { configureStep } = createFpdModule({ site: { content: { title: 'module' } } });
+
+        const moliConfig: MoliConfig = configWithTargeting({
+          keyValues: {},
+          ortb2: { site: { content: { title: 'targeting', language: 'de' } } }
+        });
+
+        await configureStep(adPipelineContext(moliConfig), []);
+
+        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        expect(site.content?.title).to.be.equals('module');
+        // branches the module config does not mention survive
+        expect(site.content?.language).to.be.equals('de');
+      });
+
+      it('should let what prebid already holds win over targeting.ortb2', async () => {
+        const { configureStep } = createFpdModule({});
+
+        const moliConfig: MoliConfig = configWithTargeting({
+          keyValues: {},
+          ortb2: { site: { content: { title: 'targeting' } } }
+        });
+
+        readConfigStub.returns({ ortb2: { site: { content: { title: 'existing' } } } });
+
+        await configureStep(adPipelineContext(moliConfig), []);
+
+        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        expect(site.content?.title).to.be.equals('existing');
+      });
+
+      it('should concatenate arrays of all three layers, base first', async () => {
+        const { configureStep } = createFpdModule({ site: { cat: ['IAB-module'] } });
+
+        const moliConfig: MoliConfig = configWithTargeting({
+          keyValues: {},
+          ortb2: { site: { cat: ['IAB-targeting'] } }
+        });
+
+        readConfigStub.returns({ ortb2: { site: { cat: ['IAB-existing'] } } });
+
+        await configureStep(adPipelineContext(moliConfig), []);
+
+        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        expect(site.cat).to.deep.equals(['IAB-targeting', 'IAB-module', 'IAB-existing']);
+      });
+
+      it('should not send the runtime half of ortb2 to prebid', async () => {
+        const { configureStep } = createFpdModule({});
+
+        const moliConfig: MoliConfig = configWithTargeting({
+          keyValues: {},
+          ortb2: { site: { content: { title: 'static' } } }
+        });
+
+        const context = adPipelineContext(moliConfig);
+        await configureStep(
+          {
+            ...context,
+            runtimeConfig__: {
+              ...context.runtimeConfig__,
+              ortb2: { site: { content: { title: 'runtime', url: 'https://example.com/1' } } }
+            }
+          },
+          []
+        );
+
+        expect(setConfigSpy).to.have.been.calledOnceWithExactly({
+          ortb2: { site: { content: { title: 'static' } } }
+        });
+      });
+
+      it('should leave the key-value category mappings untouched when targeting.ortb2 is set', async () => {
+        const { configureStep } = createFpdModule(
+          {},
+          { cat: 'openrtb2_cat', iabV2: 'iab_v2' },
+          'test.com'
+        );
+
+        const moliConfig: MoliConfig = configWithTargeting({
+          keyValues: { openrtb2_cat: ['IAB-1'], iab_v2: ['111', '222'] },
+          ortb2: { site: { content: { title: 'How do I bake bread?' } } }
+        });
+
+        await configureStep(adPipelineContext(moliConfig), []);
+
+        expect(setConfigSpy).to.have.been.calledOnceWithExactly({
+          ortb2: {
+            site: {
+              cat: ['IAB-1'],
+              sectioncat: ['IAB-1'],
+              pagecat: ['IAB-1'],
+              content: {
+                title: 'How do I bake bread?',
+                data: [
+                  { name: 'test.com', ext: { segtax: 6 }, segment: [{ id: '111' }, { id: '222' }] }
+                ]
+              }
+            }
+          }
+        });
+      });
+
+      it('should change nothing for a publisher who sets neither', async () => {
+        const { configureStep } = createFpdModule({ user: { keywords: 'static' } });
+
+        const moliConfig: MoliConfig = configWithTargeting({ keyValues: {} });
+
+        await configureStep(adPipelineContext(moliConfig), []);
+
+        expect(setConfigSpy).to.have.been.calledOnceWithExactly({
+          ortb2: { user: { keywords: 'static' } }
+        });
+      });
+
+      it('should not mutate the static targeting.ortb2 across two configure runs', async () => {
+        const { configureStep } = createFpdModule({ site: { cat: ['IAB-module'] } });
+
+        const ortb2 = { site: { cat: ['IAB-targeting'] } };
+        const moliConfig: MoliConfig = configWithTargeting({ keyValues: {}, ortb2 });
+
+        await configureStep(adPipelineContext(moliConfig), []);
+        await configureStep(adPipelineContext(moliConfig), []);
+
+        expect(ortb2.site.cat).to.deep.equals(['IAB-targeting']);
+        const site = setConfigSpy.secondCall.firstArg.ortb2.site as OpenRtb2Site;
+        expect(site.cat).to.deep.equals(['IAB-targeting', 'IAB-module']);
+      });
+    });
   });
 });

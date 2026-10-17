@@ -4,10 +4,28 @@
  * The main purpose of this module is to provide a consistent API for publishers that don't want to interact with `pbjs`
  * directly. This module
  *
+ * - uses the publisher's static page content (`targeting.ortb2`) as the base of the ortb2 object
  * - supports a static configuration that is built into the ad tag. Useful for static properties like `site.cat`,
  *   `site.mobile` or `site.privacypolicy`
  * - supports a limited mapping definition from key-values available via `moli.setTargeting`. This allows to reuse the
  *   IAB categories
+ *
+ * ## Precedence
+ *
+ * Three layers are merged, in increasing precedence - a later layer wins on a conflicting scalar,
+ * arrays are concatenated in this order:
+ *
+ * 1. `targeting.ortb2` - the publisher's static page content
+ * 2. `staticPrebidFirstPartyData` - this module's own config, the more specific statement of intent
+ * 3. `pbjs.readConfig().ortb2` - whatever prebid already holds
+ *
+ * The IAB category mappings from key-values are layered on top and are a separate mechanism,
+ * unaffected by `targeting.ortb2`.
+ *
+ * Only the **static** half of ortb2 is forwarded. The runtime half set via
+ * `moli.setConfig({ ortb2 })` does not reach the bidders.
+ *
+ * @see docs/adr/0016-ortb2-is-the-page-content-channel.md
  *
  * ## Integration
  *
@@ -84,8 +102,23 @@ export const createPrebidFirstPartyDataModule = (): IModule => {
       context.window__.pbjs.que.push(() => {
         const existingFpd = context.window__.pbjs.readConfig().ortb2 || {};
 
-        // extract key-values from gpt targeting
-        const ortb2FromKeyValues = mergeDeep({}, config.staticPrebidFirstPartyData, existingFpd);
+        // Three layers, least specific first: the publisher's static page content
+        // (`targeting.ortb2`), this module's own first party data, and whatever prebid already
+        // holds. Later layers win on scalars, arrays are concatenated in that order.
+        //
+        // The module config is the more specific statement of intent for a publisher who sets
+        // both, so it outranks `targeting.ortb2`.
+        //
+        // Only the *static* half of ortb2 is read here. The runtime half
+        // (`runtimeConfig__.ortb2`) deliberately does not reach the bidders yet.
+        //
+        // @see docs/adr/0016-ortb2-is-the-page-content-channel.md
+        const ortb2FromKeyValues = mergeDeep(
+          {},
+          context.config__.targeting?.ortb2,
+          config.staticPrebidFirstPartyData,
+          existingFpd
+        );
         if (gptTargeting) {
           const site: OpenRtb2Site = {
             cat: [],
