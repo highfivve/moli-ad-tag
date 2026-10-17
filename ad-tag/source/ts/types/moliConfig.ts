@@ -2789,7 +2789,7 @@ export namespace modules {
        * The `key` in the targeting map that contains the `sectionCat` values.
        *
        * The targeting values should be an array of IAB content categories that describe the current section of the site.
-       * If not defined, `cat` will be used as a fallback
+       * If not defined, or if no key-value is set for this key on the current page, `cat` will be used as a fallback.
        */
       readonly sectionCat?: string;
 
@@ -2797,7 +2797,8 @@ export namespace modules {
        * The `key` in the targeting map that contains the `pageCat` values.
        *
        * The targeting values should be an array of IAB content categories that describe the current page or view of
-       * the site. if not defined, `cat` will be used as a fallback
+       * the site. If not defined, or if no key-value is set for this key on the current page, `cat` will be used as
+       * a fallback.
        */
       readonly pageCat?: string;
 

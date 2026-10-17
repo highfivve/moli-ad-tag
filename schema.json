@@ -8373,11 +8373,11 @@
           "type": "string"
         },
         "pageCat": {
-          "description": "The `key` in the targeting map that contains the `pageCat` values.\n\nThe targeting values should be an array of IAB content categories that describe the current page or view of the site. if not defined, `cat` will be used as a fallback",
+          "description": "The `key` in the targeting map that contains the `pageCat` values.\n\nThe targeting values should be an array of IAB content categories that describe the current page or view of the site. If not defined, or if no key-value is set for this key on the current page, `cat` will be used as a fallback.",
           "type": "string"
         },
         "sectionCat": {
-          "description": "The `key` in the targeting map that contains the `sectionCat` values.\n\nThe targeting values should be an array of IAB content categories that describe the current section of the site. If not defined, `cat` will be used as a fallback",
+          "description": "The `key` in the targeting map that contains the `sectionCat` values.\n\nThe targeting values should be an array of IAB content categories that describe the current section of the site. If not defined, or if no key-value is set for this key on the current page, `cat` will be used as a fallback.",
           "type": "string"
         }
       },

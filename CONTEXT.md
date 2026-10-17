@@ -244,6 +244,19 @@ default, or drop the parameter from the URL. Fixed parameters (`zdid`, `env`, `e
 _Avoid_: adex mapping definition — adex mappings target structured JSON attributes, ROQAD
 mappings target flat URL parameters.
 
+### GPT Targeting Mapping
+A rule that turns one page key-value into one prebid first party data target in the ortb2 object.
+Five targets exist: `cat`, `sectionCat` and `pageCat` feed `site.cat`, `site.sectioncat` and
+`site.pagecat`; `iabV2` and `iabV3` each feed one `site.content.data` object named after the
+`iabDataProviderName`, carrying `ext.segtax` 6 (IAB Content Taxonomy 2.2) or 7 (IAB Content
+Taxonomy 3) and one segment per key-value entry. A mapping reads the static key-values shipped in
+the ad tag and the runtime ones from `setTargeting()` together, runtime replacing static per key
+rather than being unioned with it. A mapped `cat` cross-fills all three category targets; a
+`sectionCat` or `pageCat` that yields values overrides its half of that cross-fill, and one that
+yields nothing leaves the cross-fill standing. `iabV2` and `iabV3` never cross-fill.
+_Avoid_: ROQAD Parameter Mapping — those target flat URL parameters on a cookie-sync call, GPT
+targeting mappings target the ortb2 object sent into the prebid auction.
+
 ### Gmail-Normalised Email
 An email address trimmed, lower-cased and, for Gmail addresses, stripped of `.` and of any
 `+suffix` before the `@`. The default normalisation highfivve asks publishers to apply before

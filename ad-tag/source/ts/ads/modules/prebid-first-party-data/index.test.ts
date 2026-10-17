@@ -31,7 +31,10 @@ describe('Prebid First Party Data Module', () => {
   let { dom, jsDomWindow } = createDomAndWindow();
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
-  const adPipelineContext = (config: MoliConfig): AdPipelineContext => {
+  const adPipelineContext = (
+    config: MoliConfig,
+    runtimeKeyValues: googleAdManager.KeyValueMap = {}
+  ): AdPipelineContext => {
     return {
       auctionId__: 'xxxx-xxxx-xxxx-xxxx',
       requestId__: 0,
@@ -39,7 +42,7 @@ describe('Prebid First Party Data Module', () => {
       env__: 'production',
       logger__: noopLogger,
       config__: config,
-      runtimeConfig__: emptyRuntimeConfig,
+      runtimeConfig__: { ...emptyRuntimeConfig, keyValues: runtimeKeyValues },
       window__: jsDomWindow,
       // no service dependencies required
       labelConfigService__: null as any,
@@ -252,6 +255,108 @@ describe('Prebid First Party Data Module', () => {
         expect(site.cat).to.deep.equals(['IAB-1']);
         expect(site.sectioncat).to.deep.equals(['IAB-1']);
         expect(site.pagecat).to.deep.equals(['IAB-2']);
+      });
+    });
+
+    describe('runtime key values', () => {
+      it('should read a key-value that only exists at runtime', async () => {
+        const { configureStep } = createFpdModule({}, { cat: 'openrtb2_cat' });
+
+        const moliConfig: MoliConfig = configWithTargeting({ keyValues: {} });
+
+        await configureStep(adPipelineContext(moliConfig, { openrtb2_cat: ['IAB-1'] }), []);
+
+        expect(setConfigSpy).to.have.been.calledOnce;
+        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        expect(site.cat).to.deep.equals(['IAB-1']);
+      });
+
+      it('should let a runtime key-value replace the static one of the same key', async () => {
+        const { configureStep } = createFpdModule({}, { cat: 'openrtb2_cat' });
+
+        const moliConfig: MoliConfig = configWithTargeting({
+          keyValues: { openrtb2_cat: ['IAB-1'] }
+        });
+
+        await configureStep(adPipelineContext(moliConfig, { openrtb2_cat: ['IAB-2'] }), []);
+
+        expect(setConfigSpy).to.have.been.calledOnce;
+        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        expect(site.cat).to.deep.equals(['IAB-2']);
+      });
+
+      it('should keep static key-values that the runtime config does not define', async () => {
+        const { configureStep } = createFpdModule(
+          {},
+          { cat: 'openrtb2_cat', pageCat: 'openrtb2_page_cat' }
+        );
+
+        const moliConfig: MoliConfig = configWithTargeting({
+          keyValues: { openrtb2_cat: ['IAB-1'], openrtb2_page_cat: ['IAB-3'] }
+        });
+
+        await configureStep(adPipelineContext(moliConfig, { openrtb2_cat: ['IAB-2'] }), []);
+
+        expect(setConfigSpy).to.have.been.calledOnce;
+        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        expect(site.cat).to.deep.equals(['IAB-2']);
+        expect(site.pagecat).to.deep.equals(['IAB-3']);
+      });
+    });
+
+    describe('mapped targets without a key-value', () => {
+      it('should keep the cat cross-fill if the pageCat key-value is absent', async () => {
+        const { configureStep } = createFpdModule(
+          {},
+          { cat: 'openrtb2_cat', pageCat: 'openrtb2_page_cat' }
+        );
+
+        const moliConfig: MoliConfig = configWithTargeting({
+          keyValues: { openrtb2_cat: ['IAB-1'] }
+        });
+
+        await configureStep(adPipelineContext(moliConfig), []);
+
+        expect(setConfigSpy).to.have.been.calledOnce;
+        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        expect(site.cat).to.deep.equals(['IAB-1']);
+        expect(site.pagecat).to.deep.equals(['IAB-1']);
+        expect(site.sectioncat).to.deep.equals(['IAB-1']);
+      });
+
+      it('should keep the cat cross-fill if the sectionCat key-value is absent', async () => {
+        const { configureStep } = createFpdModule(
+          {},
+          { cat: 'openrtb2_cat', sectionCat: 'openrtb2_section_cat' }
+        );
+
+        const moliConfig: MoliConfig = configWithTargeting({
+          keyValues: { openrtb2_cat: ['IAB-1'] }
+        });
+
+        await configureStep(adPipelineContext(moliConfig), []);
+
+        expect(setConfigSpy).to.have.been.calledOnce;
+        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        expect(site.cat).to.deep.equals(['IAB-1']);
+        expect(site.sectioncat).to.deep.equals(['IAB-1']);
+        expect(site.pagecat).to.deep.equals(['IAB-1']);
+      });
+
+      it('should keep the static first party data categories if the key-values are absent', async () => {
+        const { configureStep } = createFpdModule(
+          { site: { sectioncat: ['IAB-7'], pagecat: ['IAB-8'] } },
+          { sectionCat: 'openrtb2_section_cat', pageCat: 'openrtb2_page_cat' }
+        );
+
+        const moliConfig: MoliConfig = configWithTargeting({ keyValues: {} });
+
+        await configureStep(adPipelineContext(moliConfig), []);
+
+        expect(setConfigSpy).to.have.been.calledOnce;
+        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        expect(site.sectioncat).to.deep.equals(['IAB-7']);
+        expect(site.pagecat).to.deep.equals(['IAB-8']);
       });
     });
 
