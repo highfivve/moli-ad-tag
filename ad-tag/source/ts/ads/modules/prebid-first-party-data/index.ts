@@ -72,7 +72,13 @@ export const createPrebidFirstPartyDataModule = (): IModule => {
     log: MoliRuntime.MoliLogger
   ): Promise<void> => {
     if (context.config__.prebid) {
-      const keyValues = context.config__.targeting?.keyValues || {};
+      // static key-values first, runtime second. A runtime key-value replaces the static one of
+      // the same key instead of being unioned with it. Same precedence as page targeting, emetriq,
+      // adex and roqad.
+      const keyValues: googleAdManager.KeyValueMap = {
+        ...context.config__.targeting?.keyValues,
+        ...context.runtimeConfig__.keyValues
+      };
       const gptTargeting = config.gptTargetingMappings;
 
       context.window__.pbjs.que.push(() => {
@@ -93,11 +99,20 @@ export const createPrebidFirstPartyDataModule = (): IModule => {
             site.pagecat?.push(...keyValueData);
             site.sectioncat?.push(...keyValueData);
           }
+          // A mapping that yields nothing leaves the existing value alone. Overwriting would
+          // destroy both the `cat` cross-fill above and whatever the static first party data put
+          // there.
           if (gptTargeting.sectionCat) {
-            site.sectioncat = extractKeyValueArray(gptTargeting.sectionCat, keyValues);
+            const keyValueData = extractKeyValueArray(gptTargeting.sectionCat, keyValues);
+            if (keyValueData.length > 0) {
+              site.sectioncat = keyValueData;
+            }
           }
           if (gptTargeting.pageCat) {
-            site.pagecat = extractKeyValueArray(gptTargeting.pageCat, keyValues);
+            const keyValueData = extractKeyValueArray(gptTargeting.pageCat, keyValues);
+            if (keyValueData.length > 0) {
+              site.pagecat = keyValueData;
+            }
           }
 
           if (site.cat) {
