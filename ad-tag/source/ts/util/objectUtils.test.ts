@@ -45,6 +45,27 @@ describe('objectUtils', () => {
       expect(result).to.deep.equals({ a: [1, 2] });
     });
 
+    it('should not alias a source array the target does not have', () => {
+      const source = { a: [1] };
+      const result = mergeDeep({}, source);
+      result.a.push(2);
+      expect(source.a).to.deep.equals([1]);
+    });
+
+    it('should not alias objects inside a source array', () => {
+      const source = { a: [{ name: 'original' }] };
+      const result = mergeDeep({}, source);
+      result.a[0].name = 'changed';
+      expect(source.a[0].name).to.equals('original');
+    });
+
+    it('should not alias a source array that is concatenated onto the target', () => {
+      const source = { a: [{ name: 'original' }] };
+      const result = mergeDeep({ a: [] }, source);
+      result.a[0].name = 'changed';
+      expect(source.a[0].name).to.equals('original');
+    });
+
     it('should merge all primitive types', () => {
       const fn = Object.is;
       const result = mergeDeep({ a: 1, b: 'str' }, { c: false, d: fn });

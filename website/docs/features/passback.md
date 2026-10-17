@@ -27,7 +27,7 @@ const moliConfig = {
 
 ## Message Protocol
 
-The bridge supports two types of messages:
+The bridge supports three types of messages:
 
 ### 1. Refresh Ad Unit Message
 
@@ -64,6 +64,113 @@ Indicates a passback scenario and adds targeting parameters:
 - `domId`: The DOM ID of the ad slot (fallback if `adUnitPath` not provided)
 - `adUnitPath`: The ad unit path (preferred method)
 - `passbackOrigin`: Name of the advertiser triggering the passback
+
+### 3. ortb2 Request Message {#ortb2}
+
+Asks the page for its content. The creative posts:
+
+```ts
+{
+  event: 'h5.ortb2'
+}
+```
+
+**Parameters:**
+
+- `event`: Must be `'h5.ortb2'` — the message takes nothing else
+
+The page replies **to the window that asked**, and to no other:
+
+```ts
+{
+  event: 'h5.ortb2.response',
+  ortb2: {
+    site: {
+      content: {
+        title: 'How do I bake sourdough bread?',
+        producer: { name: 'baker42' },
+        language: 'de'
+      }
+    }
+  }
+}
+```
+
+**Response fields:**
+
+- `event`: always `'h5.ortb2.response'`
+- `ortb2`: the page's OpenRTB 2.6 first party data — the static `targeting.ortb2` and the
+  runtime half set via `moli.setConfig({ ortb2 })`, deep merged. `{}` when the publisher set
+  neither.
+
+The reply carries `ortb2` and **nothing else**. Key-values, labels and audience data are not
+part of it and cannot be requested over the bridge.
+
+The answer always reflects the **current** page: in a single page application, a creative that
+asks after an in-app navigation gets the new page's content, not the one the ad tag started on.
+
+#### Reading it from a creative
+
+The reply is asynchronous, so register the listener *before* asking. A creative should also
+decide what to render if no answer arrives — the bridge may be disabled, or the creative may be
+running on a page without moli at all.
+
+```html
+<script>
+  (function () {
+    var TIMEOUT_MS = 300;
+    var settled = false;
+
+    function render(ortb2) {
+      if (settled) return;
+      settled = true;
+      window.removeEventListener('message', onMessage);
+
+      var content = (ortb2 && ortb2.site && ortb2.site.content) || {};
+      // always assign through textContent, never innerHTML
+      document.getElementById('headline').textContent = content.title || '';
+    }
+
+    function onMessage(event) {
+      var data = event.data;
+      try {
+        if (typeof data === 'string') data = JSON.parse(data);
+      } catch (_) {
+        return;
+      }
+      if (data && data.event === 'h5.ortb2.response') {
+        render(data.ortb2);
+      }
+    }
+
+    window.addEventListener('message', onMessage);
+
+    var request = JSON.stringify({ event: 'h5.ortb2' });
+    try {
+      window.top.postMessage(request, '*');
+    } catch (_) {
+      window.postMessage(request, '*');
+    }
+
+    // never blank the slot: render the generic variant if no answer arrives
+    window.setTimeout(function () {
+      render(null);
+    }, TIMEOUT_MS);
+  })();
+</script>
+```
+
+:::caution
+Substitute the values into `textContent`, never into `innerHTML`. The content is publisher data,
+but it is user generated on many pages.
+:::
+
+#### What the page will not tell you
+
+The bridge answers any iframe that asks and performs no origin check — see
+[Security Considerations](#security-considerations). That is precisely why the reply scope is
+narrow: `ortb2` is the only thing a creative can read, so anything a publisher does not want a
+creative to see simply does not go into `ortb2`.
 
 ## Implementation Examples
 
@@ -194,20 +301,24 @@ These parameters are preserved in subsequent ad requests, allowing for:
 - Analytics and reporting on passback performance
 - Custom logic based on passback origin
 
-## Security Considerations
+## Security Considerations {#security-considerations}
 
 ### Origin Validation
 
-The bridge accepts messages from any origin (`'*'`). For production environments, consider:
+The bridge performs **no origin check** on any message, `h5.ortb2` included. A sandboxed
+SafeFrame has the origin `null`, so an allow-list would lock out exactly the creatives the
+bridge exists for.
 
-```ts
-// More secure implementation
-function sendSecureMessage(message, allowedOrigin) {
-  if (window.top.origin === allowedOrigin) {
-    window.top.postMessage(message, allowedOrigin);
-  }
-}
-```
+What contains the `h5.ortb2` reply instead is its **target** and its **scope**:
+
+- the reply is posted to `event.source` — the window that asked — and is never broadcast on the
+  page window
+- the reply carries `ortb2` and nothing else; key-values, labels and audience data are
+  unreachable over the bridge
+
+The accepted cost is that the page answers any iframe that asks, including third party creatives
+in other slots. Treat `targeting.ortb2` accordingly: whatever is in it is readable by any
+creative on the page.
 
 ### Message Validation
 
@@ -302,11 +413,17 @@ function trackPassback(origin) {
    - Verify message format and event type
    - Ensure creative has permission to post messages
 
-2. **Ad Slot Not Found**
+2. **No ortb2 Response**
+   - Check if bridge is enabled in configuration
+   - Register the `message` listener *before* posting the request
+   - The response is `{ ortb2: {} }` when the publisher set no `targeting.ortb2` and made no
+     `setConfig({ ortb2 })` call — that is an answer, not a failure
+
+3. **Ad Slot Not Found**
    - Verify `domId` or `adUnitPath` matches configured slots
    - Check that target slot exists and is properly configured
 
-3. **Backfill Not Triggering**
+4. **Backfill Not Triggering**
    - Ensure target slot has `loaded: 'backfill'` behavior
    - Verify slot is properly configured for backfill scenarios
 
@@ -318,6 +435,7 @@ Enable debug logging to troubleshoot issues:
 // Check browser console for bridge messages
 // Look for: "bridge: add message listener"
 // Look for: "passback: Process passback for ad slot [path]"
+// Look for: "bridge: answering ortb2 request"
 ```
 
 ## Integration Checklist

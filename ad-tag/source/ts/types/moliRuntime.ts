@@ -426,6 +426,11 @@ export namespace MoliRuntime {
      *
      * Runtime configuration takes precedence over the static configuration.
      *
+     * `ortb2` is the exception to the per-key merge the other fields use: the static
+     * `targeting.ortb2` and the runtime half set via `setConfig({ ortb2 })` are deep merged into
+     * a fresh object, with arrays concatenated and the runtime half winning on scalars. It is
+     * `{}` when neither half is set.
+     *
      * @returns the current page targeting
      */
     getPageTargeting(): Readonly<googleAdManager.Targeting>;
@@ -503,6 +508,21 @@ export namespace MoliRuntime {
     readonly keyValues: googleAdManager.KeyValueMap;
 
     /**
+     * Additional OpenRTB 2.6 first party data for the current page, set via
+     * `setConfig({ ortb2 })`. Deep merged on top of the static `Targeting.ortb2` by
+     * `getPageTargeting()`.
+     *
+     * Only valid for the current page - reset on each single-page-app `requestAds()` call,
+     * like `keyValues`.
+     *
+     * @example
+     * window.moli.que.push(function(moli) => {
+     *   moli.setConfig({ ortb2: { site: { content: { title: document.title } } } });
+     * });
+     */
+    readonly ortb2: prebidjs.firstpartydata.PrebidFirstPartyData;
+
+    /**
      * Additional labels. Insert with
      *
      * @example
@@ -575,6 +595,7 @@ export namespace MoliRuntime {
    * - `audience` - full replace
    * - `labels` - append onto the existing `runtimeConfig.labels`
    * - `targeting` - merged per-key into the existing `runtimeConfig.keyValues`
+   * - `ortb2` - deep merged into the existing `runtimeConfig.ortb2`, arrays concatenated
    * - `adUnitPathVariables` - full replace
    */
   export type MoliRuntimeConfigOverrides = Pick<MoliRuntimeConfig, 'adVolume' | 'audience'> & {
@@ -591,6 +612,28 @@ export namespace MoliRuntime {
      * match the public `MoliConfig.targeting.keyValues` naming.
      */
     targeting?: googleAdManager.KeyValueMap;
+
+    /**
+     * OpenRTB 2.6 first party data for the current page - deep merged into the existing
+     * `runtimeConfig.ortb2`. Objects are merged recursively, arrays are concatenated and
+     * scalars are overwritten by the later call. Additive across multiple `setConfig()` calls:
+     * a branch not mentioned in this object is left untouched.
+     *
+     * Merged on top of the static `MoliConfig.targeting.ortb2` by `getPageTargeting()`, where
+     * this runtime half wins on scalars.
+     *
+     * @example
+     * moli.setConfig({
+     *   ortb2: {
+     *     site: {
+     *       content: { title: 'How do I bake bread?', producer: { name: 'baker42' } }
+     *     }
+     *   }
+     * });
+     *
+     * @see googleAdManager.Targeting.ortb2
+     */
+    ortb2?: prebidjs.firstpartydata.PrebidFirstPartyData;
 
     /**
      * Ad unit path variables - full replace, matching `setAdUnitPathVariables()`'s semantics.

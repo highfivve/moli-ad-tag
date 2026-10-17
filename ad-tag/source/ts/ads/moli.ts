@@ -24,6 +24,7 @@ import {
   Overridable,
   ResolveAdUnitPathOptions
 } from '../types/moliConfig';
+import { mergeDeep } from 'ad-tag/util/objectUtils';
 import { QueryParameters } from 'ad-tag/util/queryParameters';
 import { BrowserStorageKeys } from 'ad-tag/util/browserStorageKeys';
 
@@ -180,6 +181,10 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   function getPageTargeting(): Readonly<googleAdManager.Targeting> {
     return {
       keyValues: { ...state.config?.targeting?.keyValues, ...state.runtimeConfig.keyValues },
+      // deep merged into a fresh object that shares nothing with either half, so a caller may
+      // mutate what it gets back without reaching into the config. Arrays are concatenated and
+      // the runtime half wins on scalars - see `MoliRuntimeConfigOverrides.ortb2`.
+      ortb2: mergeDeep({}, state.config?.targeting?.ortb2 ?? {}, state.runtimeConfig.ortb2),
       labels: [...(state.config?.targeting?.labels ?? []), ...state.runtimeConfig.labels],
       adUnitPathVariables: {
         ...state.config?.targeting?.adUnitPathVariables,
@@ -960,6 +965,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     const validated: MoliRuntime.MoliRuntimeConfigOverrides = {
       labels: partial.labels,
       targeting: partial.targeting,
+      ortb2: partial.ortb2,
       audience: partial.audience,
       adUnitPathVariables: partial.adUnitPathVariables
     };
@@ -997,6 +1003,9 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     }
     if (validated.targeting !== undefined) {
       Object.assign(target.keyValues, validated.targeting);
+    }
+    if (validated.ortb2 !== undefined) {
+      mergeDeep(target.ortb2, validated.ortb2);
     }
     if (validated.audience !== undefined) {
       target.audience = validated.audience;
@@ -1043,6 +1052,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
    *
    * - labels , they are only valid for the current page
    * - keyValues , they are only valid for the current page
+   * - ortb2 , page content is only valid for the current page
    * - refreshSlots , slots that have been refreshed, must be explicitly refreshed again
    * - refreshInfiniteSlots , slots that have been refreshed, must be explicitly refreshed again
    *
@@ -1052,7 +1062,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   function newEmptyRuntimeConfig(
     previous?: MoliRuntime.MoliRuntimeConfig,
     options?: {
-      /** if true, the labels and keyValues are kept from the previous runtime config */
+      /** if true, the labels, keyValues and ortb2 are kept from the previous runtime config */
       keepTargeting: boolean;
     }
   ): MoliRuntime.MoliRuntimeConfig {
@@ -1069,6 +1079,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         options?.keepTargeting === true ? (previous?.adUnitPathVariables ?? {}) : {},
       labels: options?.keepTargeting === true ? (previous?.labels ?? []) : [],
       keyValues: options?.keepTargeting === true ? (previous?.keyValues ?? {}) : {},
+      ortb2: options?.keepTargeting === true ? (previous?.ortb2 ?? {}) : {},
       refreshSlots: [],
       refreshInfiniteSlots: [],
       refreshBuckets: [],
