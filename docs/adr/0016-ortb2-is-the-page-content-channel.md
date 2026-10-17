@@ -51,6 +51,17 @@ and `Producer` are typed in `types/prebidjs.ts` accordingly — `Producer` was p
 This is page *content*, not page *targeting*. Key-values stay what they are: short, GAM-shaped
 targeting signals. Page content goes in `ortb2`.
 
+Two homes in that sentence look wrong and are deliberate. The field sits on
+`googleAdManager.Targeting` although it is the one field that must *not* reach Google Ad Manager:
+that type is moli's page-level targeting bag, the thing `getPageTargeting()` returns, and
+splitting page content into a second top-level config section would make publishers reason about
+two places where page-level data lives. Its *type* comes from `prebidjs.firstpartydata` although a
+publisher may run no prebid at all: that namespace is simply where this repo already types OpenRTB
+2.6, and duplicating `Site`/`Content`/`User` under a neutral namespace would leave two definitions
+of the same spec to drift apart. If a third consumer of ORTB appears that is neither prebid nor
+GAM, moving the ORTB types to their own namespace is the cleanup — the field's name and shape do
+not change with it.
+
 ### Merge and lifetime follow keyValues
 
 The static half (`MoliConfig.targeting.ortb2`) is the base; the runtime half set via `setConfig()`

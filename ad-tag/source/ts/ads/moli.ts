@@ -181,8 +181,9 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   function getPageTargeting(): Readonly<googleAdManager.Targeting> {
     return {
       keyValues: { ...state.config?.targeting?.keyValues, ...state.runtimeConfig.keyValues },
-      // deep merged into a fresh object so neither half is mutated by a read. Arrays are
-      // concatenated and the runtime half wins on scalars - see `MoliRuntimeConfigOverrides.ortb2`.
+      // deep merged into a fresh object that shares nothing with either half, so a caller may
+      // mutate what it gets back without reaching into the config. Arrays are concatenated and
+      // the runtime half wins on scalars - see `MoliRuntimeConfigOverrides.ortb2`.
       ortb2: mergeDeep({}, state.config?.targeting?.ortb2 ?? {}, state.runtimeConfig.ortb2),
       labels: [...(state.config?.targeting?.labels ?? []), ...state.runtimeConfig.labels],
       adUnitPathVariables: {

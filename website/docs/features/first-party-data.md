@@ -86,6 +86,15 @@ intent for a publisher who sets both.
 On top of the merged object the module layers the IAB category mappings read from key-values
 (`gptTargetingMappings`), which is a separate mechanism and is unaffected by `targeting.ortb2`.
 
+Two consequences of that layering are worth knowing if you put categories or content data in
+`targeting.ortb2`:
+
+- `site.cat` / `site.pagecat` / `site.sectioncat` entries from `targeting.ortb2` participate in
+  the de-duplication, so a category you set in both places appears once.
+- `site.content.data` entries whose `name` equals the configured `iabDataProviderName` are
+  dropped, because the module clears that provider's rows before writing its own. Use a different
+  `name` for your own data rows.
+
 ```ts
 const moliConfig: Moli.MoliConfig = {
   slots: [ /* ... */ ],

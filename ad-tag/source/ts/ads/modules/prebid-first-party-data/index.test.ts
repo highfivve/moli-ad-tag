@@ -662,6 +662,39 @@ describe('Prebid First Party Data Module', () => {
         });
       });
 
+      it('should not write the key-value categories back into the static targeting.ortb2', async () => {
+        // the category mappings push onto site.cat/pagecat/sectioncat. If the merge aliased the
+        // publisher's array, each requestAds() would append again and page 2 would carry page 1.
+        const { configureStep } = createFpdModule({}, { cat: 'openrtb2_cat' });
+
+        const ortb2 = { site: { cat: ['IAB-publisher'] } };
+        const moliConfig: MoliConfig = configWithTargeting({
+          keyValues: { openrtb2_cat: ['IAB-keyvalue'] },
+          ortb2
+        });
+
+        await configureStep(adPipelineContext(moliConfig), []);
+        await configureStep(adPipelineContext(moliConfig), []);
+
+        expect(ortb2.site.cat).to.deep.equals(['IAB-publisher']);
+        const site = setConfigSpy.secondCall.firstArg.ortb2.site as OpenRtb2Site;
+        expect(site.cat).to.deep.equals(['IAB-publisher', 'IAB-keyvalue']);
+      });
+
+      it('should not alias site.content.data objects from the static targeting.ortb2', async () => {
+        const { configureStep } = createFpdModule({});
+
+        const ortb2 = {
+          site: { content: { data: [{ name: 'publisher-dmp', segment: [{ id: '1' }] }] } }
+        };
+        const moliConfig: MoliConfig = configWithTargeting({ keyValues: {}, ortb2 });
+
+        await configureStep(adPipelineContext(moliConfig), []);
+
+        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        expect(site.content?.data?.[0]).to.not.equal(ortb2.site.content.data[0]);
+      });
+
       it('should not mutate the static targeting.ortb2 across two configure runs', async () => {
         const { configureStep } = createFpdModule({ site: { cat: ['IAB-module'] } });
 

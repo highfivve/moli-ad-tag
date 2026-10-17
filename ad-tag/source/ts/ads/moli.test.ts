@@ -1319,6 +1319,39 @@ describe('moli', () => {
       expect(adTag.getRuntimeConfig().ortb2).to.be.deep.equal({ site: { cat: ['IAB2'] } });
     });
 
+    it('should not alias the static half when only it sets an array', async () => {
+      const staticOrtb2 = { site: { cat: ['IAB1'] } };
+      const adTag = createMoliTag(jsDomWindow);
+      await adTag.configure({
+        ...defaultConfig,
+        targeting: { keyValues: {}, ortb2: staticOrtb2 }
+      });
+
+      adTag.getPageTargeting().ortb2?.site?.cat?.push('IAB-injected');
+
+      expect(staticOrtb2.site.cat).to.be.deep.equal(['IAB1']);
+      expect(adTag.getPageTargeting().ortb2).to.be.deep.equal({ site: { cat: ['IAB1'] } });
+    });
+
+    it('should not alias the runtime half when only it sets an array', () => {
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setConfig({ ortb2: { site: { cat: ['IAB1'] } } });
+
+      adTag.getPageTargeting().ortb2?.site?.cat?.push('IAB-injected');
+
+      expect(adTag.getRuntimeConfig().ortb2).to.be.deep.equal({ site: { cat: ['IAB1'] } });
+    });
+
+    it('should not keep a reference to the array the caller passed to setConfig()', () => {
+      const callerOwned = { site: { cat: ['IAB1'] } };
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setConfig({ ortb2: callerOwned });
+
+      callerOwned.site.cat.push('IAB-added-later');
+
+      expect(adTag.getRuntimeConfig().ortb2).to.be.deep.equal({ site: { cat: ['IAB1'] } });
+    });
+
     it('should reset the runtime ortb2 on each spa requestAds() call', async () => {
       dom.reconfigure({ url: 'https://localhost/1' });
       const adTag = createMoliTag(jsDomWindow);

@@ -71,8 +71,8 @@ const parseMessageData = (data: any): BridgeProtocol | null => {
     switch (message?.event) {
       case 'h5.adunit.passback':
         return message.passbackOrigin && (message.domId || message.adUnitPath) ? message : null;
+      // neither carries a payload to validate
       case 'h5.adunit.refresh':
-        return message;
       case 'h5.ortb2':
         return message;
       default:
@@ -180,14 +180,14 @@ const handlePassback = (message: PassbackMessage, context: AdPipelineContext): v
  * creatives in other slots - which is why `ortb2` is no place for anything that should not be
  * readable by a creative.
  *
- * @param event the message event, whose `source` is the window to answer
+ * The message itself carries no payload, so this takes the asking window rather than the parsed
+ * message - that window is the only thing the handler needs.
+ *
+ * @param source the window that asked, taken from the message event's `source`
  * @param context
  * @see docs/adr/0016-ortb2-is-the-page-content-channel.md
  */
-const handleOrtb2 = (event: MessageEvent, context: AdPipelineContext): void => {
-  // `MessageEventSource` also covers MessagePort and ServiceWorker, whose postMessage has a
-  // different signature. A creative always posts from a window, so narrow to one.
-  const source = event.source as Window | null;
+const handleOrtb2 = (source: Window | null, context: AdPipelineContext): void => {
   if (!source) {
     context.logger__.debug('bridge', 'ortb2 request without a source window - ignoring');
     return;
@@ -219,7 +219,9 @@ export const bridgeInitStep = (): InitStep =>
               handleRefresh(message, context);
               break;
             case 'h5.ortb2':
-              handleOrtb2(event, context);
+              // `MessageEventSource` also covers MessagePort and ServiceWorker, whose
+              // postMessage has a different signature. A creative always posts from a window.
+              handleOrtb2(event.source as Window | null, context);
               break;
           }
         }

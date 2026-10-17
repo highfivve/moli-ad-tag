@@ -102,17 +102,7 @@ export const createPrebidFirstPartyDataModule = (): IModule => {
       context.window__.pbjs.que.push(() => {
         const existingFpd = context.window__.pbjs.readConfig().ortb2 || {};
 
-        // Three layers, least specific first: the publisher's static page content
-        // (`targeting.ortb2`), this module's own first party data, and whatever prebid already
-        // holds. Later layers win on scalars, arrays are concatenated in that order.
-        //
-        // The module config is the more specific statement of intent for a publisher who sets
-        // both, so it outranks `targeting.ortb2`.
-        //
-        // Only the *static* half of ortb2 is read here. The runtime half
-        // (`runtimeConfig__.ortb2`) deliberately does not reach the bidders yet.
-        //
-        // @see docs/adr/0016-ortb2-is-the-page-content-channel.md
+        // least specific first - see the precedence table in this module's header doc
         const ortb2FromKeyValues = mergeDeep(
           {},
           context.config__.targeting?.ortb2,
