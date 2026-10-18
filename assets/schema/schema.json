@@ -5341,6 +5341,10 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "ortb2": {
+          "$ref": "#/definitions/prebidjs.firstpartydata.PrebidFirstPartyData",
+          "description": "Static OpenRTB 2.6 first party data describing the page and its content.\n\nThis is moli's channel for page content - the article headline, the author, the content language. Each field has a standard, named home in the ORTB spec, so partners receive it labelled instead of as an anonymous key-value. Page content does **not** belong in `keyValues`: `adManagerExcludes` only gates the Google Ad Manager path, while the adex, emetriq and roqad modules merge key-values without honouring it.\n\nPublishers supply the per-page values at runtime via `moli.setConfig({ ortb2 })`. The static half here and the runtime half are deep merged - with arrays concatenated and the runtime half winning on scalars - and read back through `moli.getPageTargeting().ortb2`. The runtime half is reset on each single-page-app `requestAds()` call, exactly like `keyValues`."
         }
       },
       "required": [
@@ -8373,11 +8377,11 @@
           "type": "string"
         },
         "pageCat": {
-          "description": "The `key` in the targeting map that contains the `pageCat` values.\n\nThe targeting values should be an array of IAB content categories that describe the current page or view of the site. if not defined, `cat` will be used as a fallback",
+          "description": "The `key` in the targeting map that contains the `pageCat` values.\n\nThe targeting values should be an array of IAB content categories that describe the current page or view of the site. If not defined, or if no key-value is set for this key on the current page, `cat` will be used as a fallback.",
           "type": "string"
         },
         "sectionCat": {
-          "description": "The `key` in the targeting map that contains the `sectionCat` values.\n\nThe targeting values should be an array of IAB content categories that describe the current section of the site. If not defined, `cat` will be used as a fallback",
+          "description": "The `key` in the targeting map that contains the `sectionCat` values.\n\nThe targeting values should be an array of IAB content categories that describe the current section of the site. If not defined, or if no key-value is set for this key on the current page, `cat` will be used as a fallback.",
           "type": "string"
         }
       },
@@ -16205,7 +16209,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-222904-222907-248365657-222897-222907-248365657-222865-223693-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-235941%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-224818-224821-248365657-224811-224821-248365657-224779-225607-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-237855%3E"
           },
           "type": "array"
         }
@@ -16215,7 +16219,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<(alias-248365657-221808-221978-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-2359411149092559&alias-248365657-221978-222111-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-2359411210238678)>": {
+    "prebidjs.activitycontrols.IActivity<(alias-248365657-223722-223892-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-2378551149092559&alias-248365657-223892-224025-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-2378551210238678)>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -16225,7 +16229,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-221808-221978-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-2359411149092559%26alias-248365657-221978-222111-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-2359411210238678)%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-223722-223892-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-2378551149092559%26alias-248365657-223892-224025-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-2378551210238678)%3E"
           },
           "type": "array"
         }
@@ -16235,7 +16239,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-221353-221567-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-23594198888365>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-223267-223481-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-23785598888365>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -16245,7 +16249,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-221353-221567-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-23594198888365%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-223267-223481-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-23785598888365%3E"
           },
           "type": "array"
         }
@@ -16255,7 +16259,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-221567-221808-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-235941187177090>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-223481-223722-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-237855187177090>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -16265,7 +16269,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-221567-221808-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-235941187177090%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-223481-223722-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-237855187177090%3E"
           },
           "type": "array"
         }
@@ -16275,7 +16279,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-221808-221978-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-2359411149092559&alias-248365657-221978-222111-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-2359411210238678)>": {
+    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-223722-223892-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-2378551149092559&alias-248365657-223892-224025-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-2378551210238678)>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -16338,7 +16342,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-221353-221567-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-23594198888365>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-223267-223481-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-23785598888365>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -16398,7 +16402,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-221567-221808-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-235941187177090>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-223481-223722-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-237855187177090>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -16453,7 +16457,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<structure-248365657-222904-222907-248365657-222897-222907-248365657-222865-223693-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-235941>": {
+    "prebidjs.activitycontrols.IActivityRule<structure-248365657-224818-224821-248365657-224811-224821-248365657-224779-225607-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-237855>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -16509,7 +16513,7 @@
       "description": "Starting with version 7.52, Prebid.js introduced a centralized control mechanism for privacy-sensitive activities\n- such as accessing device storage or sharing data with partners.  These controls are intended to serve as building blocks for privacy protection mechanisms, allowing module developers or publishers to directly specify what should be permitted or avoided in any given regulatory environment.",
       "properties": {
         "accessDevice": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-221353-221567-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-23594198888365%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-223267-223481-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-23785598888365%3E",
           "description": "A component wants to use device storage.\n\nEffect when denied: Storage is disabled"
         },
         "enrichEids": {
@@ -16521,7 +16525,7 @@
           "description": "A Real-Time Data (RTD) submodule wants to add user first-party data to outgoing requests (`user.data` in ORTB)\n\nEffect when denied: User FPD is discarded"
         },
         "fetchBids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-221567-221808-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-235941187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-223481-223722-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-237855187177090%3E",
           "description": "A bid adapter wants to participate in an auction\n\nEffect when denied: Bidder is removed from the auction"
         },
         "reportAnalytics": {
@@ -16529,23 +16533,23 @@
           "description": "An analytics adapter is being enabled through `pbjs.enableAnalytics`\n\nEffect when denied: Adapter remains disabled"
         },
         "syncUser": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-221808-221978-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-2359411149092559%26alias-248365657-221978-222111-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-2359411210238678)%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-223722-223892-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-2378551149092559%26alias-248365657-223892-224025-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-2378551210238678)%3E",
           "description": "A bid adapter wants to fetch a [user sync](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-Configure-User-Syncing)\n\nEffect when denied: User sync is skipped"
         },
         "transmitEids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-221567-221808-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-235941187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-223481-223722-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-237855187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user IDs to their endpoint.\n\nEffect when denied: User IDs are hidden from the component"
         },
         "transmitPreciseGeo": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-221567-221808-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-235941187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-223481-223722-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-237855187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit precise geolocation data to their endpoint.\n\nEffect when denied: Component is allowed only 2-digit precision for latitude and longitude"
         },
         "transmitTid": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-221567-221808-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-235941187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-223481-223722-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-237855187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit globally unique transaction IDs to their endpoint.\n\nEffect when denied: Transaction IDs are hidden from the component"
         },
         "transmitUfpd": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-221567-221808-248365657-220772-226875-248365657-220657-226875-248365657-195-235940-248365657-168-235940-248365657-0-235941187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-223481-223722-248365657-222686-228789-248365657-222571-228789-248365657-195-237854-248365657-168-237854-248365657-0-237855187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user FPD to their endpoint.\n\nEffect when denied: User FPD is hidden from the component"
         }
       },
@@ -18028,6 +18032,51 @@
       ],
       "type": "object"
     },
+    "prebidjs.firstpartydata.OpenRtb2Content": {
+      "additionalProperties": false,
+      "description": "Details about the content within the site - the article, video or, for user generated content, the post that the ad is shown next to.\n\nOpenRTB 2.6, section 3.2.16.",
+      "properties": {
+        "data": {
+          "description": "Additional content data. Each object represents a different data source.",
+          "items": {
+            "$ref": "#/definitions/prebidjs.firstpartydata.OpenRtb2Data"
+          },
+          "type": "array"
+        },
+        "ext": {
+          "description": "Placeholder for exchange-specific extensions to OpenRTB."
+        },
+        "keywords": {
+          "description": "Comma separated list of keywords describing the content.",
+          "type": "string"
+        },
+        "language": {
+          "description": "Content language using ISO-639-1-alpha-2.",
+          "type": "string"
+        },
+        "prodq": {
+          "$ref": "#/definitions/prebidjs.firstpartydata.ContentQuality",
+          "description": "Production quality of the content."
+        },
+        "producer": {
+          "$ref": "#/definitions/prebidjs.firstpartydata.OpenRtb2Producer",
+          "description": "The producer of the content - for user generated content the author of the post."
+        },
+        "title": {
+          "description": "Content title (e.g., the headline of an article or the title of a question).",
+          "type": "string"
+        },
+        "url": {
+          "description": "URL of the content, for buy-side contextualization or review.",
+          "type": "string"
+        },
+        "userrating": {
+          "description": "User rating of the content (e.g., number of stars, likes, etc.).",
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
     "prebidjs.firstpartydata.OpenRtb2Data": {
       "additionalProperties": false,
       "description": "Data segment that allows additional data about the related object (e.g. content).",
@@ -18067,6 +18116,35 @@
       "required": [
         "ua"
       ],
+      "type": "object"
+    },
+    "prebidjs.firstpartydata.OpenRtb2Producer": {
+      "additionalProperties": false,
+      "description": "This object describes the content producer of the content within the site - the entity that created or published it, which is not necessarily the publisher serving the ad.\n\nOpenRTB 2.6, section 3.2.17.",
+      "properties": {
+        "cat": {
+          "description": "Array of IAB content categories that describe the content producer.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "domain": {
+          "description": "Highest level domain of the content producer (e.g., \"producer.com\").",
+          "type": "string"
+        },
+        "ext": {
+          "description": "Placeholder for exchange-specific extensions to OpenRTB."
+        },
+        "id": {
+          "description": "Content producer or originator ID. Useful if content is syndicated and may be posted on a site using embed tags.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Content producer or originator name (e.g., \"Warner Bros\", or - for user generated content - the name of the user who created it).",
+          "type": "string"
+        }
+      },
       "type": "object"
     },
     "prebidjs.firstpartydata.OpenRtb2Publisher": {
@@ -18221,39 +18299,8 @@
           "type": "array"
         },
         "content": {
-          "additionalProperties": false,
-          "description": "Details about the Content (Section 3.2.16) within the site.",
-          "properties": {
-            "data": {
-              "description": "Additional content data. Each object represents a different data source.",
-              "items": {
-                "$ref": "#/definitions/prebidjs.firstpartydata.OpenRtb2Data"
-              },
-              "type": "array"
-            },
-            "keywords": {
-              "description": "Comma separated list of keywords describing the content.",
-              "type": "string"
-            },
-            "language": {
-              "description": "Content language using ISO-639-1-alpha-2.",
-              "type": "string"
-            },
-            "prodq": {
-              "$ref": "#/definitions/prebidjs.firstpartydata.ContentQuality"
-            },
-            "title": {
-              "type": "string"
-            },
-            "url": {
-              "type": "string"
-            },
-            "userrating": {
-              "description": "User rating of the content (e.g., number of stars, likes, etc.).",
-              "type": "number"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/prebidjs.firstpartydata.OpenRtb2Content",
+          "description": "Details about the Content (Section 3.2.16) within the site."
         },
         "ext": {
           "anyOf": [
