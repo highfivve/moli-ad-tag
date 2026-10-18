@@ -23,7 +23,7 @@
  * unaffected by `targeting.ortb2`.
  *
  * Only the **static** half of ortb2 is forwarded. The runtime half set via
- * `moli.setConfig({ ortb2 })` does not reach the bidders.
+ * `moli.setConfig({ ortb2 })` does not reach the bidders - whether it should is GD-10519.
  *
  * @see docs/adr/0016-ortb2-is-the-page-content-channel.md
  *
