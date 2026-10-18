@@ -119,5 +119,7 @@ Three properties of that handler are deliberate:
 - The bridge answers any iframe. Anything added to `ortb2` is readable by any creative on the page,
   so `ortb2` is not a place for anything that should not be.
 - Only the static half reaches prebid today. The runtime half is readable through
-  `getPageTargeting()` and over the bridge, but does not reach bidders until the follow-up story
-  wires it — a deliberate gap, not an oversight.
+  `getPageTargeting()` and over the bridge, but does not reach bidders — a deliberate gap, not an
+  oversight. Wiring it in would change what every bidder sees on every page for every publisher
+  running the module, which is a decision of its own: GD-10519. Until that is decided, anything a
+  publisher needs bidders to see belongs in the static `targeting.ortb2`.
