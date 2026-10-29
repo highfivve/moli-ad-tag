@@ -462,4 +462,176 @@ describe('IntentIQ Module', () => {
       expect(enableAnalyticsSpy).to.have.been.calledOnce;
     });
   });
+
+  describe('IntentIQ Bidders', () => {
+    const intentIqConfigWithBidders: modules.intentiq.IntentIqModuleConfig = {
+      ...intentIqConfig,
+      bidders: ['appnexus', 'criteo']
+    };
+
+    it('should restrict the intentIqId userId provider to the IntentIQ Bidders', async () => {
+      const mergeConfigSpy = sandbox.spy(jsDomWindow.pbjs, 'mergeConfig');
+      const module = createModule(intentIqConfigWithBidders);
+      await module.configureSteps__()[0](adPipelineContext(), []);
+
+      expect(mergedProvider(mergeConfigSpy).bidders).to.deep.equal(['appnexus', 'criteo']);
+    });
+
+    it('should enable the Manual Win Report on the config object shared by userId and analytics', async () => {
+      const mergeConfigSpy = sandbox.spy(jsDomWindow.pbjs, 'mergeConfig');
+      const enableAnalyticsSpy = sandbox.spy(jsDomWindow.pbjs, 'enableAnalytics');
+      const module = createModule(intentIqConfigWithBidders);
+      await module.configureSteps__()[0](adPipelineContext(), []);
+
+      expect(enabledAdapter(enableAnalyticsSpy).options).to.equal(
+        mergedProvider(mergeConfigSpy).params
+      );
+      expect(enabledAdapter(enableAnalyticsSpy).options).to.deep.equal({
+        partner: 12345,
+        domainName: 'example.com',
+        region: 'gdpr',
+        manualWinReportEnabled: true
+      });
+    });
+
+    describe('Manual Win Report', () => {
+      const mkBidWon = (
+        overrides: Partial<prebidjs.IGenericBidResponse> = {}
+      ): prebidjs.BidResponse =>
+        ({
+          bidder: 'appnexus',
+          bidderCode: 'appnexus',
+          auctionId: 'auction-1',
+          adUnitCode: 'ad-content-1',
+          cpm: 1.5,
+          currency: 'EUR',
+          originalCpm: 1.8,
+          originalCurrency: 'USD',
+          status: 'rendered',
+          mediaType: 'banner',
+          source: 'client',
+          ...overrides
+        }) as prebidjs.BidResponse;
+
+      /** stubs pbjs.onEvent and returns the registered bidWon handlers */
+      const stubOnEvent = (): Array<(bid: prebidjs.BidResponse) => void> => {
+        const handlers: Array<(bid: prebidjs.BidResponse) => void> = [];
+        sandbox.stub(jsDomWindow.pbjs, 'onEvent').callsFake((event: string, handler: any) => {
+          if (event === 'bidWon') {
+            handlers.push(handler);
+          }
+        });
+        return handlers;
+      };
+
+      /** installs IntentIQ's window adapter variable for partner 12345 */
+      const installAdapter = (): Sinon.SinonStub => {
+        const reportExternalWin = sandbox.stub();
+        (jsDomWindow as any).intentIqAnalyticsAdapter_12345 = { reportExternalWin };
+        return reportExternalWin;
+      };
+
+      it('should report the win of an IntentIQ Bidder with the full payload', async () => {
+        const handlers = stubOnEvent();
+        const reportExternalWin = installAdapter();
+        const module = createModule(intentIqConfigWithBidders);
+        await module.configureSteps__()[0](adPipelineContext(), []);
+
+        expect(handlers).to.have.length(1);
+        handlers[0](mkBidWon());
+
+        expect(reportExternalWin).to.have.been.calledOnceWithExactly({
+          biddingPlatformId: 1,
+          bidderCode: 'appnexus',
+          prebidAuctionId: 'auction-1',
+          cpm: 1.5,
+          currency: 'EUR',
+          originalCpm: 1.8,
+          originalCurrency: 'USD',
+          status: 'rendered',
+          placementId: 'ad-content-1',
+          adType: 'banner'
+        });
+      });
+
+      it('should report server-side wins with biddingPlatformId 1 (prebid) too', async () => {
+        const handlers = stubOnEvent();
+        const reportExternalWin = installAdapter();
+        const module = createModule(intentIqConfigWithBidders);
+        await module.configureSteps__()[0](adPipelineContext(), []);
+
+        handlers[0](mkBidWon({ bidder: 'criteo', bidderCode: 'criteo', source: 's2s' }));
+
+        expect(reportExternalWin).to.have.been.calledOnce;
+        expect(reportExternalWin.firstCall.args[0]).to.include({
+          biddingPlatformId: 1,
+          bidderCode: 'criteo'
+        });
+      });
+
+      it('should not report the win of a bidder that is not an IntentIQ Bidder', async () => {
+        const handlers = stubOnEvent();
+        const reportExternalWin = installAdapter();
+        const module = createModule(intentIqConfigWithBidders);
+        await module.configureSteps__()[0](adPipelineContext(), []);
+
+        handlers[0](mkBidWon({ bidder: 'dspx', bidderCode: 'dspx' }));
+
+        expect(reportExternalWin).to.have.not.been.called;
+      });
+
+      it('should skip the report with a debug log if the adapter window variable is missing', async () => {
+        const handlers = stubOnEvent();
+        const logger = newNoopLogger();
+        const debugSpy = sandbox.spy(logger, 'debug');
+        const module = createModule(intentIqConfigWithBidders);
+        await module.configureSteps__()[0]({ ...adPipelineContext(), logger__: logger }, []);
+
+        expect(() => handlers[0](mkBidWon())).to.not.throw();
+        expect(debugSpy).to.have.been.calledOnceWithExactly(
+          'IntentIQ',
+          'no intentIqAnalyticsAdapter_12345 found. Skipping win report'
+        );
+      });
+
+      it('should register the bidWon listener only once, even across requestAds cycles', async () => {
+        const handlers = stubOnEvent();
+        const reportExternalWin = installAdapter();
+        const module = createModule(intentIqConfigWithBidders);
+        const configureStep = module.configureSteps__()[0];
+        const context = adPipelineContext();
+
+        await configureStep(context, []);
+        await configureStep({ ...context, requestAdsCalls__: 2 }, []);
+        await configureStep({ ...context, requestAdsCalls__: 3 }, []);
+
+        expect(handlers).to.have.length(1);
+        handlers[0](mkBidWon());
+        expect(reportExternalWin).to.have.been.calledOnce;
+      });
+
+      [undefined, []].forEach(bidders =>
+        it(`should not register a bidWon listener if bidders is ${JSON.stringify(bidders)}`, async () => {
+          const onEventSpy = sandbox.spy(jsDomWindow.pbjs, 'onEvent');
+          const module = createModule({ ...intentIqConfig, bidders });
+          await module.configureSteps__()[0](adPipelineContext(), []);
+
+          expect(onEventSpy).to.have.not.been.called;
+        })
+      );
+    });
+
+    [undefined, []].forEach(bidders =>
+      it(`should leave the userId provider unrestricted and the Manual Win Report off if bidders is ${JSON.stringify(bidders)}`, async () => {
+        const mergeConfigSpy = sandbox.spy(jsDomWindow.pbjs, 'mergeConfig');
+        const module = createModule({ ...intentIqConfig, bidders });
+        await module.configureSteps__()[0](adPipelineContext(), []);
+
+        expect(mergedProvider(mergeConfigSpy)).to.not.have.property('bidders');
+        expect(mergedProvider(mergeConfigSpy).params).to.not.have.property(
+          'manualWinReportEnabled'
+        );
+      })
+    );
+  });
 });

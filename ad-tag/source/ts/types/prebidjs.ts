@@ -1567,7 +1567,8 @@ export namespace prebidjs {
        * `iiqAnalytics` only. Set to `true` to allow manual win reporting via
        * `window.intentIqAnalyticsAdapter_<partnerId>.reportExternalWin()`. Defaults to `false`.
        *
-       * Out of scope for v1 - never populated by moli.
+       * Set to `true` by the `intentiq` module whenever `modules.intentiq.IntentIqModuleConfig.bidders`
+       * is non-empty (Manual Win Report) - never configurable on its own.
        */
       readonly manualWinReportEnabled?: boolean;
 
@@ -2556,6 +2557,42 @@ export namespace prebidjs {
      */
     export interface IIntentIqAnalyticsAdapter extends IAnalyticsAdapter<userSync.IIntentIqConfig> {
       readonly provider: 'iiqAnalytics';
+    }
+
+    /**
+     * Payload of `window.intentIqAnalyticsAdapter_<partner>.reportExternalWin`. Only the fields
+     * the `intentiq` module sends for a prebid win are typed.
+     *
+     * @see https://github.com/prebid/Prebid.js/blob/master/modules/intentIqAnalyticsAdapter.ts
+     * @see https://github.com/prebid/Prebid.js/blob/master/modules/intentIqAnalyticsAdapter.md
+     */
+    export interface IIntentIqExternalWinData {
+      /**
+       * Platform that rendered the impression: 1 = Prebid, 2 = Amazon, 3 = Google,
+       * 4 = Open RTB / local Prebid server.
+       */
+      readonly biddingPlatformId: 1 | 2 | 3 | 4;
+      readonly bidderCode: string;
+      readonly prebidAuctionId?: string;
+      readonly cpm: number;
+      readonly currency: string;
+      readonly originalCpm?: number;
+      readonly originalCurrency?: string;
+      readonly status?: string;
+      /**
+       * Unique identifier of the ad unit that showed the ad.
+       */
+      readonly placementId?: string;
+      readonly adType?: string;
+    }
+
+    /**
+     * The global the `iiqAnalytics` adapter defines as `window.intentIqAnalyticsAdapter_<partner>`
+     * when it is enabled. `reportExternalWin` only reports when the adapter was enabled with
+     * `manualWinReportEnabled: true`.
+     */
+    export interface IIntentIqAnalyticsAdapterGlobal {
+      readonly reportExternalWin: (data: IIntentIqExternalWinData) => boolean | void;
     }
   }
 

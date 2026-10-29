@@ -58,3 +58,22 @@ guard as the userId merge, which re-checks `pbjs.getConfig().userSync` on every 
 
 This is the generalisation of 0012's closing note: a module owns one vendor's prebid config keys end
 to end — all of them, when the vendor requires them to agree.
+
+## Amendment (2026-10-29): IntentIQ Bidders and the Manual Win Report (GD-10631)
+
+highfivve-portal can exclude bidders from IntentIQ (highfivve-portal ADR 0041). It derives the
+remaining **IntentIQ Bidders** and emits them as `modules.intentiq.bidders`; moli never sees the
+exclusion. A non-empty `bidders` is the only switch, and it changes all three integration points
+together, because they must agree:
+
+- the `intentIqId` userId entry gets `bidders`, so only those bidders receive the EID;
+- the shared config object gets `manualWinReportEnabled: true`, so the `iiqAnalytics` adapter
+  stops reporting every win itself;
+- the module registers one prebid `bidWon` listener and reports wins of the IntentIQ Bidders via
+  `window.intentIqAnalyticsAdapter_<partner>.reportExternalWin` (the **Manual Win Report**).
+
+The listener is registered in the same once-per-page branch that enables the adapter, for the same
+reason: a second registration on an SPA navigation would report every win twice.
+`biddingPlatformId` is always `1` (prebid), for server-side bids too — they are still prebid wins.
+When the adapter's window variable is missing (GDPR enforcement blocked the adapter, or the Prebid
+Distribution does not ship it), the win is skipped with a debug log.
