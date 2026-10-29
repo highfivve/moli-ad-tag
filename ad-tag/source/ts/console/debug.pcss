@@ -1,13 +1,225 @@
 /** @define MoliDebug */
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/*
+ * Tailwind CSS 4 + daisyUI 5 setup for the moli debug console.
+ *
+ * This CSS is only rendered as a <style> tag inside the console shadow root (see
+ * rollup.console.config.mjs and globalConfig.tsx). Nothing must leak to the publisher page:
+ * - preflight is not imported: it resets element styles via html/body selectors that don't
+ *   exist inside the console shadow root
+ * - Tailwind theme variables are emitted on `:root, :host`, daisyUI's on `:host` (`root` option)
+ * - postcss.config.js converts rem to px and makes @property initial values work in the shadow DOM
+ */
+@layer theme, base, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+/* only scan the console sources, not the whole repository */
+@import 'tailwindcss/utilities.css' layer(utilities) source(none);
+@source './**/*.{js,ts,jsx,tsx}';
+
+/* the themingService toggles the .dark class (and data-theme for daisyUI) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@custom-variant tall (@media (min-height: 1100px));
+@custom-variant xTall (@media (min-height: 1300px));
+@custom-variant xxTall (@media (min-height: 1500px));
+
+@plugin 'daisyui' {
+  /* prefix daisyUI component classes to make them distinguishable from
+     tailwind utilities and custom classes */
+  prefix: 'd-';
+  logs: false;
+  /* only the custom light/dark themes below */
+  themes: false;
+  root: ':host';
+}
+
+@plugin 'daisyui/theme' {
+  name: 'light';
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+  root: ':host';
+
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(96.1151% 0 0);
+  --color-base-300: oklch(92.4169% 0.00108 197.137559);
+  --color-base-content: oklch(27.8078% 0.029596 256.847952);
+  --color-primary: #000000;
+  --color-primary-content: oklch(80% 0 0);
+  --color-secondary: #00c8c8; /* highfivve turquoise */
+  --color-secondary-content: oklch(98.71% 0.0106 342.55);
+  --color-accent: #ba0e5f; /* highfivve berry */
+  --color-accent-content: oklch(90.2789% 0.040309 1.597621);
+  --color-neutral: oklch(32.1785% 0.02476 255.701624);
+  --color-neutral-content: oklch(89.4994% 0.011585 252.096176);
+  --color-info: #7da6d7;
+  --color-info-content: oklch(14.2803% 0.016962 253.333568);
+  --color-success: #006e65;
+  --color-success-content: oklch(89.6791% 0.017054 185.028998);
+  --color-warning: #e8d06a;
+  --color-warning-content: oklch(17.1455% 0.025044 96.335388);
+  --color-error: #c5015d;
+  --color-error-content: oklch(90.6073% 0.042588 4.252918);
+
+  /* close to the daisyUI 4 look (rounded-badge / rounded-btn / rounded-box) */
+  --radius-selector: 1rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin 'daisyui/theme' {
+  name: 'dark';
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+  root: ':host';
+
+  /* improved card contrast in dark mode */
+  --color-base-100: #1f1f2e;
+  --color-base-200: #2d2d3d;
+  --color-base-300: #3a3a4d;
+  --color-base-content: oklch(74.6477% 0.0216 264.435964);
+  /* inverted primary so black-on-light becomes white-on-dark */
+  --color-primary: #ffffff;
+  --color-primary-content: oklch(20% 0 0);
+  --color-secondary: #00c8c8; /* highfivve turquoise */
+  --color-secondary-content: oklch(15.0802% 0.025742 194.768948);
+  --color-accent: #ba0e5f; /* highfivve berry */
+  --color-accent-content: oklch(90.2789% 0.040309 1.597621);
+  --color-neutral: oklch(31.3815% 0.021108 254.139175);
+  --color-neutral-content: oklch(74.6477% 0.0216 264.435964);
+  --color-info: #7da6d7;
+  --color-info-content: oklch(14.2803% 0.016962 253.333568);
+  --color-success: #42cbc9;
+  --color-success-content: oklch(15.3974% 0.023008 193.608741);
+  --color-warning: #e8d06a;
+  --color-warning-content: oklch(17.1455% 0.025044 96.335388);
+  --color-error: #f88383;
+  --color-error-content: oklch(14.8058% 0.028623 21.111915);
+
+  --radius-selector: 1rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@theme {
+  --font-sans: Brownfox-Formular, ui-sans-serif, system-ui;
+  --font-BrownfoxFormular: Brownfox-Formular;
+  --font-roboto: Roboto, Arial, sans-serif;
+
+  --breakpoint-*: initial;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1515px;
+
+  /* highfivve palette, extends/overrides single tailwind shades */
+  --color-turquoise-50: rgba(130, 218, 216, 0.5);
+  --color-turquoise-200: #82dad8;
+  --color-turquoise-300: #42cbc9;
+  --color-turquoise-400: #00c8c8; /* from highfivve styleguide */
+  --color-turquoise-600: #56a9a8;
+  --color-blue-50: rgba(183, 203, 226, 0.5);
+  --color-blue-200: #b7cbe2;
+  --color-blue-300: #7da6d7;
+  --color-blue-400: #052e53;
+  --color-berry-50: #bba1b0;
+  --color-berry-200: #c45f8d;
+  --color-berry-400: #ba0e5f; /* from highfivve styleguide */
+  --color-berry-500: #c5015d;
+  --color-purple-50: rgba(172, 149, 232, 0.5);
+  --color-purple-400: #ac95e8;
+  --color-purple-500: #8a7de0;
+  --color-pink-50: rgba(241, 118, 175, 0.5);
+  --color-pink-400: #f176af;
+  --color-yellow-50: rgba(232, 208, 106, 0.5);
+  --color-yellow-400: #e8d06a;
+  --color-orange-50: rgba(234, 148, 69, 0.5);
+  --color-orange-400: #ea9445;
+  --color-red-50: rgba(248, 131, 131, 0.5);
+  --color-red-400: #f88383;
+  --color-gray-50: rgba(66, 203, 201, 0.05);
+  --color-gray-200: rgba(203, 0, 95, 0.04);
+  --color-gray-400: #e7e7e7;
+  --color-gray-450: #e1e1e1;
+  --color-darkgray-200: #a2a3a5;
+  --color-green-400: #49817b;
+  --color-green-600: #006e65;
+}
 
 /*
- * Design tokens used by the tailwind config (hsl(var(--...)) colors, --radius).
- * This CSS is only rendered as a <style> tag inside the console shadow root,
- * so the tokens are declared on :host. Nothing must leak to the publisher page.
+ * Design tokens declared on :host / .dark below. `inline` so utilities reference the
+ * token variables directly and pick up the .dark overrides on descendants.
+ * primary/secondary/accent are intentionally not mapped: those utilities use daisyUI's theme colors.
+ */
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border-color));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+/*
+ * Needed to make dynamic classNames (e.g. colors) possible
+ * (formerly the tailwind 3 `safelist`).
+ */
+@source inline('{bg,text,fill,stroke}-{slate,gray,zinc,neutral,stone,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{50,200,300,400,500,600}');
+@source inline('{bg,text,fill,stroke}-turquoise-{50,200,300,400,600}');
+@source inline('{bg,text,fill,stroke}-berry-{50,200,400,500}');
+@source inline('{bg,text,fill,stroke}-darkgray-200');
+
+/*
+ * The only preflight rules the console needs: daisyUI 5 components like the collapse title
+ * or the collapse toggle input set `width: 100%` and overflow the panel with the default
+ * content-box and the browser's default checkbox/radio margin.
+ */
+@layer base {
+  *,
+  ::before,
+  ::after {
+    box-sizing: border-box;
+  }
+
+  input[type='checkbox'],
+  input[type='radio'] {
+    margin: 0;
+  }
+}
+
+/*
+ * Design tokens used by the theme above (hsl(var(--...)) colors, --radius).
+ * Declared on :host as this CSS lives in the console shadow root.
+ *
+ * Don't name a token `--border`: daisyUI 5 uses `--border` for its border width.
  */
 :host {
   /* stop the publisher page's font-size from inheriting into the console */
@@ -28,7 +240,7 @@
   --accent-foreground: 240 5.9% 10%;
   --destructive: 0 72% 51%;
   --destructive-foreground: 210 40% 98%;
-  --border: 240 5.9% 90%;
+  --border-color: 240 5.9% 90%;
   --input: 240 5.9% 90%;
   --ring: 178 100% 39%;
   --chart-1: 178 100% 39%;
@@ -56,7 +268,7 @@
   --accent-foreground: 0 0% 98%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 0% 98%;
-  --border: 240 3.7% 15.9%;
+  --border-color: 240 3.7% 15.9%;
   --input: 240 3.7% 15.9%;
   --ring: 178 100% 39%;
   --chart-1: 178 80% 45%;

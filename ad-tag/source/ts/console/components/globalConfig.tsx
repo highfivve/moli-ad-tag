@@ -3,30 +3,31 @@ import React, { Component } from 'react';
 import { AdSlotConfig } from './adSlotConfig';
 import { ModuleConfigs } from './moduleConfigs';
 import { Tag, TagLabel } from './tag';
-import { Block, Btn, Panel, SubHeadline, Tabs, TagContainer, TextInput, Toggle } from './ui';
+import {
+  Block,
+  Btn,
+  Dropdown,
+  Filter,
+  Panel,
+  SubHeadline,
+  Tabs,
+  TagContainer,
+  TextInput,
+  Toggle
+} from './ui';
 import { classList } from '../util/stringUtils';
 import { IWindowEventObserver, WindowResizeService } from '../util/windowResizeService';
 import { ThemeConfig, ThemingService } from '../util/themingService';
 
 import { ConsentConfig } from './consentConfig';
 import { LabelConfigDebug } from './labelConfigDebug';
-import { extractPrebidAdSlotConfigs } from '../util/prebid';
-import { checkAdReloadConfig } from '../validations/adReloadValidations';
-import { checkSizesConfig } from '../validations/sizesConfigValidations';
+import { filterAndSortSlots, SlotFilter, SlotSort } from '../util/slotList';
 import { prebidjs } from '../../types/prebidjs';
 import { googletag } from '../../types/googletag';
 import { MoliRuntime } from '../../types/moliRuntime';
-import {
-  AdSlot,
-  googleAdManager,
-  headerbidding,
-  sizeConfigs,
-  modules,
-  MoliConfig
-} from '../../types/moliConfig';
+import { AdSlot, googleAdManager, modules, MoliConfig } from '../../types/moliConfig';
 import { LabelConfigService } from '../../ads/labelConfigService';
 import { SizeConfigService } from '../../ads/sizeConfigService';
-import { checkBucketConfig, checkSkinConfig } from '../validations/bucketValidations';
 import {
   getActiveEnvironmentOverride,
   resetEnvironmentOverrides,
@@ -79,9 +80,10 @@ type IGlobalConfigState = {
   activeTab: ConsoleTab;
   /** slot that was clicked in the overview; opened and scrolled to in the ad setup tab */
   selectedSlotDomId?: string;
-  messages: Message[];
   browserResized: boolean;
-  showOnlyRenderedSlots: boolean;
+  /** `undefined` if no filter is selected, which shows all slots */
+  slotFilter?: SlotFilter;
+  slotSort: SlotSort;
   themeConfig: ThemeConfig;
   adstxtEntry: string[];
   adstxtDomain: string;
@@ -89,11 +91,6 @@ type IGlobalConfigState = {
   adDensity: AdDensityState;
   configVersion: string;
   newDebugLabel: string;
-};
-
-export type Message = {
-  kind: 'error' | 'warning' | 'optimization';
-  text: React.ReactNode;
 };
 
 const debugSidebarSelector = 'moli-debug-sidebar';
@@ -107,9 +104,8 @@ export class GlobalConfig
     this.state = {
       sidebarHidden: false,
       activeTab: 'overview',
-      messages: [],
       browserResized: false,
-      showOnlyRenderedSlots: false,
+      slotSort: 'rendered',
       themeConfig: props.themingService.currentThemeConfig(),
       adstxtEntry: [],
       adstxtDomain: '',
@@ -122,40 +118,7 @@ export class GlobalConfig
       newDebugLabel: ''
     };
 
-    if (!props.config) {
-      this.reportMissingConfig(this.state.messages);
-    } else {
-      props.config.slots.forEach(slot => {
-        this.checkForDuplicateOrMissingSlots(this.state.messages, slot);
-        this.checkSlotPrebidConfig(this.state.messages, slot);
-        this.checkForWrongPrebidCodeEntry(this.state.messages, slot);
-      });
-
-      if (props.config.prebid) {
-        this.checkPrebidConfig(this.state.messages, props.config.prebid);
-      }
-
-      if (props.config.labelSizeConfig) {
-        props.config.labelSizeConfig.forEach(this.checkGlobalSizeConfigEntry(this.state.messages));
-      }
-
-      if (props.config.buckets) {
-        checkBucketConfig(this.state.messages, props.config.buckets, props.config.slots);
-      }
-
-      checkSkinConfig(this.state.messages, props.modules, props.config.slots);
-      checkAdReloadConfig(
-        this.state.messages,
-        props.modules,
-        props.config.slots,
-        this.props.labelConfigService.getSupportedLabels()
-      );
-
-      checkSizesConfig(
-        this.state.messages,
-        props.config.slots,
-        this.props.labelConfigService.getSupportedLabels()
-      );
+    if (props.config) {
       props.windowResizeService.register(this);
     }
   }
@@ -286,8 +249,7 @@ export class GlobalConfig
                     label: (
                       <>
                         <span className="sm:hidden">🐞</span>
-                        <span className="hidden sm:inline">Debugging</span>{' '}
-                        {this.validationCountTag()}
+                        <span className="hidden sm:inline">Debugging</span>
                       </>
                     )
                   }
@@ -313,50 +275,19 @@ export class GlobalConfig
     );
   }
 
-  private renderThemeDropdown = (): React.ReactElement => {
-    const { themeConfig } = this.state;
-    const options: ReadonlyArray<{ id: ThemeConfig; label: string }> = [
-      { id: 'system', label: '🖥️ system' },
-      { id: 'light', label: '🌞 light' },
-      { id: 'dark', label: '🌔 dark' }
-    ];
-    const activeOption = options.find(option => option.id === themeConfig) ?? options[0];
-
-    return (
-      <div className="d-dropdown d-dropdown-end ml-auto min-w-24">
-        <button
-          tabIndex={0}
-          className="d-btn d-btn-ghost d-btn-sm font-normal normal-case"
-          title="Appearance"
-        >
-          {activeOption.label} ▾
-        </button>
-        <ul
-          tabIndex={0}
-          className="d-dropdown-content d-menu d-menu-sm z-20 w-32 rounded-md bg-base-200 p-1 shadow"
-        >
-          {options.map(option => (
-            <li key={option.id}>
-              <button
-                // border/background resets needed because preflight is disabled
-                className={classList('border-0 bg-transparent text-left', [
-                  option.id === themeConfig,
-                  'd-active'
-                ])}
-                onClick={e => {
-                  this.setThemeConfig(option.id);
-                  // close the focus driven daisyUI dropdown
-                  e.currentTarget.blur();
-                }}
-              >
-                {option.label}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
-  };
+  private renderThemeDropdown = (): React.ReactElement => (
+    <Dropdown<ThemeConfig>
+      className="ml-auto min-w-24"
+      title="Appearance"
+      options={[
+        { id: 'system', label: '🖥️ system' },
+        { id: 'light', label: '🌞 light' },
+        { id: 'dark', label: '🌔 dark' }
+      ]}
+      active={this.state.themeConfig}
+      onSelect={this.setThemeConfig}
+    />
+  );
 
   private renderOverview = (config: MoliConfig): React.ReactElement => {
     const { runtimeConfig, labelConfigService } = this.props;
@@ -525,60 +456,63 @@ export class GlobalConfig
 
   private renderAdSetup = (config: MoliConfig): React.ReactElement => {
     const { modules, labelConfigService } = this.props;
-    const { showOnlyRenderedSlots, selectedSlotDomId } = this.state;
+    const { slotFilter, slotSort, selectedSlotDomId } = this.state;
+    const renderedSlotCount = config.slots.filter(this.isSlotRendered).length;
+    const slots = filterAndSortSlots(
+      config.slots,
+      slotFilter ?? 'all',
+      slotSort,
+      this.isSlotRendered
+    );
 
     return (
       <>
         <Block title="Ad Slots" color="slots">
-          <Panel variant="grey">
-            Slot sizes are annotated to show the origin of their validation state:
-            <ul>
-              <li>
-                <strong>Ⓢ</strong> means that the validation originates from the{' '}
-                <strong>slot's own sizeConfig</strong>,
-              </li>
-              <li>
-                <strong>Ⓖ</strong> indicates that the validation was done using the{' '}
-                <strong>global sizeConfig</strong>.
-              </li>
-            </ul>
-          </Panel>
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <Filter<SlotFilter>
+              name="moli-console-slot-filter"
+              options={[
+                { id: 'all', label: `All (${config.slots.length})` },
+                { id: 'rendered', label: `Rendered (${renderedSlotCount})` }
+              ]}
+              active={slotFilter}
+              onSelect={filter => this.setState({ slotFilter: filter })}
+            />
+            <Dropdown<SlotSort>
+              className="ml-auto"
+              title="Sort ad slots"
+              buttonPrefix="Sort: "
+              options={[
+                { id: 'rendered', label: 'Rendered first' },
+                { id: 'alphabetical', label: 'Alphabetical' }
+              ]}
+              active={slotSort}
+              onSelect={sort => this.setState({ slotSort: sort })}
+            />
+          </div>
 
-          <Panel variant="grey">
-            <label className="flex select-none items-center gap-2">
-              <input
-                className="d-checkbox d-checkbox-primary d-checkbox-xs border border-solid border-primary"
-                type="checkbox"
-                checked={showOnlyRenderedSlots}
-                onChange={e =>
-                  this.setState({
-                    showOnlyRenderedSlots: (e.target as HTMLInputElement).checked
-                  })
-                }
-              />
-              Show only rendered slots
-            </label>
-          </Panel>
-
-          {config.slots.map((slot, index) =>
-            this.isSlotRendered(slot) || !showOnlyRenderedSlots ? (
-              <div
-                key={index}
-                ref={el => {
-                  if (el && selectedSlotDomId && selectedSlotDomId === slot.domId) {
-                    el.scrollIntoView({ block: 'start' });
-                    this.setState({ selectedSlotDomId: undefined });
-                  }
-                }}
-              >
-                <AdSlotConfig
-                  labelConfigService={labelConfigService}
-                  slot={slot}
-                  initiallyExpanded={selectedSlotDomId === slot.domId}
-                />
-              </div>
-            ) : null
+          {slots.length === 0 && (
+            <span>
+              {slotFilter === 'rendered' ? 'No rendered ad slots.' : 'No ad slots configured.'}
+            </span>
           )}
+          {slots.map((slot, index) => (
+            <div
+              key={`${slot.domId}-${index}`}
+              ref={el => {
+                if (el && selectedSlotDomId && selectedSlotDomId === slot.domId) {
+                  el.scrollIntoView({ block: 'start' });
+                  this.setState({ selectedSlotDomId: undefined });
+                }
+              }}
+            >
+              <AdSlotConfig
+                labelConfigService={labelConfigService}
+                slot={slot}
+                initiallyExpanded={selectedSlotDomId === slot.domId}
+              />
+            </div>
+          ))}
         </Block>
 
         <Block title="Label Size Config" color="sizeConfig">
@@ -928,29 +862,6 @@ export class GlobalConfig
             </>
           )}
         </Block>
-
-        <Block title={<>Validation {this.validationCountTag()}</>} color="validation">
-          <div className="flex max-w-md flex-col gap-1">
-            {this.state.messages.length === 0 && (
-              <div className="d-alert d-alert-success rounded-md px-2 py-1 text-sm">
-                <span>✔ No configuration issues found</span>
-              </div>
-            )}
-            {this.state.messages.map((message, index) => (
-              <div
-                key={index}
-                className={classList(
-                  'd-alert rounded-md px-2 py-1 text-sm',
-                  [message.kind === 'error', 'd-alert-error'],
-                  [message.kind === 'warning', 'd-alert-warning'],
-                  [message.kind === 'optimization', 'd-alert-info']
-                )}
-              >
-                <span>{message.text}</span>
-              </div>
-            ))}
-          </div>
-        </Block>
       </>
     );
   };
@@ -962,20 +873,6 @@ export class GlobalConfig
   public componentWillUnmount = (): void => {
     this.props.windowResizeService.unregister(this);
   };
-
-  private validationCountTag = (): React.ReactElement => (
-    <Tag
-      variant={
-        this.state.messages.some(m => m.kind === 'error')
-          ? 'red'
-          : this.state.messages.length > 0
-            ? 'yellow'
-            : 'green'
-      }
-    >
-      {this.state.messages.length}
-    </Tag>
-  );
 
   private openSlotInAdSetup = (domId: string): void => {
     this.setState({ activeTab: 'adSetup', selectedSlotDomId: domId });
@@ -1113,104 +1010,6 @@ export class GlobalConfig
 
   private toggleSidebar = (): void => {
     this.setState({ sidebarHidden: !this.state.sidebarHidden });
-  };
-
-  private reportMissingConfig = (messages: Message[]): void => {
-    messages.push({
-      kind: 'error',
-      text: 'No moli config found.'
-    });
-  };
-
-  private checkForDuplicateOrMissingSlots = (messages: Message[], slot: AdSlot): void => {
-    const count = document.querySelectorAll(`[id='${slot.domId}']`).length;
-
-    if (count > 1) {
-      messages.push({
-        kind: 'warning',
-        text: (
-          <span>
-            {count} DOM elements with id <strong>{slot.domId}</strong> found. This may lead to
-            unexpected results.
-          </span>
-        )
-      });
-    }
-
-    if (count === 0) {
-      messages.push({
-        kind: 'warning',
-        text: (
-          <span>
-            No DOM element with id <strong>{slot.domId}</strong> found. Slot will not be rendered.
-          </span>
-        )
-      });
-    }
-  };
-
-  private checkPrebidConfig = (messages: Message[], prebid: headerbidding.PrebidConfig) => {
-    if (!prebid.config.consentManagement) {
-      messages.push({
-        kind: 'error',
-        text: 'No prebid consentManagement configuration found.'
-      });
-    }
-
-    if (!window.pbjs?.version) {
-      messages.push({
-        kind: 'error',
-        text: 'No prebid instance available! Either remove the prebid configuration or add prebid to the ad tag'
-      });
-    }
-  };
-
-  private checkSlotPrebidConfig = (messages: Message[], slot: AdSlot) => {
-    if (slot.prebid) {
-      const labels = this.props.labelConfigService.getSupportedLabels();
-      extractPrebidAdSlotConfigs(slot.prebid).forEach(prebidConfig => {
-        const mediaTypes = prebidConfig.adUnit.mediaTypes;
-
-        if (!!mediaTypes && !mediaTypes.banner && !mediaTypes.video) {
-          messages.push({
-            kind: 'error',
-            text: `Prebidjs mediaTypes for slot ${slot.domId} | ${slot.adUnitPath} is empty.`
-          });
-        }
-      });
-    }
-  };
-
-  private checkGlobalSizeConfigEntry =
-    (messages: Message[]) =>
-    (entry: sizeConfigs.LabelSizeConfigEntry, _: number): void => {
-      if (entry.labelsSupported.length === 0) {
-        messages.push({
-          kind: 'warning',
-          text: `No Global LabelSizeConfig entries. We recommend defining labels.`
-        });
-      }
-    };
-
-  private checkForWrongPrebidCodeEntry = (messages: Message[], slot: AdSlot) => {
-    if (slot.prebid) {
-      const labels = this.props.labelConfigService.getSupportedLabels();
-      extractPrebidAdSlotConfigs(slot.prebid).forEach(prebidConfig => {
-        const code = prebidConfig.adUnit.code;
-        if (code && code !== slot.domId) {
-          messages.push({
-            kind: 'error',
-            text: (
-              <span>
-                The <code>prebid.adUnit.code</code> must match the <code>slot.domID</code>{' '}
-                <strong>${slot.domId}</strong>, but
-                <br /> <strong>{code}</strong> was not <strong>{slot.domId}</strong>
-              </span>
-            )
-          });
-        }
-      });
-    }
   };
 
   private isSlotRendered = (slot: AdSlot): boolean =>
