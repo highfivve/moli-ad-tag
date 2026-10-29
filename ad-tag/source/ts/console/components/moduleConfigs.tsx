@@ -377,6 +377,12 @@ const IntentIqModule: React.FC<{ config: modules.intentiq.IntentIqModuleConfig }
         <ListTags values={config.browserBlockList.split(',')} variant="grey" />
       </Row>
     )}
+    {config.bidders && config.bidders.length > 0 && (
+      <Row label="IntentIQ Bidders">
+        <ListTags values={config.bidders} variant="grey" />
+        <Tag variant="blue">manual win report</Tag>
+      </Row>
+    )}
     {config.scriptUrl && (
       <Row label="Script URL">
         <Tag>{config.scriptUrl}</Tag>

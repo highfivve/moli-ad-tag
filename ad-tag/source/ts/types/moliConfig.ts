@@ -3129,6 +3129,35 @@ export namespace modules {
       readonly refreshUserIds?: boolean;
 
       /**
+       * The IntentIQ Bidders: bidder codes that receive the IntentIQ id. Computed by
+       * highfivve-portal (active bidders minus an operator-chosen exclusion, see highfivve-portal
+       * ADR 0041) and never authored by hand. Includes bidder aliases and PBS bidder aliases, which
+       * is why this is a plain `string[]` rather than `prebidjs.BidderCode[]`.
+       *
+       * A **non-empty** list turns on two things - there is no other flag. First, the `intentIqId`
+       * userId provider gets `bidders`, so only these bidders receive the IntentIQ EID. Second, the
+       * Manual Win Report: the shared IntentIQ config object gets `manualWinReportEnabled: true`,
+       * so the `iiqAnalytics` adapter stops reporting wins itself, and the module reports wins of
+       * these bidders only, on prebid's `bidWon` event, via
+       * `window.intentIqAnalyticsAdapter_<partner>.reportExternalWin`.
+       *
+       * Absent or empty means every bidder gets the IntentIQ id and the `iiqAnalytics` adapter
+       * reports every win itself.
+       *
+       * @example
+       * ```json
+       * {
+       *   "intentiq": {
+       *     "enabled": true,
+       *     "partner": 123456,
+       *     "bidders": ["appnexus", "criteo", "pubmatic"]
+       *   }
+       * }
+       * ```
+       */
+      readonly bidders?: string[];
+
+      /**
        * Storage settings for the userId provider. `type` and `name` are always `html5` /
        * `intentIqId` and cannot be configured.
        */

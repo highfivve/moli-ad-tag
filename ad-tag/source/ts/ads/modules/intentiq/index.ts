@@ -45,6 +45,36 @@
  * (https://github.com/prebid/Prebid.js/pull/15691). highfivve-portal sets the flag based on the
  * Prebid.js version; the module only follows it.
  *
+ * ## IntentIQ Bidders and Manual Win Report
+ *
+ * highfivve-portal can restrict IntentIQ to a subset of bidders (highfivve-portal ADR 0041). It
+ * then emits the **IntentIQ Bidders** as `bidders`:
+ *
+ * ```json
+ * {
+ *   "intentiq": {
+ *     "enabled": true,
+ *     "partner": 123456,
+ *     "bidders": ["appnexus", "criteo", "pubmatic"]
+ *   }
+ * }
+ * ```
+ *
+ * A non-empty `bidders` list turns on, with no other flag:
+ *
+ * - `bidders` on the `intentIqId` userId entry, so only those bidders receive the IntentIQ EID
+ * - `manualWinReportEnabled: true` on the shared config object, so the `iiqAnalytics` adapter
+ *   stops reporting wins itself
+ * - the **Manual Win Report**: one prebid `bidWon` listener per page (registered together with the
+ *   analytics adapter, so not again on SPA navigations) calls
+ *   `window.intentIqAnalyticsAdapter_<partner>.reportExternalWin(...)` for wins of the IntentIQ
+ *   Bidders only. `biddingPlatformId` is always `1` (prebid), for server-side bids too. If the
+ *   adapter's window variable is missing (no consent, or the adapter is not in the Prebid
+ *   Distribution) the win is skipped with a debug log.
+ *
+ * Without `bidders` (or with an empty list) every bidder gets the IntentIQ id and the adapter
+ * reports every win itself.
+ *
  * @module
  */
 import { IModule, ModuleType } from 'ad-tag/types/module';
@@ -68,6 +98,13 @@ import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
 const gvlid: string = '1323';
 
 const name = 'intentiq';
+
+/**
+ * A non-empty `bidders` list turns on both the restriction of the IntentIQ id and the Manual Win
+ * Report. There is no other flag.
+ */
+const hasIntentIqBidders = (config: modules.intentiq.IntentIqModuleConfig): boolean =>
+  !!config.bidders && config.bidders.length > 0;
 
 export const createIntentIq = (): IModule => {
   let intentIqConfig: modules.intentiq.IntentIqModuleConfig | null = null;
@@ -139,8 +176,49 @@ export const createIntentIq = (): IModule => {
           gamParameterName: config.gamParameterName,
           gamObjectReference: context.window__.googletag as unknown as Record<string, unknown>
         }
-      : {})
+      : {}),
+    // the adapter stops reporting wins itself - the module reports them, see `reportWin`
+    ...(hasIntentIqBidders(config) ? { manualWinReportEnabled: true } : {})
   });
+
+  /**
+   * Manual Win Report: reports a prebid win to IntentIQ if the winning bidder is one of the
+   * IntentIQ Bidders. The `iiqAnalytics` adapter defines the window variable when it is enabled -
+   * it is missing if prebid's GDPR enforcement blocked the adapter or the Prebid Distribution does
+   * not ship it, in which case there is nothing to report to.
+   */
+  const reportWin = (
+    config: modules.intentiq.IntentIqModuleConfig,
+    context: AdPipelineContext,
+    bid: prebidjs.BidResponse
+  ): void => {
+    if (!config.bidders?.includes(bid.bidderCode)) {
+      return;
+    }
+    const adapterVariable = `intentIqAnalyticsAdapter_${config.partner}`;
+    const adapter = (
+      context.window__ as unknown as Partial<
+        Record<string, prebidjs.analytics.IIntentIqAnalyticsAdapterGlobal>
+      >
+    )[adapterVariable];
+    if (!adapter) {
+      context.logger__.debug('IntentIQ', `no ${adapterVariable} found. Skipping win report`);
+      return;
+    }
+    adapter.reportExternalWin({
+      // always prebid - server-side (s2s) bids are prebid wins too, never 4 (Open RTB)
+      biddingPlatformId: 1,
+      bidderCode: bid.bidderCode,
+      prebidAuctionId: bid.auctionId,
+      cpm: bid.cpm,
+      currency: bid.currency,
+      originalCpm: bid.originalCpm,
+      originalCurrency: bid.originalCurrency,
+      status: bid.status,
+      placementId: bid.adUnitCode,
+      adType: bid.mediaType
+    });
+  };
 
   /** Builds the `intentIqId` userId provider around the shared config object. */
   const mkUserIdProvider = (
@@ -148,6 +226,8 @@ export const createIntentIq = (): IModule => {
     intentIqConfigObject: prebidjs.userSync.IIntentIqConfig
   ): prebidjs.userSync.IIntentIqIdProvider => ({
     name: 'intentIqId',
+    // the IntentIQ Bidders include (PBS) bidder aliases, which prebid accepts here as well
+    ...(hasIntentIqBidders(config) ? { bidders: config.bidders as prebidjs.BidderCode[] } : {}),
     storage: {
       type: 'html5',
       name: 'intentIqId',
@@ -201,6 +281,10 @@ export const createIntentIq = (): IModule => {
         context.window__.pbjs.enableAnalytics([
           { provider: 'iiqAnalytics', options: intentIqConfigObject }
         ]);
+        // like the adapter, the win report listener must exist only once per page (SPA)
+        if (hasIntentIqBidders(config)) {
+          context.window__.pbjs.onEvent('bidWon', bid => reportWin(config, context, bid));
+        }
       }
     });
 
