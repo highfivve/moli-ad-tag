@@ -288,3 +288,17 @@ An email address only trimmed and lower-cased — no Gmail-specific rules. Requi
 that hash without Gmail rules (ROQAD); the basis of `hem.sha256BasicNormalized`. For non-Gmail
 addresses, and Gmail addresses without `.`/`+`, it equals the [Gmail-Normalised Email].
 _Avoid_: raw email, unnormalised email.
+
+### IntentIQ Bidders
+The bidder codes that receive the IntentIQ id (`modules.intentiq.bidders`). Computed by
+highfivve-portal from the publisher's active bidders minus an exclusion the operator chose
+(highfivve-portal ADR 0041); moli never sees the exclusion itself. Present and non-empty means
+the restriction is in effect and [Manual Win Report] is on; absent means every bidder gets the id.
+_Avoid_: excluded bidders (that is the portal's input, not moli's), include list.
+
+### Manual Win Report
+Reporting a won prebid bid to IntentIQ explicitly from moli
+(`intentIqAnalyticsAdapter_<partner>.reportExternalWin`) instead of letting IntentIQ's analytics
+adapter report every win itself. On exactly when [IntentIQ Bidders] are configured, and then only
+wins of those bidders are reported.
+_Avoid_: external win report (IntentIQ's API name), impression report.
