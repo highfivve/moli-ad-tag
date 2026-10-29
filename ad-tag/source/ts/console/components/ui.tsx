@@ -16,8 +16,7 @@ export type SectionColor =
   | 'a9'
   | 'consent'
   | 'supplyChain'
-  | 'adDensity'
-  | 'validation';
+  | 'adDensity';
 
 const sectionAccent: Record<SectionColor, string> = {
   moli: 'border-l-[#998fc7]',
@@ -30,8 +29,7 @@ const sectionAccent: Record<SectionColor, string> = {
   a9: 'border-l-[#ea9445]',
   consent: 'border-l-[#d9f4c7]',
   supplyChain: 'border-l-[#82dad8]',
-  adDensity: 'border-l-[#f176af]',
-  validation: 'border-l-[#f4ef88]'
+  adDensity: 'border-l-[#f176af]'
 };
 
 type BlockProps = {
@@ -43,7 +41,7 @@ type BlockProps = {
  * Titled content block with a colored left border indicating the topic.
  */
 export const Block: React.FC<PropsWithChildren<BlockProps>> = ({ title, color, children }) => (
-  <section className={classList('mb-4 border-l-4 bg-base-100 pl-3', sectionAccent[color])}>
+  <section className={classList('mb-4 border-l-4 bg-base-100 px-3', sectionAccent[color])}>
     <h4 className="mb-1 text-base font-semibold">{title}</h4>
     <div className="pb-1 text-sm">{children}</div>
   </section>
@@ -65,7 +63,7 @@ export const Tabs = <T extends string>({
   onSelect,
   className
 }: TabsProps<T>): React.ReactElement => (
-  <div role="tablist" className={classList('d-tabs d-tabs-bordered w-full', className ?? '')}>
+  <div role="tablist" className={classList('d-tabs d-tabs-border w-full', className ?? '')}>
     {tabs.map(tab => (
       <button
         key={tab.id}
@@ -85,6 +83,111 @@ export const Tabs = <T extends string>({
   </div>
 );
 
+type FilterProps<T extends string> = {
+  /** radio group name, must be unique within the console */
+  readonly name: string;
+  readonly options: ReadonlyArray<{ readonly id: T; readonly label: string }>;
+  /** selected option, `undefined` if nothing is selected */
+  readonly active?: T;
+  /** called with `undefined` when the filter is reset */
+  readonly onSelect: (id: T | undefined) => void;
+};
+
+/**
+ * daisyUI filter. Selecting an option hides the others and shows a reset button.
+ */
+export const Filter = <T extends string>({
+  name,
+  options,
+  active,
+  onSelect
+}: FilterProps<T>): React.ReactElement => (
+  <div className="d-filter">
+    <input
+      type="radio"
+      name={name}
+      aria-label="×"
+      title="Reset filter"
+      className="d-btn d-btn-xs d-filter-reset"
+      checked={active === undefined}
+      onChange={() => onSelect(undefined)}
+    />
+    {options.map(option => (
+      <input
+        key={option.id}
+        type="radio"
+        name={name}
+        aria-label={option.label}
+        className="d-btn d-btn-xs font-normal normal-case"
+        checked={option.id === active}
+        onChange={() => onSelect(option.id)}
+      />
+    ))}
+  </div>
+);
+
+type DropdownProps<T extends string> = {
+  readonly options: ReadonlyArray<{ readonly id: T; readonly label: string }>;
+  readonly active: T;
+  readonly onSelect: (id: T) => void;
+  readonly title?: string;
+  /** prefix shown in the button before the active option label */
+  readonly buttonPrefix?: string;
+  readonly className?: string;
+};
+
+/**
+ * Focus driven daisyUI dropdown to pick one option.
+ */
+export const Dropdown = <T extends string>({
+  options,
+  active,
+  onSelect,
+  title,
+  buttonPrefix,
+  className
+}: DropdownProps<T>): React.ReactElement => {
+  const activeOption = options.find(option => option.id === active) ?? options[0];
+
+  return (
+    <div className={classList('d-dropdown d-dropdown-end', className ?? '')}>
+      <button
+        tabIndex={0}
+        className="d-btn d-btn-ghost d-btn-sm font-normal normal-case"
+        title={title}
+      >
+        {buttonPrefix}
+        {activeOption.label} ▾
+      </button>
+      <ul
+        tabIndex={0}
+        className="d-dropdown-content d-menu d-menu-sm z-20 w-40 rounded-md bg-base-200 p-1 shadow-sm"
+      >
+        {options.map(option => (
+          <li key={option.id}>
+            <button
+              // border/background resets needed because preflight is disabled. The background
+              // reset must not be applied to the active item, as utilities win over d-menu-active
+              className={classList(
+                'border-0 text-left',
+                [option.id === active, 'd-menu-active'],
+                [option.id !== active, 'bg-transparent']
+              )}
+              onClick={e => {
+                onSelect(option.id);
+                // close the focus driven daisyUI dropdown
+                e.currentTarget.blur();
+              }}
+            >
+              {option.label}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 type ToggleProps = {
   readonly checked: boolean;
   readonly disabled?: boolean;
@@ -98,7 +201,7 @@ type ToggleProps = {
 export const Toggle: React.FC<ToggleProps> = ({ checked, disabled, title, onChange }) => (
   <input
     type="checkbox"
-    className="d-toggle d-toggle-secondary d-toggle-sm border border-solid border-primary"
+    className="d-toggle d-toggle-secondary d-toggle-sm border border-solid border-secondary"
     checked={checked}
     disabled={disabled}
     title={title}
@@ -219,7 +322,7 @@ type TextInputProps = {
 
 export const TextInput: React.FC<TextInputProps> = props => (
   <input
-    className="d-input d-input-bordered d-input-xs mx-1 w-44 bg-base-100"
+    className="d-input d-input-xs mx-1 w-44 bg-base-100"
     type={props.type ?? 'text'}
     {...props}
   />

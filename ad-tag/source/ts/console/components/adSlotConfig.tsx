@@ -26,7 +26,7 @@ type IAdSlotConfigState = {
   activeTab: SlotTab;
 };
 
-type ValidatedSlotSize = { valid: boolean; size: googleAdManager.SlotSize };
+type SupportedSlotSize = { supported: boolean; size: googleAdManager.SlotSize };
 
 export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotConfigState> {
   constructor(props: IAdSlotConfigProps) {
@@ -90,7 +90,7 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
       <div
         className={classList(
           'd-collapse d-collapse-arrow mb-2 rounded-md border-y-0 border-l-4 border-r-0 border-solid bg-base-200',
-          [slotVisible, 'border-l-primary'],
+          [slotVisible, 'border-l-secondary'],
           [!slotVisible, 'border-l-base-300']
         )}
         title={
@@ -148,16 +148,14 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-y-1">
                 <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">AdUnit path</span>
-                <pre className="m-0 whitespace-pre-wrap break-all rounded bg-base-300 px-1.5 py-0.5 text-xs">
+                <pre className="m-0 whitespace-pre-wrap break-all rounded-sm bg-base-300 px-1.5 py-0.5 text-xs">
                   {slot.adUnitPath}
                 </pre>
               </div>
               {slot.sizes.length > 0 && (
                 <div className="mt-2 flex flex-wrap items-center gap-y-1">
                   <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Sizes</span>
-                  {this.validateSlotSizes(slot.sizes).map(validatedSlotSize =>
-                    this.tagFromValidatedSlotSize(validatedSlotSize, !!slot.sizeConfig)
-                  )}
+                  {this.checkSupportedSlotSizes(slot.sizes).map(this.tagFromSlotSize)}
                 </div>
               )}
               <div className="mt-2 flex flex-wrap items-center gap-y-1">
@@ -210,7 +208,6 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
     const hasMultipleBids = prebidAdUnits.length > 1;
 
     const elements = prebidAdUnits.map((prebidAdUnit, index) => {
-      const slotSizeConfig = this.props.slot.sizeConfig;
       const banner = prebidAdUnit.mediaTypes.banner;
       const video = prebidAdUnit.mediaTypes.video;
       const native = prebidAdUnit.mediaTypes.native;
@@ -225,9 +222,7 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
           {banner && (
             <div className="mt-2 flex flex-wrap items-center gap-y-1">
               <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Banner sizes</span>
-              {this.validateSlotSizes(banner.sizes).map(validatedSlotSize =>
-                this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig)
-              )}
+              {this.checkSupportedSlotSizes(banner.sizes).map(this.tagFromSlotSize)}
             </div>
           )}
           {video && (
@@ -235,11 +230,9 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
               <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Video</span>
               <Tag variant="green">{video.context}</Tag>
               {!!video.playerSize &&
-                this.validateSlotSizes(
+                this.checkSupportedSlotSizes(
                   this.isSingleVideoSize(video.playerSize) ? [video.playerSize] : video.playerSize
-                ).map(validatedSlotSize =>
-                  this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig)
-                )}
+                ).map(this.tagFromSlotSize)}
             </div>
           )}
           {native && (
@@ -283,16 +276,14 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
   };
 
   private a9Config = (a9: headerbidding.A9AdSlotConfig): React.ReactElement => {
-    const slotSizeConfig = this.props.slot.sizeConfig;
     return (
       <div>
         {
           <div className="mt-2 flex flex-wrap items-center gap-y-1">
             <span className="inline-block min-w-36 max-w-96 pr-1 font-medium">Sizes</span>
-            {this.validateSlotSizes(this.props.slot.sizes.filter(AdSlotConfig.isFixedSize)).map(
-              validatedSlotSize =>
-                this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig)
-            )}
+            {this.checkSupportedSlotSizes(
+              this.props.slot.sizes.filter(AdSlotConfig.isFixedSize)
+            ).map(this.tagFromSlotSize)}
           </div>
         }
         <div className="mt-2 flex flex-wrap items-center gap-y-1">{this.labelConfig(a9)}</div>
@@ -354,17 +345,15 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
           const videoValid =
             !!video &&
             (!video.playerSize ||
-              this.validateSlotSizes(
+              this.checkSupportedSlotSizes(
                 this.isSingleVideoSize(video.playerSize) ? [video.playerSize] : video.playerSize
-              ).some(validatedSlotSize => validatedSlotSize.valid));
+              ).some(slotSize => slotSize.supported));
 
           return (
             !!native ||
             videoValid ||
             (!!banner &&
-              this.validateSlotSizes(banner.sizes).some(
-                validatedSlotSize => validatedSlotSize.valid
-              ))
+              this.checkSupportedSlotSizes(banner.sizes).some(slotSize => slotSize.supported))
           );
         });
     }
@@ -398,7 +387,7 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
     );
   };
 
-  private validateSlotSizes = (sizes: googleAdManager.SlotSize[]): ValidatedSlotSize[] => {
+  private checkSupportedSlotSizes = (sizes: googleAdManager.SlotSize[]): SupportedSlotSize[] => {
     const slotSizeConfig = this.props.slot.sizeConfig;
     const sizeConfigService = new SizeConfigService(
       slotSizeConfig,
@@ -407,26 +396,21 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
     );
 
     return sizes.map(size => ({
-      valid: sizeConfigService.filterSupportedSizes([size]).length > 0,
+      supported: sizeConfigService.filterSupportedSizes([size]).length > 0,
       size
     }));
   };
 
-  private tagFromValidatedSlotSize = (
-    slotSize: ValidatedSlotSize,
-    hasSlotSizeConfig: boolean
-  ): React.ReactElement => {
+  private tagFromSlotSize = (slotSize: SupportedSlotSize): React.ReactElement => {
     const sizeString =
       slotSize.size === 'fluid' ? slotSize.size : `${slotSize.size[0]}x${slotSize.size[1]}`;
     return (
       <Tag
         key={sizeString}
-        variant={slotSize.valid ? 'green' : 'red'}
-        title={`${slotSize.valid ? 'Valid' : 'Invalid'} (${
-          hasSlotSizeConfig ? 'slot' : 'global'
-        } sizeConfig)`}
+        variant={slotSize.supported ? 'green' : 'red'}
+        title={slotSize.supported ? 'Requested' : 'Not requested'}
       >
-        {sizeString} {hasSlotSizeConfig ? 'Ⓢ' : 'Ⓖ'}
+        {sizeString}
       </Tag>
     );
   };
