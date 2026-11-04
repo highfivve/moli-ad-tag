@@ -53,7 +53,7 @@
  * |                  | process `desktop`.                                                          |
  * | `eventType`      | always `pageview`                                                           |
  * | `publisher_name` | `publisherName` from the module config                                      |
- * | `partner_dom`    | `window.location.hostname`                                                  |
+ * | `partner_dom`    | `window.location.href` - the full page URL, unmodified                      |
  * | `ctry`           | the country as ISO 3166-1 alpha-2 code, uppercased. `targeting.geo.country` |
  * |                  | if set, otherwise the country detected from the browser timezone. Omitted   |
  * |                  | if it is no alpha-2 code, so ROQAD derives it from the request IP.          |
@@ -258,7 +258,8 @@ const buildPageParameters = (
     ['env', 'mWeb'],
     ['eventType', 'pageview'],
     ['publisher_name', config.publisherName],
-    ['partner_dom', context.window__.location.hostname],
+    // the full page URL incl. query and fragment - ROQAD stores it for later use
+    ['partner_dom', context.window__.location.href],
     ['ctry', resolveCountry(context)],
     ['z_e_sha2_l', hashedEmail]
   ];
