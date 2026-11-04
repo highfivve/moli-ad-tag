@@ -18,7 +18,7 @@ use(sinonChai);
 
 describe('ROQAD Cookie Sync module', () => {
   const sandbox = Sinon.createSandbox();
-  const { jsDomWindow } = createDomAndWindow();
+  const { dom, jsDomWindow } = createDomAndWindow();
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
 
@@ -105,6 +105,7 @@ describe('ROQAD Cookie Sync module', () => {
     sandbox.reset();
     intlSandbox.restore();
     jsDomWindow.document.querySelectorAll('iframe').forEach(iframe => iframe.remove());
+    dom.reconfigure({ url: 'http://localhost' });
   });
 
   describe('configuration', () => {
@@ -208,7 +209,57 @@ describe('ROQAD Cookie Sync module', () => {
       expect(params.get('env')).to.eq('mWeb');
       expect(params.get('eventType')).to.eq('pageview');
       expect(params.get('publisher_name')).to.eq('example pub');
-      expect(params.get('partner_dom')).to.eq(jsDomWindow.location.hostname);
+      expect(params.get('partner_dom')).to.eq(jsDomWindow.location.href);
+    });
+
+    describe('partner_dom', () => {
+      const pageUrl = 'https://www.example.com/news/article?id=42&utm_source=x&q=%C3%A4#comments';
+
+      /**
+       * The page URL's own `?`, `&` and `#` must be encoded into the single `partner_dom` value
+       * and must not leak into the sync URL as additional parameters or a fragment.
+       */
+      const expectEncodedAsSingleParameter = (syncUrl: string): void => {
+        const url = new URL(syncUrl);
+        expect(url.search.slice(1).split('&')).to.include(
+          `partner_dom=${encodeURIComponent(pageUrl)}`
+        );
+        expect(url.searchParams.has('utm_source')).to.be.false;
+        expect(url.searchParams.has('q')).to.be.false;
+        expect(url.hash).to.eq('');
+      };
+
+      beforeEach(() => dom.reconfigure({ url: pageUrl }));
+
+      it('sends the full page URL, not only the hostname', async () => {
+        await runSyncStep(createModule(), mkContext());
+        expect(getLoadedUrl().searchParams.get('partner_dom')).to.eq(pageUrl);
+      });
+
+      it('encodes the page URL as a single parameter value', async () => {
+        await runSyncStep(createModule(), mkContext());
+        expectEncodedAsSingleParameter(loadScriptStub.firstCall.args[0].assetUrl);
+      });
+
+      it('sends the page URL with the pixel sync method', async () => {
+        await runSyncStep(createModule({ syncMethod: 'pixel' }), mkContext());
+        const iframe = jsDomWindow.document.querySelector<HTMLIFrameElement>('#h5v-roqad-sync');
+        expect(new URL(iframe!.src).searchParams.get('partner_dom')).to.eq(pageUrl);
+        expectEncodedAsSingleParameter(iframe!.src);
+      });
+
+      it('sends the current page URL on each sync of a single page application', async () => {
+        const [step] = createModule().configureSteps__();
+        dom.reconfigure({ url: 'https://www.example.com/first' });
+        await step(mkContext({ requestAdsCalls__: 1 }), []);
+        dom.reconfigure({ url: 'https://www.example.com/second?page=2' });
+        await step(mkContext({ requestAdsCalls__: 2 }), []);
+        const urls = loadScriptStub.getCalls().map(call => new URL(call.args[0].assetUrl));
+        expect(urls.map(url => url.searchParams.get('partner_dom'))).to.deep.eq([
+          'https://www.example.com/first',
+          'https://www.example.com/second?page=2'
+        ]);
+      });
     });
 
     it('sets env to mWeb even if the desktop label is active', async () => {

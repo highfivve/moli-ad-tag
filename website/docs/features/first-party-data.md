@@ -198,7 +198,7 @@ These parameters are always set by the module and are not configurable as mappin
 | `env`            | always `mWeb`. ROQAD only supports `mWeb` for website calls and does not process `desktop`.             |
 | `eventType`      | always `pageview`                                                                                       |
 | `publisher_name` | `publisherName` from the module config                                                                  |
-| `partner_dom`    | `window.location.hostname`                                                                              |
+| `partner_dom`    | `window.location.href` - the full page URL, unmodified                                                  |
 | `ctry`           | The country as an uppercase ISO 3166-1 alpha-2 code. See [below](#roqad-country).                       |
 | `z_e_sha2_l`     | `audience.hem.sha256BasicNormalized`, falling back to `audience.hem.sha256`. Omitted if neither is set. |
 
