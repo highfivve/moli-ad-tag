@@ -176,6 +176,7 @@ separate integration. Do not configure ROQAD through the `zeotap` module.
 | `zdid`               | The ROQAD / zeotap data source id. Sent as `zdid`. Must not be blank.               |
 | `publisherName`      | The publisher name as agreed with ROQAD. Sent as `publisher_name`. Must not be blank. |
 | `syncMethod`         | _optional_ `mapper` (default) or `pixel`. See [below](#roqad-sync-method).          |
+| `partnerDom`         | _optional_ `path` (default) or `href`. See [below](#roqad-page-url).                |
 | `mappingDefinitions` | Mappings from key-values to additional URL parameters. See [below](#roqad-mapping). |
 
 ### Sync method {#roqad-sync-method}
@@ -198,7 +199,7 @@ These parameters are always set by the module and are not configurable as mappin
 | `env`            | always `mWeb`. ROQAD only supports `mWeb` for website calls and does not process `desktop`.             |
 | `eventType`      | always `pageview`                                                                                       |
 | `publisher_name` | `publisherName` from the module config                                                                  |
-| `partner_dom`    | `window.location.href` - the full page URL, unmodified                                                  |
+| `partner_dom`    | The page URL. Origin and path by default. See [below](#roqad-page-url).                                 |
 | `ctry`           | The country as an uppercase ISO 3166-1 alpha-2 code. See [below](#roqad-country).                       |
 | `z_e_sha2_l`     | `audience.hem.sha256BasicNormalized`, falling back to `audience.hem.sha256`. Omitted if neither is set. |
 
@@ -216,6 +217,38 @@ window.moli.que.push(function (moli) {
 
 If only `sha256` is set, that value is sent instead. For non-Gmail addresses (and Gmail addresses
 without `.` or `+suffix`) both hashes are identical.
+
+### Page URL {#roqad-page-url}
+
+`partner_dom` is the URL of the current page. ROQAD stores it for later use. `partnerDom` selects
+which parts of the URL are sent:
+
+| `partnerDom`     | Sent                                                                                                 |
+| ---------------- | ---------------------------------------------------------------------------------------------------- |
+| `path` (default) | Origin and path, e.g. `https://www.example.com/news/article`. Query string and fragment are dropped. |
+| `href`           | `window.location.href`, the full page URL incl. query string and fragment.                           |
+
+Query strings may carry user data such as `token` or `user_id`, which ROQAD must not receive. Use
+`href` only if your URLs never do. Any value other than `href` is treated as `path`, so a typo in
+the config never sends the query string. With `path`, credentials in the URL
+(`https://user:pass@…`) are never sent either.
+
+```json
+{
+  "modules": {
+    "roqad": {
+      "enabled": true,
+      "zdid": "1234",
+      "publisherName": "example-publisher",
+      "partnerDom": "href",
+      "mappingDefinitions": []
+    }
+  }
+}
+```
+
+In a [single page application](#roqad-spa), each sync sends the URL at the time of the
+`requestAds()` call.
 
 ### Country {#roqad-country}
 

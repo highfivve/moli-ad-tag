@@ -209,56 +209,123 @@ describe('ROQAD Cookie Sync module', () => {
       expect(params.get('env')).to.eq('mWeb');
       expect(params.get('eventType')).to.eq('pageview');
       expect(params.get('publisher_name')).to.eq('example pub');
-      expect(params.get('partner_dom')).to.eq(jsDomWindow.location.href);
+      expect(params.get('partner_dom')).to.eq('http://localhost/');
     });
 
     describe('partner_dom', () => {
-      const pageUrl = 'https://www.example.com/news/article?id=42&utm_source=x&q=%C3%A4#comments';
+      const pageUrl =
+        'https://www.example.com/news/%C3%A4rger?id=42&token=secret&user_id=7#comments';
+      const pagePath = 'https://www.example.com/news/%C3%A4rger';
 
       /**
        * The page URL's own `?`, `&` and `#` must be encoded into the single `partner_dom` value
        * and must not leak into the sync URL as additional parameters or a fragment.
        */
-      const expectEncodedAsSingleParameter = (syncUrl: string): void => {
+      const expectEncodedAsSingleParameter = (syncUrl: string, expected: string): void => {
         const url = new URL(syncUrl);
         expect(url.search.slice(1).split('&')).to.include(
-          `partner_dom=${encodeURIComponent(pageUrl)}`
+          `partner_dom=${encodeURIComponent(expected)}`
         );
-        expect(url.searchParams.has('utm_source')).to.be.false;
-        expect(url.searchParams.has('q')).to.be.false;
+        expect(url.searchParams.has('token')).to.be.false;
+        expect(url.searchParams.has('user_id')).to.be.false;
         expect(url.hash).to.eq('');
       };
 
-      beforeEach(() => dom.reconfigure({ url: pageUrl }));
+      const getIframeSrc = (): string =>
+        jsDomWindow.document.querySelector<HTMLIFrameElement>('#h5v-roqad-sync')!.src;
 
-      it('sends the full page URL, not only the hostname', async () => {
-        await runSyncStep(createModule(), mkContext());
-        expect(getLoadedUrl().searchParams.get('partner_dom')).to.eq(pageUrl);
-      });
-
-      it('encodes the page URL as a single parameter value', async () => {
-        await runSyncStep(createModule(), mkContext());
-        expectEncodedAsSingleParameter(loadScriptStub.firstCall.args[0].assetUrl);
-      });
-
-      it('sends the page URL with the pixel sync method', async () => {
-        await runSyncStep(createModule({ syncMethod: 'pixel' }), mkContext());
-        const iframe = jsDomWindow.document.querySelector<HTMLIFrameElement>('#h5v-roqad-sync');
-        expect(new URL(iframe!.src).searchParams.get('partner_dom')).to.eq(pageUrl);
-        expectEncodedAsSingleParameter(iframe!.src);
-      });
-
-      it('sends the current page URL on each sync of a single page application', async () => {
-        const [step] = createModule().configureSteps__();
+      /**
+       * Runs one sync step twice, as a single page application does on two virtual page views,
+       * and returns the `partner_dom` value of each sync.
+       */
+      const syncTwoPageViews = async (
+        config: Partial<modules.roqad.RoqadModuleConfig>
+      ): Promise<ReadonlyArray<string | null>> => {
+        const [step] = createModule(config).configureSteps__();
         dom.reconfigure({ url: 'https://www.example.com/first' });
         await step(mkContext({ requestAdsCalls__: 1 }), []);
         dom.reconfigure({ url: 'https://www.example.com/second?page=2' });
         await step(mkContext({ requestAdsCalls__: 2 }), []);
-        const urls = loadScriptStub.getCalls().map(call => new URL(call.args[0].assetUrl));
-        expect(urls.map(url => url.searchParams.get('partner_dom'))).to.deep.eq([
-          'https://www.example.com/first',
-          'https://www.example.com/second?page=2'
-        ]);
+        return loadScriptStub
+          .getCalls()
+          .map(call => new URL(call.args[0].assetUrl).searchParams.get('partner_dom'));
+      };
+
+      beforeEach(() => dom.reconfigure({ url: pageUrl }));
+
+      describe('path (default)', () => {
+        it('sends the page URL without query string and fragment if partnerDom is not set', async () => {
+          await runSyncStep(createModule(), mkContext());
+          expect(getLoadedUrl().searchParams.get('partner_dom')).to.eq(pagePath);
+        });
+
+        it('sends the page URL without query string and fragment', async () => {
+          await runSyncStep(createModule({ partnerDom: 'path' }), mkContext());
+          expect(getLoadedUrl().searchParams.get('partner_dom')).to.eq(pagePath);
+        });
+
+        it('never sends query parameters such as token and user_id', async () => {
+          await runSyncStep(createModule(), mkContext());
+          const syncUrl: string = loadScriptStub.firstCall.args[0].assetUrl;
+          expect(syncUrl).not.to.contain('secret');
+          expect(syncUrl).not.to.contain('user_id');
+          expect(syncUrl).not.to.contain('comments');
+          expectEncodedAsSingleParameter(syncUrl, pagePath);
+        });
+
+        it('falls back to path for an unknown partnerDom value', async () => {
+          await runSyncStep(
+            createModule({ partnerDom: 'query' as modules.roqad.RoqadPartnerDom }),
+            mkContext()
+          );
+          expect(getLoadedUrl().searchParams.get('partner_dom')).to.eq(pagePath);
+        });
+
+        it('drops credentials in the page URL', async () => {
+          dom.reconfigure({ url: 'https://user:pass@www.example.com/news' });
+          await runSyncStep(createModule(), mkContext());
+          expect(getLoadedUrl().searchParams.get('partner_dom')).to.eq(
+            'https://www.example.com/news'
+          );
+        });
+
+        it('sends the page URL without query string with the pixel sync method', async () => {
+          await runSyncStep(createModule({ syncMethod: 'pixel' }), mkContext());
+          expect(new URL(getIframeSrc()).searchParams.get('partner_dom')).to.eq(pagePath);
+          expectEncodedAsSingleParameter(getIframeSrc(), pagePath);
+        });
+
+        it('sends the current page path on each sync of a single page application', async () => {
+          expect(await syncTwoPageViews({})).to.deep.eq([
+            'https://www.example.com/first',
+            'https://www.example.com/second'
+          ]);
+        });
+      });
+
+      describe('href', () => {
+        it('sends the full page URL incl. query string and fragment', async () => {
+          await runSyncStep(createModule({ partnerDom: 'href' }), mkContext());
+          expect(getLoadedUrl().searchParams.get('partner_dom')).to.eq(pageUrl);
+        });
+
+        it('encodes the page URL as a single parameter value', async () => {
+          await runSyncStep(createModule({ partnerDom: 'href' }), mkContext());
+          expectEncodedAsSingleParameter(loadScriptStub.firstCall.args[0].assetUrl, pageUrl);
+        });
+
+        it('sends the full page URL with the pixel sync method', async () => {
+          await runSyncStep(createModule({ partnerDom: 'href', syncMethod: 'pixel' }), mkContext());
+          expect(new URL(getIframeSrc()).searchParams.get('partner_dom')).to.eq(pageUrl);
+          expectEncodedAsSingleParameter(getIframeSrc(), pageUrl);
+        });
+
+        it('sends the current page URL on each sync of a single page application', async () => {
+          expect(await syncTwoPageViews({ partnerDom: 'href' })).to.deep.eq([
+            'https://www.example.com/first',
+            'https://www.example.com/second?page=2'
+          ]);
+        });
       });
     });
 
