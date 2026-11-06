@@ -53,12 +53,39 @@
  * |                  | process `desktop`.                                                          |
  * | `eventType`      | always `pageview`                                                           |
  * | `publisher_name` | `publisherName` from the module config                                      |
- * | `partner_dom`    | `window.location.href` - the full page URL, unmodified                      |
+ * | `partner_dom`    | the page URL, see `partnerDom` below                                        |
  * | `ctry`           | the country as ISO 3166-1 alpha-2 code, uppercased. `targeting.geo.country` |
  * |                  | if set, otherwise the country detected from the browser timezone. Omitted   |
  * |                  | if it is no alpha-2 code, so ROQAD derives it from the request IP.          |
  * | `z_e_sha2_l`     | `audience.hem.sha256BasicNormalized`, falls back to `audience.hem.sha256`.  |
  * |                  | Omitted if neither is set.                                                  |
+ *
+ * ### Page URL (`partner_dom`)
+ *
+ * | `partnerDom`     | Sent                                                                        |
+ * | ---------------- | --------------------------------------------------------------------------- |
+ * | `path` (default) | origin and path, e.g. `https://www.example.com/news/article`. Query string  |
+ * |                  | and fragment are dropped, as they may carry user data such as `token` or    |
+ * |                  | `user_id` that ROQAD must not receive.                                      |
+ * | `href`           | `window.location.href` - the full page URL incl. query string and fragment  |
+ *
+ * Any other value is treated as `path`, so a typo in the config never sends the query string.
+ * With `path`, credentials in the URL (`https://user:pass@...`) are never sent either. Each sync
+ * sends the URL at the time of the `requestAds()` call, see single page applications below.
+ *
+ * ```json
+ * {
+ *   "modules": {
+ *     "roqad": {
+ *       "enabled": true,
+ *       "zdid": "1234",
+ *       "publisherName": "example-publisher",
+ *       "partnerDom": "href",
+ *       "mappingDefinitions": []
+ *     }
+ *   }
+ * }
+ * ```
  *
  * The `pixel` sync method additionally sends the consent parameters
  *
@@ -236,6 +263,16 @@ const resolveCountry = (context: AdPipelineContext): string | undefined => {
 };
 
 /**
+ * The page URL sent as `partner_dom`. Only `href` sends the full URL - anything else, including a
+ * mistyped value from a JSON config, sends origin and path, so the query string never leaks by
+ * accident. `origin` never contains credentials, unlike the start of `href`.
+ */
+const resolvePartnerDom = (
+  partnerDom: modules.roqad.RoqadPartnerDom | undefined,
+  location: Location
+): string => (partnerDom === 'href' ? location.href : `${location.origin}${location.pathname}`);
+
+/**
  * The fixed parameters and the parameter mappings with their raw values. Shared by both sync
  * methods. Encoding and emptiness filtering happen in {@link buildUrl}.
  */
@@ -258,8 +295,8 @@ const buildPageParameters = (
     ['env', 'mWeb'],
     ['eventType', 'pageview'],
     ['publisher_name', config.publisherName],
-    // the full page URL incl. query and fragment - ROQAD stores it for later use
-    ['partner_dom', context.window__.location.href],
+    // ROQAD stores the page URL for later use
+    ['partner_dom', resolvePartnerDom(config.partnerDom, context.window__.location)],
     ['ctry', resolveCountry(context)],
     ['z_e_sha2_l', hashedEmail]
   ];

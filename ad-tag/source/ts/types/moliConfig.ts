@@ -3488,6 +3488,18 @@ export namespace modules {
     export type RoqadSyncMethod = 'mapper' | 'pixel';
 
     /**
+     * Which parts of the page URL are sent as `partner_dom` parameter.
+     *
+     * - `path` - origin and path, e.g. `https://www.example.com/news/article`. Query string and
+     *   fragment are dropped, as they may carry user data such as `token` or `user_id` that ROQAD
+     *   must not receive.
+     * - `href` - `window.location.href`, the full page URL including query string and fragment.
+     *
+     * Credentials in the URL (`https://user:pass@...`) are never sent with `path`.
+     */
+    export type RoqadPartnerDom = 'href' | 'path';
+
+    /**
      * ## ROQAD Cookie Sync module configuration
      *
      * The country is sent as `ctry`: `targeting.geo.country` if set, otherwise the country
@@ -3501,6 +3513,7 @@ export namespace modules {
      *   "zdid": "1234",
      *   "publisherName": "example-publisher",
      *   "syncMethod": "pixel",
+     *   "partnerDom": "path",
      *   "mappingDefinitions": [
      *     { "roqadValueType": "string", "key": "channel", "parameter": "category" }
      *   ]
@@ -3530,6 +3543,15 @@ export namespace modules {
        * @see RoqadSyncMethod
        */
       readonly syncMethod?: RoqadSyncMethod;
+
+      /**
+       * Which parts of the page URL are sent as `partner_dom` parameter. Any value other than
+       * `href` is treated as `path`, so a typo never leaks the query string.
+       *
+       * @default 'path'
+       * @see RoqadPartnerDom
+       */
+      readonly partnerDom?: RoqadPartnerDom;
 
       /**
        * Mappings from key-values to additional ROQAD URL parameters.
