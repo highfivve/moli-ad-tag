@@ -3352,6 +3352,11 @@
           },
           "type": "array"
         },
+        "partnerDom": {
+          "$ref": "#/definitions/modules.roqad.RoqadPartnerDom",
+          "default": "path",
+          "description": "Which parts of the page URL are sent as `partner_dom` parameter. Any value other than `href` is treated as `path`, so a typo never leaks the query string."
+        },
         "publisherName": {
           "description": "The publisher name as agreed with ROQAD. Sent as `publisher_name` parameter.\n\nMust not be blank, like `zdid`.",
           "type": "string"
@@ -8471,6 +8476,11 @@
           },
           "type": "array"
         },
+        "partnerDom": {
+          "$ref": "#/definitions/modules.roqad.RoqadPartnerDom",
+          "default": "path",
+          "description": "Which parts of the page URL are sent as `partner_dom` parameter. Any value other than `href` is treated as `path`, so a typo never leaks the query string."
+        },
         "publisherName": {
           "description": "The publisher name as agreed with ROQAD. Sent as `publisher_name` parameter.\n\nMust not be blank, like `zdid`.",
           "type": "string"
@@ -8496,6 +8506,14 @@
     "modules.roqad.RoqadParameterMapping": {
       "$ref": "#/definitions/modules.roqad.RoqadStringParameterMapping",
       "description": "A rule that turns one page key-value into one ROQAD Cookie Sync URL parameter.\n\nDiscriminated by `roqadValueType`. Currently only  {@link  RoqadStringParameterMapping }  exists."
+    },
+    "modules.roqad.RoqadPartnerDom": {
+      "description": "Which parts of the page URL are sent as `partner_dom` parameter.\n\n- `path` - origin and path, e.g. `https://www.example.com/news/article`. Query string and   fragment are dropped, as they may carry user data such as `token` or `user_id` that ROQAD   must not receive.\n- `href` - `window.location.href`, the full page URL including query string and fragment.\n\nCredentials in the URL (`https://user:pass@...`) are never sent with `path`.",
+      "enum": [
+        "href",
+        "path"
+      ],
+      "type": "string"
     },
     "modules.roqad.RoqadStringParameterMapping": {
       "additionalProperties": false,
